@@ -6,8 +6,8 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#EEF3F1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Onde">
-<title>Onde</title>
+<meta name="apple-mobile-web-app-title" content="Sinis Waves">
+<title>Sinis Waves</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -15,11 +15,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <style>
 :root{
-  --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
-  --accent:#1D5F8A; --wind:#5E6E2E; --sea:#DCE8EA;
-  --s0:#C5CFD3; --s1:#9CC0D3; --s2:#2E7D74; --s3:#E6B24A; --s4:#9E2A5C;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
+ --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
+ --accent:#1D5F8A; --wind:#5E6E2E; --sea:#DCE8EA;
+ --s0:#C5CFD3; --s1:#9CC0D3; --s2:#2E7D74; --s3:#E6B24A; --s4:#9E2A5C;
+ box-sizing:border-box;
+ padding-top:env(safe-area-inset-top,0px);
 }
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -28,6 +28,7 @@ main{max-width:560px;margin:0 auto;padding:24px 20px calc(110px + env(safe-area-
 h1,h2,.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
 h1{margin:0;font-weight:700;font-size:48px;line-height:.95}
 h1.sub{font-size:40px;line-height:1}
+h1.brand{font-size:clamp(34px,10.5vw,48px);white-space:nowrap}
 h2{margin:24px 0 8px;font-weight:600;font-size:22px}
 p{margin:0}
 .muted{color:var(--muted)} .small{font-size:14px} .xs{font-size:13px}
@@ -36,17 +37,14 @@ button{cursor:pointer}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
-
 .head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
 .pillbtn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--panel);font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
 .pillbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:16px;min-height:48px;border-radius:24px;justify-content:center;width:100%}
 .backlink{display:inline-flex;align-items:center;gap:4px;min-height:44px;border:0;background:none;color:var(--accent);font-weight:600;padding:0}
-
 .badge{flex-shrink:0;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 19px "Barlow Condensed",sans-serif;background:var(--c);color:var(--fg,#13283B)}
 .badge.sm{width:34px;height:34px;font-size:16px}
 .badge.lg{width:48px;height:48px;font-size:20px}
 .badge.xs{width:28px;height:28px;font-size:14px}
-
 /* preferito */
 .fav{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px;width:100%;text-align:left;display:block}
 .fav .top{display:flex;align-items:center;gap:12px}
@@ -57,12 +55,10 @@ a{color:var(--accent)}
 .fav .days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .fav .days div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
 .favhint{margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:16px;font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center}
-
 .banner{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:#fff;border:0;width:100%;text-align:left}
 .banner .k{font-size:13px;color:#B9C8D0}
 .banner .t{margin-top:2px;font:600 22px/1.1 "Barlow Condensed",sans-serif}
 .banner .d{margin-top:2px;font-size:14px;color:#D9E3E8}
-
 .list{display:flex;flex-direction:column;gap:8px}
 .row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
 .row .grow{flex:1;min-width:0}
@@ -73,7 +69,6 @@ a{color:var(--accent)}
 .mini{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;width:100%;text-align:left}
 .mini .grow{flex:1;font-weight:600}
 .addspot{margin-top:20px;width:100%;justify-content:center;border-style:dashed;background:transparent}
-
 .dial{flex-shrink:0}
 .dial .ring{fill:var(--panel);stroke:var(--line)}
 .dial .win{fill:none;stroke:var(--s2);stroke-linecap:round;opacity:.45}
@@ -81,7 +76,6 @@ a{color:var(--accent)}
 .dial .swh{fill:var(--accent)}
 .dial .wd{stroke:var(--wind);fill:none}
 .dial text{font:600 3.6px Barlow,sans-serif;fill:var(--muted)}
-
 /* dettaglio */
 .dhead{display:flex;gap:16px;align-items:center;margin-top:4px}
 .dhead h1{font-size:38px}
@@ -106,7 +100,6 @@ a{color:var(--accent)}
 .dlist div{display:grid;grid-template-columns:86px 36px minmax(0,1fr);gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .dlist div:last-child{border-bottom:0}
 .dlist div.best{background:var(--panel);border-radius:10px;padding-left:8px;padding-right:8px}
-
 /* mappa */
 .chips{display:flex;gap:6px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
 .chips button{flex-shrink:0;min-height:38px;padding:0 14px;border-radius:19px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
@@ -118,7 +111,6 @@ a{color:var(--accent)}
 .pin.sel{box-shadow:0 0 0 3px var(--ink)}
 .mapcard{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border-radius:18px;border:1px solid var(--line);text-align:left;width:auto}
 .maptoggle{position:absolute;right:12px;top:12px;z-index:500}
-
 /* alert */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .alist button{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;width:100%;text-align:left}
@@ -132,21 +124,32 @@ a{color:var(--accent)}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .15s}
 .switch[aria-pressed="true"]{background:var(--accent)}
 .switch[aria-pressed="true"]::after{left:23px}
-
 /* nuovo spot */
 .pick{height:46vh;min-height:280px;border-radius:16px;border:1px solid var(--line);overflow:hidden;z-index:0}
 .step h2{margin-bottom:4px}
-.compass{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:6px;margin-top:10px}
-.compass button{border:1px solid var(--line);background:var(--panel);border-radius:14px;font:600 17px "Barlow Condensed",sans-serif}
-.compass button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.compass .c{display:grid;place-items:center;color:var(--muted);font-size:12px}
+/* rosa dei venti */
+.compass{margin-top:12px;display:flex;flex-direction:column;align-items:center}
+.compass svg{width:min(290px,100%);height:auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.compass svg:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:50%}
+.compass .face{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+.compass .sec{fill:var(--accent);opacity:.14}
+.compass .tk line{stroke:var(--line);stroke-width:1.5}
+.compass .lb text{font-family:"Barlow Condensed",sans-serif;fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+.compass .lb .m{font-size:18px;font-weight:600}
+.compass .lb .s{font-size:12.5px;font-weight:500}
+.compass .lb .on{fill:var(--accent);font-weight:700}
+.compass .arm{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.compass .knob{fill:var(--ink);stroke:#fff;stroke-width:3}
+.compass .hub{fill:var(--bg);stroke:var(--line)}
+.compass .hub1{font:500 12px Barlow,sans-serif;fill:var(--muted);text-anchor:middle}
+.compass .hub2{font:700 21px "Barlow Condensed",sans-serif;fill:var(--ink);text-anchor:middle}
+.compass .out{margin-top:6px;text-align:center}
 .types{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .types button{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 14px;min-height:56px}
 .types button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .types b{display:block}
 .field{width:100%;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
 .err{color:var(--s4);margin-top:12px;font-weight:500}
-
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom,0px)}
 nav.tabs button{min-height:64px;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
@@ -155,111 +158,114 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 </head>
 <body>
 <main>
-  <!-- SPOT -->
-  <section id="v-spot">
-    <div class="head">
-      <div><h1>Onde</h1><p class="muted small" id="updated" style="margin-top:4px">Scarico le previsioni…</p></div>
-      <button class="pillbtn" id="nearBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>Vicino a me</button>
-    </div>
-    <div id="fav"></div>
-    <button class="banner" id="banner" hidden></button>
-    <h2>Attivi ora</h2>
-    <div class="list" id="activeList"></div>
-    <h2 class="muted">Non attivi</h2>
-    <div class="list" id="offList" style="gap:6px"></div>
-    <button class="pillbtn addspot" id="addOpen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi uno spot</button>
-    <p class="err" id="status" hidden></p>
-  </section>
 
-  <!-- DETTAGLIO -->
-  <section id="v-detail" hidden></section>
+<!-- SPOT -->
+<section id="v-spot">
+ <div class="head">
+  <div><h1 class="brand">Sinis Waves</h1><p class="muted small" id="updated" style="margin-top:4px">Scarico le previsioni…</p></div>
+  <button class="pillbtn" id="nearBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>Vicino a me</button>
+ </div>
+ <div id="fav"></div>
+ <button class="banner" id="banner" hidden></button>
+ <h2>Attivi ora</h2>
+ <div class="list" id="activeList"></div>
+ <h2 class="muted">Non attivi</h2>
+ <div class="list" id="offList" style="gap:6px"></div>
+ <button class="pillbtn addspot" id="addOpen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi uno spot</button>
+ <p class="err" id="status" hidden></p>
+</section>
 
-  <!-- MAPPA -->
-  <section id="v-map" hidden>
-    <h1 class="sub">Mappa</h1>
-    <p class="muted small" id="mapSub" style="margin-top:4px">Adesso</p>
-    <div class="chips" id="chips"></div>
-    <div class="mapwrap">
-      <div id="leaf"></div>
-      <iframe id="windy" title="Onde animate Windy" hidden></iframe>
-      <button class="pillbtn maptoggle" id="windyBtn" aria-pressed="false">Onde animate</button>
-      <button class="mapcard" id="mapCard" hidden></button>
-    </div>
-  </section>
+<!-- DETTAGLIO -->
+<section id="v-detail" hidden></section>
 
-  <!-- ALERT -->
-  <section id="v-alert" hidden>
-    <h1 class="sub">Alert</h1>
-    <p class="muted small" style="margin-top:4px">Ti avvisiamo quando uno spot che segui entra in condizione nei prossimi 7 giorni.</p>
-    <h2>In arrivo</h2>
-    <div class="card alist" id="alertList"></div>
-    <h2>Avvisami da</h2>
-    <div class="seg" id="seg"></div>
-    <p class="xs muted" style="margin-top:6px">3 vuol dire onda nel range dello spot e vento accettabile.</p>
-    <h2>Come</h2>
-    <div class="card">
-      <div class="srow"><div><p style="font-weight:600">Notifiche dell'app</p><p class="xs muted" id="notifState"></p></div><button class="pillbtn" id="notifBtn">Attiva</button></div>
-      <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot con "alert": true in spots.json.</p></div></div>
-      <div class="srow"><div><p style="font-weight:600">Solo ore di luce</p><p class="xs muted">Dalle 7 alle 19</p></div></div>
-    </div>
-    <h2>Spot seguiti</h2>
-    <div class="card" id="followList"></div>
-  </section>
+<!-- MAPPA -->
+<section id="v-map" hidden>
+ <h1 class="sub">Mappa</h1>
+ <p class="muted small" id="mapSub" style="margin-top:4px">Adesso</p>
+ <div class="chips" id="chips"></div>
+ <div class="mapwrap">
+  <div id="leaf"></div>
+  <iframe id="windy" title="Onde animate Windy" hidden></iframe>
+  <button class="pillbtn maptoggle" id="windyBtn" aria-pressed="false">Onde animate</button>
+  <button class="mapcard" id="mapCard" hidden></button>
+ </div>
+</section>
 
-  <!-- NUOVO SPOT -->
-  <section id="v-add" hidden>
-    <button class="backlink" id="addBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Annulla</button>
-    <h1 class="sub" style="margin-top:6px">Nuovo spot</h1>
-    <div class="step">
-      <h2>Dov'è lo spot?</h2>
-      <p class="small muted">Tocca la mappa sul punto dove entri in acqua, oppure usa la tua posizione se sei lì.</p>
-      <div style="display:flex;gap:8px;margin:10px 0">
-        <button class="pillbtn" id="addHere">Usa la mia posizione</button>
-        <button class="pillbtn" id="addSat" aria-pressed="false">Satellite</button>
-      </div>
-      <div class="pick" id="pickMap"></div>
-    </div>
-    <div class="step">
-      <h2>Da che parte è il mare aperto?</h2>
-      <p class="small muted">Stando in spiaggia e guardando il mare, verso dove guardi? Sulla mappa compare una freccia per controllare.</p>
-      <div class="compass" id="compass"></div>
-    </div>
-    <div class="step">
-      <h2>Che tipo di spot è?</h2>
-      <div class="types" id="types"></div>
-    </div>
-    <div class="step">
-      <h2>Come si chiama?</h2>
-      <input class="field" id="addName" placeholder="Es. Sa Mesa Longa" autocomplete="off">
-    </div>
-    <p class="err" id="addErr" hidden></p>
-    <button class="pillbtn primary" id="addSave" style="margin-top:24px">Salva spot</button>
-    <p class="xs muted" style="margin-top:10px">Lo spot resta su questo telefono. Dal suo dettaglio puoi copiare la configurazione da incollare in spots.json per riceverne gli alert su Telegram.</p>
-  </section>
+<!-- ALERT -->
+<section id="v-alert" hidden>
+ <h1 class="sub">Alert</h1>
+ <p class="muted small" style="margin-top:4px">Ti avvisiamo quando uno spot che segui entra in condizione nei prossimi 7 giorni.</p>
+ <h2>In arrivo</h2>
+ <div class="card alist" id="alertList"></div>
+ <h2>Avvisami da</h2>
+ <div class="seg" id="seg"></div>
+ <p class="xs muted" style="margin-top:6px">3 vuol dire onda nel range dello spot e vento accettabile.</p>
+ <h2>Come</h2>
+ <div class="card">
+  <div class="srow"><div><p style="font-weight:600">Notifiche dell'app</p><p class="xs muted" id="notifState"></p></div><button class="pillbtn" id="notifBtn">Attiva</button></div>
+  <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot con "alert": true in spots.json.</p></div></div>
+  <div class="srow"><div><p style="font-weight:600">Solo ore di luce</p><p class="xs muted">Dalle 7 alle 19</p></div></div>
+ </div>
+ <h2>Spot seguiti</h2>
+ <div class="card" id="followList"></div>
+</section>
+
+<!-- NUOVO SPOT -->
+<section id="v-add" hidden>
+ <button class="backlink" id="addBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Annulla</button>
+ <h1 class="sub" style="margin-top:6px">Nuovo spot</h1>
+ <div class="step">
+  <h2>Dov'è lo spot?</h2>
+  <p class="small muted">Tocca la mappa sul punto dove entri in acqua, oppure usa la tua posizione se sei lì.</p>
+  <div style="display:flex;gap:8px;margin:10px 0">
+   <button class="pillbtn" id="addHere">Usa la mia posizione</button>
+   <button class="pillbtn" id="addSat" aria-pressed="false">Satellite</button>
+  </div>
+  <div class="pick" id="pickMap"></div>
+ </div>
+ <div class="step">
+  <h2>Da che parte è il mare aperto?</h2>
+  <p class="small muted">Stando in spiaggia e guardando il mare, verso dove guardi? Trascina il dito sul cerchio: sulla mappa compare una freccia per controllare.</p>
+  <div class="compass" id="compass"></div>
+ </div>
+ <div class="step">
+  <h2>Che tipo di spot è?</h2>
+  <div class="types" id="types"></div>
+ </div>
+ <div class="step">
+  <h2>Come si chiama?</h2>
+  <input class="field" id="addName" placeholder="Es. Sa Mesa Longa" autocomplete="off">
+ </div>
+ <p class="err" id="addErr" hidden></p>
+ <button class="pillbtn primary" id="addSave" style="margin-top:24px">Salva spot</button>
+ <p class="xs muted" style="margin-top:10px">Lo spot resta su questo telefono. Dal suo dettaglio puoi copiare la configurazione da incollare in spots.json per riceverne gli alert su Telegram.</p>
+</section>
+
 </main>
 
 <nav class="tabs" aria-label="Sezioni">
-  <button data-tab="spot" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/></svg>Spot</button>
-  <button data-tab="map"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Mappa</button>
-  <button data-tab="alert"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Alert</button>
+ <button data-tab="spot" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/></svg>Spot</button>
+ <button data-tab="map"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Mappa</button>
+ <button data-tab="alert"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Alert</button>
 </nav>
 
 <script>
 // ---------- Costanti ----------
 const ACTIVE_FROM = 2, DAY_START = 7, DAY_END = 19, TZ = 'Europe/Rome';
 const CHART_HOURS = ['08','11','14','17'];
-const WINDY_URL = 'https://embed.windy.com/embed2.html?lat=40.0&lon=8.7&detailLat=40.0&detailLon=8.4&width=650&height=450&zoom=7&level=surface&overlay=waves&product=ecmwfWaves&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1';
+const SINIS = [39.97, 8.42];
+const WINDY_URL = 'https://embed.windy.com/embed2.html?lat=39.97&lon=8.2&detailLat=40.03&detailLon=8.35&width=650&height=450&zoom=9&level=surface&overlay=waves&product=ecmwfWaves&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1';
 const ICON = {
-  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
-  chev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted);flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>',
-  star:(on)=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="${on?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>`,
-  bell:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>'
+ back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+ chev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted);flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>',
+ star:(on)=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="${on?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>`,
+ bell:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>'
 };
 
 // ---------- Stato ----------
 const store = {
-  get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
-  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+ get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+ set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 let baseSpots = [], spots = [], data = {}, userPos = null, lastTab = 'spot';
 let threshold = store.get('surf.threshold', 3);
@@ -270,48 +276,53 @@ let mapDay = 'now', mapSel = null, leaf = null, leafPins = {};
 // ---------- Calcoli (stessa logica di alert_telegram.py) ----------
 const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
 const angDiff = (a,b)=>{ let d = Math.abs(a-b)%360; return d>180 ? 360-d : d; };
-const cardinal = d => ['N','NE','E','SE','S','SO','O','NO'][Math.round(((d%360)+360)%360/45)%8];
+const DIR16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+const DIR16_LONG = ['nord','nord-nord-est','nord-est','est-nord-est','est','est-sud-est','sud-est','sud-sud-est','sud','sud-sud-ovest','sud-ovest','ovest-sud-ovest','ovest','ovest-nord-ovest','nord-ovest','nord-nord-ovest'];
+const dirIndex = d => Math.round((((d%360)+360)%360)/22.5)%16;
+const cardinal = d => DIR16[dirIndex(d)];
 
 function evaluate(spot, s, i){
-  let hs = s.hs[i], dir = s.dir[i], T = s.per[i];
-  if (hs == null || dir == null || T == null) return null;
-  if (s.sh[i] != null && s.sh[i] >= 0.5*hs && s.sd[i] != null && s.sp[i] != null){ dir = s.sd[i]; T = Math.max(T, s.sp[i]); }
-  const d = angDiff(dir, spot.facing);
-  const dirF = d <= spot.window ? 1 : d >= spot.window+35 ? 0 : 1-(d-spot.window)/35;
-  const face = hs * dirF * clamp(0.75+(T-6)*0.06, 0.6, 1.3);
-  let hScore;
-  if (face < spot.min) hScore = 0.3*face/spot.min;
-  else if (face <= spot.max) hScore = 0.6 + 0.4*Math.min(1,(face-spot.min)/((spot.max-spot.min)*0.6));
-  else hScore = Math.max(0, 1-(face-spot.max)/spot.max);
-  const periodF = T >= spot.minPeriod ? 1 : clamp((T-3)/(spot.minPeriod-3), 0.2, 1);
-  const ws = s.ws[i] ?? 0, wd = s.wd[i] ?? 0;
-  const dw = angDiff(wd, spot.offshore);
-  const windType = ws < 8 ? 'debole' : dw <= 45 ? 'offshore' : dw <= 110 ? 'laterale' : 'onshore';
-  let windF = 1;
-  if (windType === 'offshore') windF = ws <= 35 ? 1 : 0.7;
-  else if (windType === 'laterale') windF = clamp(1-(ws-8)/35, 0.35, 1);
-  else if (windType === 'onshore') windF = clamp(1-(ws-8)/22, 0.1, 1);
-  const score = Math.min(5, Math.round(5*hScore*periodF*windF*2)/2);
-  return {score, face, hs, dir, T, ws, wd, windType};
+ let hs = s.hs[i], dir = s.dir[i], T = s.per[i];
+ if (hs == null || dir == null || T == null) return null;
+ if (s.sh[i] != null && s.sh[i] >= 0.5*hs && s.sd[i] != null && s.sp[i] != null){ dir = s.sd[i]; T = Math.max(T, s.sp[i]); }
+ const d = angDiff(dir, spot.facing);
+ const dirF = d <= spot.window ? 1 : d >= spot.window+35 ? 0 : 1-(d-spot.window)/35;
+ const face = hs * dirF * clamp(0.75+(T-6)*0.06, 0.6, 1.3);
+ let hScore;
+ if (face < spot.min) hScore = 0.3*face/spot.min;
+ else if (face <= spot.max) hScore = 0.6 + 0.4*Math.min(1,(face-spot.min)/((spot.max-spot.min)*0.6));
+ else hScore = Math.max(0, 1-(face-spot.max)/spot.max);
+ const periodF = T >= spot.minPeriod ? 1 : clamp((T-3)/(spot.minPeriod-3), 0.2, 1);
+ const ws = s.ws[i] ?? 0, wd = s.wd[i] ?? 0;
+ const dw = angDiff(wd, spot.offshore);
+ const windType = ws < 8 ? 'debole' : dw <= 45 ? 'offshore' : dw <= 110 ? 'laterale' : 'onshore';
+ let windF = 1;
+ if (windType === 'offshore') windF = ws <= 35 ? 1 : 0.7;
+ else if (windType === 'laterale') windF = clamp(1-(ws-8)/35, 0.35, 1);
+ else if (windType === 'onshore') windF = clamp(1-(ws-8)/22, 0.1, 1);
+ const score = Math.min(5, Math.round(5*hScore*periodF*windF*2)/2);
+ return {score, face, hs, dir, T, ws, wd, windType};
 }
+
 function tone(sc){
-  if (sc == null || sc < 1.5) return ['var(--s0)','#13283B'];
-  if (sc < 2.5) return ['var(--s1)','#13283B'];
-  if (sc < 3.5) return ['var(--s2)','#FFFFFF'];
-  if (sc < 4.5) return ['var(--s3)','#13283B'];
-  return ['var(--s4)','#FFFFFF'];
+ if (sc == null || sc < 1.5) return ['var(--s0)','#13283B'];
+ if (sc < 2.5) return ['var(--s1)','#13283B'];
+ if (sc < 3.5) return ['var(--s2)','#FFFFFF'];
+ if (sc < 4.5) return ['var(--s3)','#13283B'];
+ return ['var(--s4)','#FFFFFF'];
 }
 const scoreLabel = sc => sc == null ? 'Nessun dato' : sc < 1.5 ? 'Non surfabile' : sc < 2.5 ? 'Scarso' : sc < 3.5 ? 'Discreto' : sc < 4.5 ? 'Buono' : 'Ottimo';
+
 function nowKey(){
-  const p = new Intl.DateTimeFormat('sv-SE',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hour12:false}).format(new Date());
-  return p.replace(' ','T').slice(0,13)+':00';
+ const p = new Intl.DateTimeFormat('sv-SE',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hour12:false}).format(new Date());
+ return p.replace(' ','T').slice(0,13)+':00';
 }
 const todayIso = () => nowKey().slice(0,10);
 const currentIndex = s => Math.max(0, s.time.indexOf(nowKey()));
 function distanceKm(a,b){
-  const R=6371, r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
-  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
-  return 2*R*Math.asin(Math.sqrt(x));
+ const R=6371, r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
+ const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+ return 2*R*Math.asin(Math.sqrt(x));
 }
 const beach = sp => sp.beachLat ? {lat:sp.beachLat, lon:sp.beachLon} : sp;
 const isFollowed = sp => followed ? followed.includes(sp.id) : !!sp.alert;
@@ -327,402 +338,483 @@ const dayChip = iso => iso === todayIso() ? 'Oggi' : `${weekday(iso).slice(0,3)}
 
 // ---------- Dati ----------
 async function loadSpots(){
-  const r = await fetch('spots.json', {cache:'no-cache'});
-  if (!r.ok) throw new Error('spots.json non trovato');
-  baseSpots = (await r.json()).spots;
-  spots = [...baseSpots, ...store.get('surf.customSpots', [])];
+ const r = await fetch('spots.json', {cache:'no-cache'});
+ if (!r.ok) throw new Error('spots.json non trovato');
+ baseSpots = (await r.json()).spots;
+ spots = [...baseSpots, ...store.get('surf.customSpots', [])];
 }
+
 async function fetchForecast(){
-  const lat = spots.map(s=>s.lat).join(','), lon = spots.map(s=>s.lon).join(',');
-  const q = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=7`;
-  const [mr, wr] = await Promise.all([
-    fetch(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`),
-    fetch(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
-  ]);
-  if (!mr.ok || !wr.ok) throw new Error(`Open-Meteo ha risposto ${mr.status}/${wr.status}`);
-  let m = await mr.json(), w = await wr.json();
-  if (!Array.isArray(m)) m = [m];
-  if (!Array.isArray(w)) w = [w];
-  const out = {};
-  spots.forEach((sp,k)=>{
-    const mh = m[k].hourly, wh = w[k].hourly;
-    const wi = new Map(wh.time.map((t,i)=>[t,i]));
-    const pick = (arr,t)=>{ const i = wi.get(t); return i == null ? null : arr[i]; };
-    out[sp.id] = {time:mh.time, hs:mh.wave_height, dir:mh.wave_direction, per:mh.wave_period,
-      sh:mh.swell_wave_height, sd:mh.swell_wave_direction, sp:mh.swell_wave_period,
-      ws:mh.time.map(t=>pick(wh.wind_speed_10m,t)), wd:mh.time.map(t=>pick(wh.wind_direction_10m,t))};
-  });
-  return out;
+ const lat = spots.map(s=>s.lat).join(','), lon = spots.map(s=>s.lon).join(',');
+ const q = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=7`;
+ const [mr, wr] = await Promise.all([
+  fetch(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`),
+  fetch(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
+ ]);
+ if (!mr.ok || !wr.ok) throw new Error(`Open-Meteo ha risposto ${mr.status}/${wr.status}`);
+ let m = await mr.json(), w = await wr.json();
+ if (!Array.isArray(m)) m = [m];
+ if (!Array.isArray(w)) w = [w];
+ const out = {};
+ spots.forEach((sp,k)=>{
+  const mh = m[k].hourly, wh = w[k].hourly;
+  const wi = new Map(wh.time.map((t,i)=>[t,i]));
+  const pick = (arr,t)=>{ const i = wi.get(t); return i == null ? null : arr[i]; };
+  out[sp.id] = {time:mh.time, hs:mh.wave_height, dir:mh.wave_direction, per:mh.wave_period,
+   sh:mh.swell_wave_height, sd:mh.swell_wave_direction, sp:mh.swell_wave_period,
+   ws:mh.time.map(t=>pick(wh.wind_speed_10m,t)), wd:mh.time.map(t=>pick(wh.wind_direction_10m,t))};
+ });
+ return out;
 }
+
 // migliore situazione di ogni giorno, nelle ore di luce, da adesso in poi
 function forecastDays(sp){
-  const s = data[sp.id]; if (!s) return [];
-  const days = {};
-  for (let i = currentIndex(s); i < s.time.length; i++){
-    const h = +s.time[i].slice(11,13); if (h < DAY_START || h > DAY_END) continue;
-    const ev = evaluate(sp, s, i); if (!ev) continue;
-    const day = s.time[i].slice(0,10);
-    const d = days[day] ||= {day, best:null, bestHour:null, firstHit:null, minFace:Infinity, maxFace:0};
-    if (!d.best || ev.score > d.best.score){ d.best = ev; d.bestHour = h; }
-    if (ev.score >= threshold && d.firstHit == null) d.firstHit = h;
-    d.minFace = Math.min(d.minFace, ev.face); d.maxFace = Math.max(d.maxFace, ev.face);
-  }
-  return Object.values(days);
+ const s = data[sp.id]; if (!s) return [];
+ const days = {};
+ for (let i = currentIndex(s); i < s.time.length; i++){
+  const h = +s.time[i].slice(11,13); if (h < DAY_START || h > DAY_END) continue;
+  const ev = evaluate(sp, s, i); if (!ev) continue;
+  const day = s.time[i].slice(0,10);
+  const d = days[day] ||= {day, best:null, bestHour:null, firstHit:null, minFace:Infinity, maxFace:0};
+  if (!d.best || ev.score > d.best.score){ d.best = ev; d.bestHour = h; }
+  if (ev.score >= threshold && d.firstHit == null) d.firstHit = h;
+  d.minFace = Math.min(d.minFace, ev.face); d.maxFace = Math.max(d.maxFace, ev.face);
+ }
+ return Object.values(days);
 }
 function upcomingAlerts(){
-  const hits = [];
-  spots.filter(isFollowed).forEach(sp => forecastDays(sp).forEach(d => { if (d.firstHit != null) hits.push({sp, d}); }));
-  return hits.sort((a,b)=> a.d.day.localeCompare(b.d.day) || b.d.best.score - a.d.best.score);
+ const hits = [];
+ spots.filter(isFollowed).forEach(sp => forecastDays(sp).forEach(d => { if (d.firstHit != null) hits.push({sp, d}); }));
+ return hits.sort((a,b)=> a.d.day.localeCompare(b.d.day) || b.d.best.score - a.d.best.score);
 }
 function allDays(){
-  const s = Object.values(data)[0]; if (!s) return [];
-  return [...new Set(s.time.map(t=>t.slice(0,10)))].filter(d=>d >= todayIso()).slice(0,7);
+ const s = Object.values(data)[0]; if (!s) return [];
+ return [...new Set(s.time.map(t=>t.slice(0,10)))].filter(d=>d >= todayIso()).slice(0,7);
 }
 
 // ---------- Componenti ----------
 function badge(sc, size=''){
-  const [bg,fg] = tone(sc);
-  return `<span class="badge ${size}" style="--c:${bg};--fg:${fg}" aria-label="Punteggio ${sc ?? 'non disponibile'} su 5">${sc ?? '–'}</span>`;
+ const [bg,fg] = tone(sc);
+ return `<span class="badge ${size}" style="--c:${bg};--fg:${fg}" aria-label="Punteggio ${sc ?? 'non disponibile'} su 5">${sc ?? '–'}</span>`;
 }
 function pt(c,r,deg){ const a=deg*Math.PI/180; return [+(c+r*Math.sin(a)).toFixed(1), +(c-r*Math.cos(a)).toFixed(1)]; }
 function dial(sp, ev, px=56){
-  const big = px >= 100, a0 = sp.facing-sp.window, a1 = sp.facing+sp.window;
-  const [x0,y0]=pt(28,22,a0), [x1,y1]=pt(28,22,a1);
-  let arrows = '';
-  if (ev){
-    const pxy = (cx,cy,r,deg)=>{ const a=deg*Math.PI/180; return [+(cx+r*Math.sin(a)).toFixed(1), +(cy-r*Math.cos(a)).toFixed(1)]; };
-    const [sx,sy]=pt(28,22,ev.dir), [ex,ey]=pt(28,5.5,ev.dir);
-    const [h1x,hy1]=pxy(ex,ey,6,ev.dir+35), [h2x,hy2]=pxy(ex,ey,6,ev.dir-35);
-    arrows += `<path class="sw" stroke-width="${big?1.8:3}" d="M${sx},${sy} L${ex},${ey}"/><path class="swh" d="M${ex},${ey} L${h1x},${hy1} L${h2x},${hy2}Z"/>`;
-    if (ev.ws >= 3){ const [wx,wy]=pt(28,20,ev.wd), [wx2,wy2]=pt(28,10,ev.wd); arrows += `<path class="wd" stroke-width="${big?1.2:2}" stroke-dasharray="${big?'2 2':'3 3'}" d="M${wx},${wy} L${wx2},${wy2}"/>`; }
-  }
-  const label = ev ? `Swell da ${cardinal(ev.dir)}, vento da ${cardinal(ev.wd)}, finestra utile da ${cardinal(a0)} a ${cardinal(a1)}` : 'Nessun dato';
-  return `<svg class="dial" width="${px}" height="${px}" viewBox="0 0 56 56" role="img" aria-label="${label}">
-    <circle class="ring" cx="28" cy="28" r="22" stroke-width="${big?0.8:1.5}"/>
-    <path class="win" stroke-width="${big?4:6}" d="M${x0},${y0} A22,22 0 ${sp.window*2>180?1:0} 1 ${x1},${y1}"/>
-    ${big?'<text x="28" y="5" text-anchor="middle">N</text>':''}${arrows}</svg>`;
+ const big = px >= 100, a0 = sp.facing-sp.window, a1 = sp.facing+sp.window;
+ const [x0,y0]=pt(28,22,a0), [x1,y1]=pt(28,22,a1);
+ let arrows = '';
+ if (ev){
+  const pxy = (cx,cy,r,deg)=>{ const a=deg*Math.PI/180; return [+(cx+r*Math.sin(a)).toFixed(1), +(cy-r*Math.cos(a)).toFixed(1)]; };
+  const [sx,sy]=pt(28,22,ev.dir), [ex,ey]=pt(28,5.5,ev.dir);
+  const [h1x,hy1]=pxy(ex,ey,6,ev.dir+35), [h2x,hy2]=pxy(ex,ey,6,ev.dir-35);
+  arrows += `<path class="sw" stroke-width="${big?1.8:3}" d="M${sx},${sy} L${ex},${ey}"/><path class="swh" d="M${ex},${ey} L${h1x},${hy1} L${h2x},${hy2}Z"/>`;
+  if (ev.ws >= 3){ const [wx,wy]=pt(28,20,ev.wd), [wx2,wy2]=pt(28,10,ev.wd); arrows += `<path class="wd" stroke-width="${big?1.2:2}" stroke-dasharray="${big?'2 2':'3 3'}" d="M${wx},${wy} L${wx2},${wy2}"/>`; }
+ }
+ const label = ev ? `Swell da ${cardinal(ev.dir)}, vento da ${cardinal(ev.wd)}, finestra utile da ${cardinal(a0)} a ${cardinal(a1)}` : 'Nessun dato';
+ return `<svg class="dial" width="${px}" height="${px}" viewBox="0 0 56 56" role="img" aria-label="${label}">
+  <circle class="ring" cx="28" cy="28" r="22" stroke-width="${big?0.8:1.5}"/>
+  <path class="win" stroke-width="${big?4:6}" d="M${x0},${y0} A22,22 0 ${sp.window*2>180?1:0} 1 ${x1},${y1}"/>
+  ${big?'<text x="28" y="5" text-anchor="middle">N</text>':''}${arrows}</svg>`;
 }
 
 // ---------- Home ----------
 function renderSpot(){
-  // preferito
-  const fav = spots.find(s=>s.id===favorite), favEl = document.getElementById('fav');
-  if (fav && data[fav.id]){
-    const ev = nowEval(fav), days = forecastDays(fav).slice(0,5);
-    favEl.innerHTML = `<button class="fav" data-open="${fav.id}">
-      <div class="top">${dial(fav, ev, 72)}
-        <div style="flex:1;min-width:0"><p class="k">${ICON.star(true)} Il tuo spot</p><p class="name">${esc(fav.name)}</p>
-          <p class="xs muted">${ev ? `${Math.round(ev.T)} s da ${cardinal(ev.dir)}, vento ${ev.windType} ${Math.round(ev.ws)} km/h` : 'Nessun dato'}</p></div>
-        <div style="text-align:right"><p class="big">${ev ? ev.face.toFixed(1) : '–'}<span> m</span></p></div>
-        ${badge(ev?.score,'lg')}</div>
-      <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
-    </button>`;
-  } else {
-    favEl.innerHTML = `<div class="favhint">${ICON.star(false)}<span>Apri uno spot e tocca "Preferito" per averlo sempre qui in cima.</span></div>`;
-  }
+ // preferito
+ const fav = spots.find(s=>s.id===favorite), favEl = document.getElementById('fav');
+ if (fav && data[fav.id]){
+  const ev = nowEval(fav), days = forecastDays(fav).slice(0,5);
+  favEl.innerHTML = `<button class="fav" data-open="${fav.id}">
+   <div class="top">${dial(fav, ev, 72)}
+    <div style="flex:1;min-width:0"><p class="k">${ICON.star(true)} Il tuo spot</p><p class="name">${esc(fav.name)}</p>
+    <p class="xs muted">${ev ? `${Math.round(ev.T)} s da ${cardinal(ev.dir)}, vento ${ev.windType} ${Math.round(ev.ws)} km/h` : 'Nessun dato'}</p></div>
+    <div style="text-align:right"><p class="big">${ev ? ev.face.toFixed(1) : '–'}<span> m</span></p></div>
+    ${badge(ev?.score,'lg')}</div>
+   <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
+  </button>`;
+ } else {
+  favEl.innerHTML = `<div class="favhint">${ICON.star(false)}<span>Apri uno spot e tocca "Preferito" per averlo sempre qui in cima.</span></div>`;
+ }
 
-  const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, beach(sp)) : null}));
-  rows.sort((a,b)=> userPos ? a.dist-b.dist : (b.ev?.score ?? -1)-(a.ev?.score ?? -1));
-  const on = rows.filter(r=>(r.ev?.score ?? 0) >= ACTIVE_FROM), off = rows.filter(r=>(r.ev?.score ?? 0) < ACTIVE_FROM);
-  document.getElementById('activeList').innerHTML = on.length ? on.map(r=>`
-    <button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
-      <div class="grow"><p class="name">${esc(r.sp.name)}</p>
-        <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</p>
-        <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
-      <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
-      ${badge(r.ev.score)}</button>`).join('')
-    : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
-  document.getElementById('offList').innerHTML = off.map(r=>`
-    <button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
-      <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</span>${badge(r.ev?.score,'sm')}</button>`).join('');
+ const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, beach(sp)) : null}));
+ rows.sort((a,b)=> userPos ? a.dist-b.dist : (b.ev?.score ?? -1)-(a.ev?.score ?? -1));
+ const on = rows.filter(r=>(r.ev?.score ?? 0) >= ACTIVE_FROM), off = rows.filter(r=>(r.ev?.score ?? 0) < ACTIVE_FROM);
 
-  const b = document.getElementById('banner'), next = upcomingAlerts()[0];
-  if (next){
-    b.hidden = false;
-    b.innerHTML = `<div><p class="k">Onde in arrivo</p><p class="t">${esc(next.sp.name)}, ${dayLabel(next.d.day).toLowerCase()} dalle ${next.d.firstHit}</p>
-      <p class="d">${next.d.maxFace.toFixed(1)} m, ${Math.round(next.d.best.T)} s da ${cardinal(next.d.best.dir)}, vento ${next.d.best.windType}</p></div>${badge(next.d.best.score,'lg')}`;
-    b.dataset.open = next.sp.id;
-  } else b.hidden = true;
+ document.getElementById('activeList').innerHTML = on.length ? on.map(r=>`
+  <button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
+   <div class="grow"><p class="name">${esc(r.sp.name)}</p>
+    <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</p>
+    <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
+   <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
+   ${badge(r.ev.score)}</button>`).join('')
+  : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
+
+ document.getElementById('offList').innerHTML = off.map(r=>`
+  <button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
+   <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</span>${badge(r.ev?.score,'sm')}</button>`).join('');
+
+ const b = document.getElementById('banner'), next = upcomingAlerts()[0];
+ if (next){
+  b.hidden = false;
+  b.innerHTML = `<div><p class="k">Onde in arrivo</p><p class="t">${esc(next.sp.name)}, ${dayLabel(next.d.day).toLowerCase()} dalle ${next.d.firstHit}</p>
+   <p class="d">${next.d.maxFace.toFixed(1)} m, ${Math.round(next.d.best.T)} s da ${cardinal(next.d.best.dir)}, vento ${next.d.best.windType}</p></div>${badge(next.d.best.score,'lg')}`;
+  b.dataset.open = next.sp.id;
+ } else b.hidden = true;
 }
 function offReason(sp, ev){
-  if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)} m al largo, swell fuori finestra` : 'Piatto';
-  if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)} m, onshore ${Math.round(ev.ws)} km/h`;
-  return `${ev.face.toFixed(1)} m, ${ev.windType} ${Math.round(ev.ws)} km/h`;
+ if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)} m al largo, swell fuori finestra` : 'Piatto';
+ if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)} m, onshore ${Math.round(ev.ws)} km/h`;
+ return `${ev.face.toFixed(1)} m, ${ev.windType} ${Math.round(ev.ws)} km/h`;
 }
 
 // ---------- Dettaglio ----------
 function chartHtml(sp){
-  const s = data[sp.id], ci = currentIndex(s), days = allDays();
-  const cols = days.map(day => CHART_HOURS.map(h => {
-    const i = s.time.indexOf(`${day}T${h}:00`);
-    return i < 0 ? null : {e: evaluate(sp, s, i), past: i < ci};
-  }));
-  const faces = cols.flat().filter(c=>c?.e).map(c=>c.e.face);
-  const maxF = Math.ceil(Math.max(1, ...faces)*1.15*2)/2, H = 110;
-  const px = v => Math.min(v, maxF)/maxF*H;
-  const bandB = px(sp.min), bandH = sp.min < maxF ? px(sp.max) - px(sp.min) : 0;
-  const best = forecastDays(sp).reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
-  return `<div class="chart"><div class="bars">
-      ${bandH ? `<div class="band" style="bottom:${bandB}px;height:${bandH}px"></div>` : ''}
-      <span class="scale">${maxF} m</span>
-      <div class="cols">${cols.map(g=>`<div class="g">${g.map(c=>{
-        if (!c || !c.e) return '<span style="height:3px;--c:var(--line)"></span>';
-        return `<span class="${c.past?'past':''}" style="height:${Math.max(3, px(c.e.face)).toFixed(0)}px;--c:${tone(c.e.score)[0]}" title="${c.e.face.toFixed(1)} m, ${c.e.score}/5"></span>`;
-      }).join('')}</div>`).join('')}</div></div>
-    <div class="labels">${days.map(d=>`<span class="${best && best.day===d && best.best.score>=ACTIVE_FROM ? 'best':''}">${dayShort(d)}</span>`).join('')}</div></div>`;
+ const s = data[sp.id], ci = currentIndex(s), days = allDays();
+ const cols = days.map(day => CHART_HOURS.map(h => {
+  const i = s.time.indexOf(`${day}T${h}:00`);
+  return i < 0 ? null : {e: evaluate(sp, s, i), past: i < ci};
+ }));
+ const faces = cols.flat().filter(c=>c?.e).map(c=>c.e.face);
+ const maxF = Math.ceil(Math.max(1, ...faces)*1.15*2)/2, H = 110;
+ const px = v => Math.min(v, maxF)/maxF*H;
+ const bandB = px(sp.min), bandH = sp.min < maxF ? px(sp.max) - px(sp.min) : 0;
+ const best = forecastDays(sp).reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
+ return `<div class="chart"><div class="bars">
+  ${bandH ? `<div class="band" style="bottom:${bandB}px;height:${bandH}px"></div>` : ''}
+  <span class="scale">${maxF} m</span>
+  <div class="cols">${cols.map(g=>`<div class="g">${g.map(c=>{
+   if (!c || !c.e) return '<span style="height:3px;--c:var(--line)"></span>';
+   return `<span class="${c.past?'past':''}" style="height:${Math.max(3, px(c.e.face)).toFixed(0)}px;--c:${tone(c.e.score)[0]}" title="${c.e.face.toFixed(1)} m, ${c.e.score}/5"></span>`;
+  }).join('')}</div>`).join('')}</div></div>
+  <div class="labels">${days.map(d=>`<span class="${best && best.day===d && best.best.score>=ACTIVE_FROM ? 'best':''}">${dayShort(d)}</span>`).join('')}</div></div>`;
 }
+
 function openDetail(id){
-  const sp = spots.find(s=>s.id===id), s = data[id];
-  if (!sp || !s) return;
-  const ev = nowEval(sp), days = forecastDays(sp);
-  const best = days.reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
-  const custom = !baseSpots.some(b=>b.id===id), isFav = favorite === id, fol = isFollowed(sp);
-  const backTo = {spot:'Tutti gli spot', map:'Mappa', alert:'Alert'}[lastTab];
-  const el = document.getElementById('v-detail');
-  el.innerHTML = `<button class="backlink" id="back">${ICON.back}${backTo}</button>
-    <div class="dhead">${dial(sp, ev, 132)}
-      <div><h1>${esc(sp.name)}</h1><p class="muted small" style="margin-top:4px">${esc(sp.area||'')}</p>
-        <div class="pill">${badge(ev?.score,'xs')}${scoreLabel(ev?.score)} adesso</div><br>
-        <button class="star" id="favBtn" aria-pressed="${isFav}">${ICON.star(isFav)}${isFav?'Preferito':'Metti tra i preferiti'}</button></div></div>
-    <div class="facts">
-      <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
-      <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m, '+Math.round(ev.T)+' s' : '–'}</b></div>
-      <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
-      <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div></div>
-    <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
-    <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17. La fascia chiara è il range surfabile (${sp.min}–${sp.max} m).</p>
-    ${chartHtml(sp)}
-    <h2 style="margin-bottom:4px">Giorno per giorno</h2>
-    <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
-      <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></div>`).join('')}</div>
-    <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
-    ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button></div>
-      <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}`;
-  showView('detail');
-  document.getElementById('back').onclick = ()=>setTab(lastTab);
-  document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
-  document.getElementById('followBtn').onclick = ()=>{ toggleFollow(id); openDetail(id); };
-  const cp = document.getElementById('copySpot');
-  if (cp) cp.onclick = async ()=>{
-    const {beachLat, beachLon, ...clean} = sp;
-    const txt = ',\n    ' + JSON.stringify({...clean, id: slug(sp.name) || sp.id, alert:true});
-    const msg = document.getElementById('copyMsg');
-    try{ await navigator.clipboard.writeText(txt); msg.textContent = 'Copiato. Su GitHub apri spots.json, matita, incolla prima della riga con ] e fai il commit.'; }
-    catch(e){ msg.textContent = txt; }
-  };
-  const del = document.getElementById('delSpot');
-  if (del) del.onclick = ()=>{
-    store.set('surf.customSpots', store.get('surf.customSpots', []).filter(s=>s.id!==id));
-    spots = spots.filter(s=>s.id!==id); delete data[id];
-    if (favorite === id){ favorite = null; store.set('surf.favorite', null); }
-    if (leafPins[id]){ leaf.removeLayer(leafPins[id]); delete leafPins[id]; }
-    setTab('spot');
-  };
+ const sp = spots.find(s=>s.id===id), s = data[id];
+ if (!sp || !s) return;
+ const ev = nowEval(sp), days = forecastDays(sp);
+ const best = days.reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
+ const custom = !baseSpots.some(b=>b.id===id), isFav = favorite === id, fol = isFollowed(sp);
+ const backTo = {spot:'Tutti gli spot', map:'Mappa', alert:'Alert'}[lastTab];
+ const el = document.getElementById('v-detail');
+ el.innerHTML = `<button class="backlink" id="back">${ICON.back}${backTo}</button>
+  <div class="dhead">${dial(sp, ev, 132)}
+   <div><h1>${esc(sp.name)}</h1><p class="muted small" style="margin-top:4px">${esc(sp.area||'')}</p>
+    <div class="pill">${badge(ev?.score,'xs')}${scoreLabel(ev?.score)} adesso</div><br>
+    <button class="star" id="favBtn" aria-pressed="${isFav}">${ICON.star(isFav)}${isFav?'Preferito':'Metti tra i preferiti'}</button></div></div>
+  <div class="facts">
+   <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
+   <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m, '+Math.round(ev.T)+' s' : '–'}</b></div>
+   <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
+   <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div></div>
+  <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
+  <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17. La fascia chiara è il range surfabile (${sp.min}–${sp.max} m).</p>
+  ${chartHtml(sp)}
+  <h2 style="margin-bottom:4px">Giorno per giorno</h2>
+  <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
+   <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></div>`).join('')}</div>
+  <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
+  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button></div>
+  <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}`;
+ showView('detail');
+ document.getElementById('back').onclick = ()=>setTab(lastTab);
+ document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
+ document.getElementById('followBtn').onclick = ()=>{ toggleFollow(id); openDetail(id); };
+ const cp = document.getElementById('copySpot');
+ if (cp) cp.onclick = async ()=>{
+  const txt = ',\n  ' + JSON.stringify({...sp, id: slug(sp.name) || sp.id, alert:true});
+  const msg = document.getElementById('copyMsg');
+  try{ await navigator.clipboard.writeText(txt); msg.textContent = 'Copiato. Su GitHub apri spots.json, matita, incolla prima della riga con ] e fai il commit.'; }
+  catch(e){ msg.textContent = txt; }
+ };
+ const del = document.getElementById('delSpot');
+ if (del) del.onclick = ()=>{
+  store.set('surf.customSpots', store.get('surf.customSpots', []).filter(s=>s.id!==id));
+  spots = spots.filter(s=>s.id!==id); delete data[id];
+  if (favorite === id){ favorite = null; store.set('surf.favorite', null); }
+  if (leafPins[id]){ leaf.removeLayer(leafPins[id]); delete leafPins[id]; }
+  setTab('spot');
+ };
 }
 function toggleFollow(id){
-  const list = spots.filter(isFollowed).map(s=>s.id);
-  followed = list.includes(id) ? list.filter(x=>x!==id) : [...list, id];
-  store.set('surf.followed', followed);
+ const list = spots.filter(isFollowed).map(s=>s.id);
+ followed = list.includes(id) ? list.filter(x=>x!==id) : [...list, id];
+ store.set('surf.followed', followed);
 }
 
 // ---------- Mappa ----------
 function mapScore(sp){
-  if (mapDay === 'now') return nowEval(sp);
-  const d = forecastDays(sp).find(x=>x.day===mapDay);
-  return d ? {...d.best, face:d.maxFace} : null;
+ if (mapDay === 'now') return nowEval(sp);
+ const d = forecastDays(sp).find(x=>x.day===mapDay);
+ return d ? {...d.best, face:d.maxFace} : null;
 }
 function renderMap(){
-  const days = allDays();
-  document.getElementById('chips').innerHTML = [['now','Adesso'], ...days.map(d=>[d, dayChip(d)])]
-    .map(([k,l])=>`<button aria-pressed="${mapDay===k}" data-day="${k}">${l}</button>`).join('');
-  document.getElementById('mapSub').textContent = mapDay === 'now' ? 'Punteggi di adesso' : `Il meglio di ${dayLabel(mapDay).toLowerCase()} nelle ore di luce`;
-  if (!window.L){ document.getElementById('leaf').innerHTML = '<p class="muted" style="padding:16px">Mappa non disponibile: controlla la connessione.</p>'; return; }
-  if (!leaf){
-    leaf = L.map('leaf', {zoomControl:false, attributionControl:true}).setView([40.0, 8.9], 8);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap, &copy; CARTO'}).addTo(leaf);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {maxZoom:18, pane:'shadowPane'}).addTo(leaf);
-    leaf.on('click', ()=>{ mapSel = null; renderMap(); });
+ const days = allDays();
+ document.getElementById('chips').innerHTML = [['now','Adesso'], ...days.map(d=>[d, dayChip(d)])]
+  .map(([k,l])=>`<button aria-pressed="${mapDay===k}" data-day="${k}">${l}</button>`).join('');
+ document.getElementById('mapSub').textContent = mapDay === 'now' ? 'Punteggi di adesso' : `Il meglio di ${dayLabel(mapDay).toLowerCase()} nelle ore di luce`;
+ if (!window.L){ document.getElementById('leaf').innerHTML = '<p class="muted" style="padding:16px">Mappa non disponibile: controlla la connessione.</p>'; return; }
+ if (!leaf){
+  leaf = L.map('leaf', {zoomControl:false, attributionControl:true}).setView(SINIS, 11);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri'}).addTo(leaf);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(leaf);
+  const pts = spots.map(sp=>{ const b = beach(sp); return [b.lat, b.lon]; });
+  if (pts.length > 1) leaf.fitBounds(pts, {paddingTopLeft:[30,70], paddingBottomRight:[30,110], maxZoom:13});
+  leaf.on('click', ()=>{ mapSel = null; renderMap(); });
+ }
+ if (!mapSel) mapSel = favorite && spots.some(s=>s.id===favorite) ? favorite : spots.map(sp=>({sp, e:mapScore(sp)})).sort((a,b)=>(b.e?.score??-1)-(a.e?.score??-1))[0]?.sp.id;
+ spots.forEach(sp=>{
+  const e = mapScore(sp), [bg,fg] = tone(e?.score), b = beach(sp);
+  const icon = L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17],
+   html:`<div class="pin${mapSel===sp.id?' sel':''}" style="--c:${bg};--fg:${fg}" aria-label="${esc(sp.name)}, ${e?.score ?? 'n.d.'} su 5">${e?.score ?? '–'}</div>`});
+  if (leafPins[sp.id]) leafPins[sp.id].setIcon(icon);
+  else {
+   leafPins[sp.id] = L.marker([b.lat, b.lon], {icon, keyboard:true, title:sp.name}).addTo(leaf);
+   leafPins[sp.id].on('click', ev=>{ L.DomEvent.stopPropagation(ev); mapSel = sp.id; renderMap(); });
   }
-  if (!mapSel) mapSel = favorite && spots.some(s=>s.id===favorite) ? favorite : spots.map(sp=>({sp, e:mapScore(sp)})).sort((a,b)=>(b.e?.score??-1)-(a.e?.score??-1))[0]?.sp.id;
-  spots.forEach(sp=>{
-    const e = mapScore(sp), [bg,fg] = tone(e?.score), b = beach(sp);
-    const icon = L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17],
-      html:`<div class="pin${mapSel===sp.id?' sel':''}" style="--c:${bg};--fg:${fg}" aria-label="${esc(sp.name)}, ${e?.score ?? 'n.d.'} su 5">${e?.score ?? '–'}</div>`});
-    if (leafPins[sp.id]) leafPins[sp.id].setIcon(icon);
-    else {
-      leafPins[sp.id] = L.marker([b.lat, b.lon], {icon, keyboard:true, title:sp.name}).addTo(leaf);
-      leafPins[sp.id].on('click', ev=>{ L.DomEvent.stopPropagation(ev); mapSel = sp.id; renderMap(); });
-    }
-  });
-  const card = document.getElementById('mapCard'), sel = spots.find(s=>s.id===mapSel);
-  if (sel && document.getElementById('windy').hidden){
-    const e = mapScore(sel);
-    card.hidden = false; card.dataset.open = sel.id;
-    card.innerHTML = `${badge(e?.score)}<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(sel.name)}</p>
-      <p class="small muted">${e ? `${e.face.toFixed(1)} m, ${Math.round(e.T)} s da ${cardinal(e.dir)}, ${e.windType} ${Math.round(e.ws)} km/h` : 'Nessun dato'}</p></div>${ICON.chev}`;
-  } else card.hidden = true;
-  setTimeout(()=>leaf.invalidateSize(), 60);
+ });
+ const card = document.getElementById('mapCard'), sel = spots.find(s=>s.id===mapSel);
+ if (sel && document.getElementById('windy').hidden){
+  const e = mapScore(sel);
+  card.hidden = false; card.dataset.open = sel.id;
+  card.innerHTML = `${badge(e?.score)}<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(sel.name)}</p>
+   <p class="small muted">${e ? `${e.face.toFixed(1)} m, ${Math.round(e.T)} s da ${cardinal(e.dir)}, ${e.windType} ${Math.round(e.ws)} km/h` : 'Nessun dato'}</p></div>${ICON.chev}`;
+ } else card.hidden = true;
+ setTimeout(()=>leaf.invalidateSize(), 60);
 }
 document.getElementById('windyBtn').onclick = e=>{
-  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true', f = document.getElementById('windy');
-  e.currentTarget.setAttribute('aria-pressed', on);
-  e.currentTarget.textContent = on ? 'Punteggi spot' : 'Onde animate';
-  if (on && !f.src) f.src = WINDY_URL;
-  f.hidden = !on; document.getElementById('leaf').hidden = on;
-  renderMap();
+ const on = e.currentTarget.getAttribute('aria-pressed') !== 'true', f = document.getElementById('windy');
+ e.currentTarget.setAttribute('aria-pressed', on);
+ e.currentTarget.textContent = on ? 'Punteggi spot' : 'Onde animate';
+ if (on && !f.src) f.src = WINDY_URL;
+ f.hidden = !on; document.getElementById('leaf').hidden = on;
+ renderMap();
 };
 
 // ---------- Alert ----------
 function renderAlert(){
-  const hits = upcomingAlerts();
-  document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>`
-    <button data-open="${h.sp.id}">${badge(h.d.best.score)}<div><p style="font-weight:600">${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()} ${+h.d.day.slice(8,10)}</p>
-      <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m, vento ${h.d.best.windType}</p></div></button>`).join('')
-    : `<p class="muted small" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
-  document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold ? v+' / 5' : v}</button>`).join('');
-  document.getElementById('followList').innerHTML = spots.map(sp=>`
-    <div class="srow"><span style="font-weight:600">${esc(sp.name)}</span>
-      <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
-  const ns = document.getElementById('notifState'), nb = document.getElementById('notifBtn');
-  if (!('Notification' in window)){ ns.textContent = 'Non supportate: su iPhone aggiungi prima l\'app alla schermata Home.'; nb.hidden = true; }
-  else if (Notification.permission === 'granted'){ ns.textContent = 'Attive, arrivano quando apri l\'app.'; nb.hidden = true; }
-  else if (Notification.permission === 'denied'){ ns.textContent = 'Bloccate nelle impostazioni del browser.'; nb.hidden = true; }
-  else { ns.textContent = 'Arrivano quando apri l\'app.'; nb.hidden = false; }
+ const hits = upcomingAlerts();
+ document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>`
+  <button data-open="${h.sp.id}">${badge(h.d.best.score)}<div><p style="font-weight:600">${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()} ${+h.d.day.slice(8,10)}</p>
+  <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m, vento ${h.d.best.windType}</p></div></button>`).join('')
+  : `<p class="muted small" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
+ document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold ? v+' / 5' : v}</button>`).join('');
+ document.getElementById('followList').innerHTML = spots.map(sp=>`
+  <div class="srow"><span style="font-weight:600">${esc(sp.name)}</span>
+  <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
+ const ns = document.getElementById('notifState'), nb = document.getElementById('notifBtn');
+ if (!('Notification' in window)){ ns.textContent = 'Non supportate: su iPhone aggiungi prima l\'app alla schermata Home.'; nb.hidden = true; }
+ else if (Notification.permission === 'granted'){ ns.textContent = 'Attive, arrivano quando apri l\'app.'; nb.hidden = true; }
+ else if (Notification.permission === 'denied'){ ns.textContent = 'Bloccate nelle impostazioni del browser.'; nb.hidden = true; }
+ else { ns.textContent = 'Arrivano quando apri l\'app.'; nb.hidden = false; }
 }
 function notify(){
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const sent = store.get('surf.sent', {});
-  upcomingAlerts().forEach(h=>{
-    const key = `${h.sp.id}|${h.d.day}`;
-    if ((sent[key] ?? -1) >= h.d.best.score) return;
-    try{ new Notification(`${h.sp.name}: ${h.d.best.score}/5`, {body:`${dayLabel(h.d.day)} dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m`}); }catch(e){}
-    sent[key] = h.d.best.score;
-  });
-  store.set('surf.sent', sent);
+ if (!('Notification' in window) || Notification.permission !== 'granted') return;
+ const sent = store.get('surf.sent', {});
+ upcomingAlerts().forEach(h=>{
+  const key = `${h.sp.id}|${h.d.day}`;
+  if ((sent[key] ?? -1) >= h.d.best.score) return;
+  try{ new Notification(`${h.sp.name}: ${h.d.best.score}/5`, {body:`${dayLabel(h.d.day)} dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m`}); }catch(e){}
+  sent[key] = h.d.best.score;
+ });
+ store.set('surf.sent', sent);
 }
 
 // ---------- Nuovo spot ----------
-const DIRS = [['NO',315],['N',0],['NE',45],['O',270],null,['E',90],['SO',225],['S',180],['SE',135]];
 const TYPES = [
-  {id:'beach', t:'Spiaggia (beach break)', d:'Fondale di sabbia, lavora anche con onde piccole', min:0.5, max:2.5, window:50, minPeriod:6},
-  {id:'reef', t:'Scogliera o punta (reef, point)', d:'Fondale di roccia, vuole onda più formata', min:0.8, max:3.5, window:40, minPeriod:7},
-  {id:'big', t:'Solo con mareggiate', d:'Spot riparato, si attiva con mare grosso', min:1.2, max:4.5, window:35, minPeriod:8},
+ {id:'beach', t:'Spiaggia (beach break)', d:'Fondale di sabbia, lavora anche con onde piccole', min:0.5, max:2.5, window:50, minPeriod:6},
+ {id:'reef', t:'Scogliera o punta (reef, point)', d:'Fondale di roccia, vuole onda più formata', min:0.8, max:3.5, window:40, minPeriod:7},
+ {id:'big', t:'Solo con mareggiate', d:'Spot riparato, si attiva con mare grosso', min:1.2, max:4.5, window:35, minPeriod:8},
 ];
 let add = {map:null, marker:null, arrow:null, osm:null, sat:null, pos:null, facing:null, type:'beach'};
 const slug = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 function offshorePoint(lat, lon, bearing, km){
-  const b = bearing*Math.PI/180;
-  return [+(lat + km*Math.cos(b)/111.32).toFixed(4), +(lon + km*Math.sin(b)/(111.32*Math.cos(lat*Math.PI/180))).toFixed(4)];
+ const b = bearing*Math.PI/180;
+ return [+(lat + km*Math.cos(b)/111.32).toFixed(4), +(lon + km*Math.sin(b)/(111.32*Math.cos(lat*Math.PI/180))).toFixed(4)];
+}
+
+// rosa dei venti circolare a 16 direzioni: si trascina il dito sul cerchio
+const CC = 150;
+const cpt = (deg, r) => { const a = deg*Math.PI/180; return [+(CC+r*Math.sin(a)).toFixed(1), +(CC-r*Math.cos(a)).toFixed(1)]; };
+function buildCompass(){
+ const el = document.getElementById('compass');
+ if (el.dataset.built) return;
+ el.dataset.built = '1';
+ let ticks = '', labels = '';
+ DIR16.forEach((n,i)=>{
+  const a = i*22.5, main = i%2 === 0;
+  const [x1,y1] = cpt(a, main ? 117 : 122), [x2,y2] = cpt(a, 129);
+  ticks += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  const [lx,ly] = cpt(a, 101);
+  labels += `<text x="${lx}" y="${ly}" data-i="${i}" class="${main?'m':'s'}">${n}</text>`;
+ });
+ el.innerHTML = `<svg viewBox="0 0 300 300" role="slider" tabindex="0" aria-label="Direzione del mare aperto" aria-valuemin="0" aria-valuemax="337.5">
+  <circle class="face" cx="150" cy="150" r="130"/>
+  <path class="sec" id="cSec" d=""/>
+  <g class="tk">${ticks}</g><g class="lb">${labels}</g>
+  <line class="arm" id="cArm" x1="150" y1="150" x2="150" y2="150" visibility="hidden"/>
+  <circle class="knob" id="cKnob" cx="150" cy="150" r="10" visibility="hidden"/>
+  <circle class="hub" cx="150" cy="150" r="34"/>
+  <text class="hub1" x="150" y="143">spiaggia</text>
+  <text class="hub2" id="cVal" x="150" y="166">–</text>
+ </svg>
+ <p class="small muted out" id="cOut">Trascina il dito sul cerchio</p>`;
+ const svg = el.querySelector('svg');
+ let dragging = false;
+ const pick = e => {
+  const r = svg.getBoundingClientRect();
+  const x = (e.clientX-r.left)/r.width*300-CC, y = (e.clientY-r.top)/r.height*300-CC;
+  if (Math.hypot(x,y) < 34) return;
+  let a = Math.atan2(x,-y)*180/Math.PI; if (a < 0) a += 360;
+  setFacing(dirIndex(a)*22.5);
+ };
+ svg.addEventListener('pointerdown', e=>{ dragging = true; try{ svg.setPointerCapture(e.pointerId); }catch(_){} pick(e); });
+ svg.addEventListener('pointermove', e=>{ if (dragging) pick(e); });
+ svg.addEventListener('pointerup', ()=>{ dragging = false; });
+ svg.addEventListener('pointercancel', ()=>{ dragging = false; });
+ svg.addEventListener('keydown', e=>{
+  const step = {ArrowRight:1, ArrowUp:1, ArrowLeft:-1, ArrowDown:-1}[e.key];
+  if (!step) return;
+  e.preventDefault();
+  const cur = add.facing == null ? 270 : add.facing;
+  setFacing(((cur + step*22.5) % 360 + 360) % 360);
+ });
+}
+function setFacing(f){
+ if (f === add.facing) return;
+ add.facing = f;
+ updateCompass(); drawArrow();
+ if (navigator.vibrate) navigator.vibrate(8);
+}
+function updateCompass(){
+ const svg = document.querySelector('#compass svg'); if (!svg) return;
+ const f = add.facing, arm = document.getElementById('cArm'), knob = document.getElementById('cKnob');
+ const sec = document.getElementById('cSec'), val = document.getElementById('cVal'), out = document.getElementById('cOut');
+ const i = f == null ? -1 : dirIndex(f);
+ svg.querySelectorAll('.lb text').forEach(t=>t.classList.toggle('on', +t.dataset.i === i));
+ if (f == null){
+  arm.setAttribute('visibility','hidden'); knob.setAttribute('visibility','hidden'); sec.setAttribute('d','');
+  val.textContent = '–'; out.textContent = 'Trascina il dito sul cerchio';
+  svg.setAttribute('aria-valuetext','Non scelta'); svg.removeAttribute('aria-valuenow');
+  return;
+ }
+ const [x,y] = cpt(f, 82);
+ arm.setAttribute('x2', x); arm.setAttribute('y2', y); arm.setAttribute('visibility','visible');
+ knob.setAttribute('cx', x); knob.setAttribute('cy', y); knob.setAttribute('visibility','visible');
+ const [ax,ay] = cpt(f-11.25,130), [bx,by] = cpt(f+11.25,130), [cx,cy] = cpt(f+11.25,34), [dx,dy] = cpt(f-11.25,34);
+ sec.setAttribute('d', `M${ax},${ay} A130,130 0 0 1 ${bx},${by} L${cx},${cy} A34,34 0 0 0 ${dx},${dy} Z`);
+ val.textContent = DIR16[i];
+ out.textContent = `Il mare aperto è verso ${DIR16_LONG[i]} (${f}°)`;
+ svg.setAttribute('aria-valuenow', f); svg.setAttribute('aria-valuetext', `${DIR16_LONG[i]}, ${f} gradi`);
+}
+function drawArrow(){
+ if (!add.map) return;
+ if (add.arrow){ add.map.removeLayer(add.arrow); add.arrow = null; }
+ if (add.pos && add.facing != null){
+  add.arrow = L.polyline([add.pos, offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5)], {color:'#1D5F8A', weight:4, dashArray:'6 6'}).addTo(add.map);
+ }
 }
 function drawAdd(){
-  document.getElementById('compass').innerHTML = DIRS.map(d => d
-    ? `<button aria-pressed="${add.facing===d[1]}" data-dir="${d[1]}" aria-label="Mare verso ${d[0]}">${d[0]}</button>`
-    : `<span class="c">spiaggia</span>`).join('');
-  document.getElementById('types').innerHTML = TYPES.map(t =>
-    `<button aria-pressed="${add.type===t.id}" data-type="${t.id}"><b>${t.t}</b><span class="xs muted">${t.d}</span></button>`).join('');
-  if (!add.map) return;
-  if (add.arrow){ add.map.removeLayer(add.arrow); add.arrow = null; }
-  if (add.pos && add.facing != null){
-    add.arrow = L.polyline([add.pos, offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5)], {color:'#1D5F8A', weight:4, dashArray:'6 6'}).addTo(add.map);
-  }
+ buildCompass(); updateCompass();
+ document.getElementById('types').innerHTML = TYPES.map(t =>
+  `<button aria-pressed="${add.type===t.id}" data-type="${t.id}"><b>${t.t}</b><span class="xs muted">${t.d}</span></button>`).join('');
+ drawArrow();
 }
 function setPos(lat, lon, zoom){
-  add.pos = [lat, lon];
-  if (add.marker) add.marker.setLatLng(add.pos);
-  else add.marker = L.circleMarker(add.pos, {radius:9, color:'#fff', weight:3, fillColor:'#1D5F8A', fillOpacity:1}).addTo(add.map);
-  if (zoom) add.map.setView(add.pos, zoom);
-  drawAdd();
+ add.pos = [lat, lon];
+ if (add.marker) add.marker.setLatLng(add.pos);
+ else add.marker = L.circleMarker(add.pos, {radius:9, color:'#fff', weight:3, fillColor:'#1D5F8A', fillOpacity:1}).addTo(add.map);
+ if (zoom) add.map.setView(add.pos, zoom);
+ drawArrow();
 }
 function openAdd(){
-  add = {...add, pos:null, facing:null, type:'beach'};
-  document.getElementById('addName').value = '';
-  document.getElementById('addErr').hidden = true;
-  showView('add');
-  if (!window.L){ document.getElementById('pickMap').innerHTML = '<p class="muted" style="padding:14px">Mappa non disponibile: controlla la connessione e riapri.</p>'; drawAdd(); return; }
-  if (!add.map){
-    add.map = L.map('pickMap').setView([40.0, 8.5], 9);
-    add.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap'}).addTo(add.map);
-    add.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, attribution:'Esri, Maxar'});
-    add.map.on('click', e => setPos(+e.latlng.lat.toFixed(5), +e.latlng.lng.toFixed(5)));
-  } else {
-    if (add.marker){ add.map.removeLayer(add.marker); add.marker = null; }
-    add.map.setView([40.0, 8.5], 9);
-  }
-  setTimeout(()=>add.map.invalidateSize(), 60);
-  drawAdd();
+ add = {...add, pos:null, facing:null, type:'beach'};
+ document.getElementById('addName').value = '';
+ document.getElementById('addErr').hidden = true;
+ showView('add');
+ if (!window.L){ document.getElementById('pickMap').innerHTML = '<p class="muted" style="padding:14px">Mappa non disponibile: controlla la connessione e riapri.</p>'; drawAdd(); return; }
+ if (!add.map){
+  add.map = L.map('pickMap').setView(SINIS, 11);
+  add.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap'}).addTo(add.map);
+  add.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, attribution:'Esri, Maxar'});
+  add.map.on('click', e => setPos(+e.latlng.lat.toFixed(5), +e.latlng.lng.toFixed(5)));
+ } else {
+  if (add.marker){ add.map.removeLayer(add.marker); add.marker = null; }
+  add.map.setView(SINIS, 11);
+ }
+ setTimeout(()=>add.map.invalidateSize(), 60);
+ drawAdd();
 }
 document.getElementById('addOpen').onclick = openAdd;
 document.getElementById('addBack').onclick = ()=>setTab('spot');
 document.getElementById('addHere').onclick = ()=>{
-  navigator.geolocation?.getCurrentPosition(p=>setPos(+p.coords.latitude.toFixed(5), +p.coords.longitude.toFixed(5), 15),
-    ()=>{ const e = document.getElementById('addErr'); e.hidden = false; e.textContent = 'Posizione non concessa: tocca il punto sulla mappa.'; });
+ navigator.geolocation?.getCurrentPosition(p=>setPos(+p.coords.latitude.toFixed(5), +p.coords.longitude.toFixed(5), 15),
+  ()=>{ const e = document.getElementById('addErr'); e.hidden = false; e.textContent = 'Posizione non concessa: tocca il punto sulla mappa.'; });
 };
 document.getElementById('addSat').onclick = e=>{
-  if (!add.map) return;
-  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
-  e.currentTarget.setAttribute('aria-pressed', on);
-  e.currentTarget.textContent = on ? 'Mappa' : 'Satellite';
-  if (on){ add.map.removeLayer(add.osm); add.sat.addTo(add.map); } else { add.map.removeLayer(add.sat); add.osm.addTo(add.map); }
+ if (!add.map) return;
+ const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+ e.currentTarget.setAttribute('aria-pressed', on);
+ e.currentTarget.textContent = on ? 'Mappa' : 'Satellite';
+ if (on){ add.map.removeLayer(add.osm); add.sat.addTo(add.map); } else { add.map.removeLayer(add.sat); add.osm.addTo(add.map); }
 };
 document.getElementById('v-add').addEventListener('click', e=>{
-  const d = e.target.closest('[data-dir]'); if (d){ add.facing = +d.dataset.dir; drawAdd(); return; }
-  const t = e.target.closest('[data-type]'); if (t){ add.type = t.dataset.type; drawAdd(); }
+ const t = e.target.closest('[data-type]'); if (t){ add.type = t.dataset.type; drawAdd(); }
 });
 document.getElementById('addSave').onclick = ()=>{
-  const err = document.getElementById('addErr'), name = document.getElementById('addName').value.trim();
-  const miss = !add.pos ? 'Tocca la mappa per indicare lo spot.' : add.facing == null ? 'Scegli da che parte è il mare aperto.' : !name ? 'Dai un nome allo spot.' : '';
-  if (miss){ err.hidden = false; err.textContent = miss; return; }
-  const t = TYPES.find(x=>x.id===add.type), [lat, lon] = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
-  const sp = {id:'c-'+Date.now(), name, area:'Spot personale', lat, lon, beachLat:add.pos[0], beachLon:add.pos[1],
-    facing:add.facing, window:t.window, offshore:(add.facing+180)%360, min:t.min, max:t.max, minPeriod:t.minPeriod, alert:true};
-  store.set('surf.customSpots', [...store.get('surf.customSpots', []), sp]);
-  spots.push(sp); setTab('spot'); refresh().then(()=>openDetail(sp.id));
+ const err = document.getElementById('addErr'), name = document.getElementById('addName').value.trim();
+ const miss = !add.pos ? 'Tocca la mappa per indicare lo spot.' : add.facing == null ? 'Scegli sul cerchio da che parte è il mare aperto.' : !name ? 'Dai un nome allo spot.' : '';
+ if (miss){ err.hidden = false; err.textContent = miss; return; }
+ const t = TYPES.find(x=>x.id===add.type), [lat, lon] = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
+ const sp = {id:'c-'+Date.now(), name, area:'Spot personale', lat, lon, beachLat:add.pos[0], beachLon:add.pos[1],
+  facing:add.facing, window:t.window, offshore:(add.facing+180)%360, min:t.min, max:t.max, minPeriod:t.minPeriod, alert:true};
+ store.set('surf.customSpots', [...store.get('surf.customSpots', []), sp]);
+ spots.push(sp); setTab('spot'); refresh().then(()=>openDetail(sp.id));
 };
 
 // ---------- Navigazione ----------
 function showView(v){
-  ['spot','detail','add','map','alert'].forEach(x=>document.getElementById('v-'+x).hidden = x!==v);
-  window.scrollTo(0,0);
+ ['spot','detail','add','map','alert'].forEach(x=>document.getElementById('v-'+x).hidden = x!==v);
+ window.scrollTo(0,0);
 }
 function setTab(t){
-  lastTab = t;
-  document.querySelectorAll('nav.tabs button').forEach(b=> b.dataset.tab===t ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
-  showView(t); renderAll();
+ lastTab = t;
+ document.querySelectorAll('nav.tabs button').forEach(b=> b.dataset.tab===t ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
+ showView(t); renderAll();
 }
 function renderAll(){
-  if (!Object.keys(data).length) return;
-  if (lastTab==='spot') renderSpot();
-  if (lastTab==='map') renderMap();
-  if (lastTab==='alert') renderAlert();
+ if (!Object.keys(data).length) return;
+ if (lastTab==='spot') renderSpot();
+ if (lastTab==='map') renderMap();
+ if (lastTab==='alert') renderAlert();
 }
 async function refresh(){
-  const up = document.getElementById('updated'), st = document.getElementById('status');
-  up.textContent = 'Scarico le previsioni…'; st.hidden = true;
-  try{
-    if (!baseSpots.length) await loadSpots();
-    data = await fetchForecast();
-    up.textContent = 'Sardegna, aggiornato alle ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-    renderAll(); notify();
-  }catch(e){
-    up.textContent = 'Previsioni non disponibili';
-    st.hidden = false; st.textContent = `Download non riuscito (${e.message}). Controlla la connessione e ricarica la pagina.`;
-  }
+ const up = document.getElementById('updated'), st = document.getElementById('status');
+ up.textContent = 'Scarico le previsioni…'; st.hidden = true;
+ try{
+  if (!baseSpots.length) await loadSpots();
+  data = await fetchForecast();
+  up.textContent = 'Sinis, aggiornato alle ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  renderAll(); notify();
+ }catch(e){
+  up.textContent = 'Previsioni non disponibili';
+  st.hidden = false; st.textContent = `Download non riuscito (${e.message}). Controlla la connessione e ricarica la pagina.`;
+ }
 }
 
 document.addEventListener('click', e=>{
-  const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
-  const t = e.target.closest('[data-tab]'); if (t){ setTab(t.dataset.tab); return; }
-  const th = e.target.closest('[data-thr]'); if (th){ threshold = +th.dataset.thr; store.set('surf.threshold', threshold); renderAlert(); return; }
-  const dy = e.target.closest('[data-day]'); if (dy){ mapDay = dy.dataset.day; renderMap(); return; }
-  const f = e.target.closest('[data-follow]'); if (f){ toggleFollow(f.dataset.follow); renderAlert(); }
+ const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
+ const t = e.target.closest('[data-tab]'); if (t){ setTab(t.dataset.tab); return; }
+ const th = e.target.closest('[data-thr]'); if (th){ threshold = +th.dataset.thr; store.set('surf.threshold', threshold); renderAlert(); return; }
+ const dy = e.target.closest('[data-day]'); if (dy){ mapDay = dy.dataset.day; renderMap(); return; }
+ const f = e.target.closest('[data-follow]'); if (f){ toggleFollow(f.dataset.follow); renderAlert(); }
 });
 document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
 document.getElementById('nearBtn').onclick = ()=>{
-  const st = document.getElementById('status');
-  if (!navigator.geolocation){ st.hidden = false; st.textContent = 'Questo browser non fornisce la posizione.'; return; }
-  navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; renderSpot(); },
-    ()=>{ st.hidden = false; st.textContent = 'Posizione non concessa: gli spot restano ordinati per punteggio.'; });
+ const st = document.getElementById('status');
+ if (!navigator.geolocation){ st.hidden = false; st.textContent = 'Questo browser non fornisce la posizione.'; return; }
+ navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; renderSpot(); },
+  ()=>{ st.hidden = false; st.textContent = 'Posizione non concessa: gli spot restano ordinati per punteggio.'; });
 };
+
 setInterval(refresh, 3*60*60*1000);
 refresh();
 </script>
