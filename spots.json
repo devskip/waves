@@ -6,6 +6,7 @@
     {"id": "is-arutas", "name": "Is Arutas", "area": "Cabras", "lat": 39.955, "lon": 8.350, "facing": 270, "window": 45, "offshore": 90, "min": 0.7, "max": 2.5, "minPeriod": 6, "alert": true},
     {"id": "funtanamare", "name": "Funtanamare", "area": "Gonnesa", "lat": 39.265, "lon": 8.400, "facing": 265, "window": 50, "offshore": 85, "min": 0.7, "max": 3.0, "minPeriod": 6, "alert": false},
     {"id": "porto-ferro", "name": "Porto Ferro", "area": "Sassari", "lat": 40.700, "lon": 8.160, "facing": 315, "window": 50, "offshore": 135, "min": 0.8, "max": 3.0, "minPeriod": 6, "alert": false},
-    {"id": "chia", "name": "Chia", "area": "Domus de Maria", "lat": 38.860, "lon": 8.870, "facing": 180, "window": 50, "offshore": 0, "min": 0.7, "max": 2.5, "minPeriod": 6, "alert": false}
+    {"id": "chia", "name": "Chia", "area": "Domus de Maria", "lat": 38.860, "lon": 8.870, "facing": 180, "window": 50, "offshore": 0, "min": 0.7, "max": 2.5, "minPeriod": 6, "alert": false},
+    {"id":"sa-mesa-longa","name":"Sa Mesa Longa","area":"Spot personale","lat":40.0567,"lon":8.3852,"facing":315,"window":40,"offshore":135,"min":0.8,"max":3.5,"minPeriod":7,"alert":true}
   ]
 }
