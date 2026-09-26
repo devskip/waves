@@ -392,17 +392,33 @@ function openDetail(id){
   const sp = spots.find(s=>s.id===id), s = data[id];
   if (!sp || !s) return;
   const ev = evaluate(sp, s, currentIndex(s));
-  const start = currentIndex(s), pts = [];
+  // un punto ogni 3 ore, allineato a 0, 3, 6… così i giorni si leggono bene
+  let start = currentIndex(s);
+  while (start < s.time.length && +s.time[start].slice(11,13) % 3) start++;
+  const pts = [];
   for (let i=start; i<s.time.length; i+=3) pts.push({t:s.time[i], e:evaluate(sp, s, i)});
-  const bw=7, gap=3, H=120, top=10, maxF=Math.max(sp.max, ...pts.map(p=>p.e?.face||0));
-  const W = pts.length*(bw+gap)+8;
-  let g='';
-  const y = v => H-(v/maxF)*(H-top);
-  g += `<rect x="0" y="${y(sp.max)}" width="${W}" height="${y(sp.min)-y(sp.max)}" fill="var(--s2)" opacity=".1"/>`;
+  const faces = pts.map(p=>Math.max(p.e?.face||0, p.e?.hs||0));
+  const maxF = Math.ceil(Math.max(1.5, ...faces)*1.15*2)/2;       // scala adattiva, a passi di 0,5 m
+  const bw=7, gap=3, H=130, top=6, L=30, W = L + pts.length*(bw+gap) + 6;
+  const y = v => H-(Math.min(v,maxF)/maxF)*(H-top);
+  let g = `<rect x="${L}" y="${y(sp.max)}" width="${W-L}" height="${y(sp.min)-y(sp.max)}" fill="var(--s2)" opacity=".12"/>`;
+  for (let v=0; v<=maxF+0.001; v+=maxF>3?1:0.5){
+    g += `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="${v?0.5:1}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v%1?v.toFixed(1):v} m</text>`;
+  }
+  let prevDay = '';
+  const perDay = pts.reduce((m,p)=>(m[p.t.slice(0,10)]=(m[p.t.slice(0,10)]||0)+1, m), {});
   pts.forEach((p,k)=>{
-    const x = 4+k*(bw+gap);
-    if (p.t.slice(11,13)==='00' || k===0){ g += `<line x1="${x-1.5}" x2="${x-1.5}" y1="0" y2="${H}" stroke="var(--line)"/><text x="${x+2}" y="${H+15}">${dayLabel(p.t.slice(0,10)).slice(0,3)} ${+p.t.slice(8,10)}</text>`; }
-    if (p.e){ const h = Math.max(2,(p.e.face/maxF)*(H-top)); g += `<rect x="${x}" y="${H-h}" width="${bw}" height="${h}" rx="2" fill="${scoreTone(p.e.score)[0]}"><title>${p.t.slice(11)} ${p.e.face.toFixed(1)} m, ${p.e.score}/5</title></rect>`; }
+    const x = L+4+k*(bw+gap), day = p.t.slice(0,10);
+    if (day !== prevDay){
+      prevDay = day;
+      const lab = day === todayIso() ? 'Oggi' : dayName(day).slice(0,3)+' '+(+day.slice(8,10));
+      g += `<line x1="${x-2}" x2="${x-2}" y1="${top}" y2="${H}" stroke="var(--line)"/>${perDay[day] >= 4 ? `<text x="${x}" y="${H+16}">${lab}</text>` : ''}`;
+    }
+    if (p.e){
+      const hh = Math.max(2, H-y(p.e.hs)), h = Math.max(2, H-y(p.e.face));
+      g += `<rect x="${x}" y="${H-hh}" width="${bw}" height="${hh}" rx="2" fill="var(--muted)" opacity=".22"/>`;
+      g += `<rect x="${x}" y="${H-h}" width="${bw}" height="${h}" rx="2" fill="${scoreTone(p.e.score)[0]}"><title>${p.t.slice(11)}: a riva ${p.e.face.toFixed(1)} m, al largo ${p.e.hs.toFixed(1)} m, ${p.e.score}/5</title></rect>`;
+    }
   });
   const custom = !baseSpots.some(b=>b.id===id);
   const el = document.getElementById('v-detail');
@@ -415,8 +431,8 @@ function openDetail(id){
       <div><span class="small muted">Swell da</span><b>${ev? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°':'–'}</b></div>
       <div><span class="small muted">Vento</span><b>${ev? Math.round(ev.ws)+' km/h '+ev.windType:'–'}</b></div></div>
     <h2>Prossimi 7 giorni</h2>
-    <p class="small muted" style="margin-bottom:8px">Onda stimata a riva ogni 3 ore. La fascia chiara è il range surfabile (${sp.min}–${sp.max} m).</p>
-    <div class="chart"><svg width="${W}" height="${H+22}" role="img" aria-label="Altezza stimata a riva nei prossimi 7 giorni">${g}</svg></div>
+    <p class="small muted" style="margin-bottom:8px">Ogni 3 ore: barra colorata = onda stimata a riva (colore = punteggio), barra grigia = onda al largo. La fascia verde è il range surfabile (${sp.min}–${sp.max} m).</p>
+    <div class="chart"><svg width="${W}" height="${H+24}" role="img" aria-label="Altezza stimata a riva e al largo nei prossimi 7 giorni">${g}</svg></div>
     <h2>Giorno per giorno</h2>
     <ul class="days">${forecastDays(sp).map(d=>`<li><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score, true)}
       <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></li>`).join('')}</ul>
