@@ -1,1 +1,40 @@
+name: Alert onde
 
+on:
+  schedule:
+    - cron: "15 */3 * * *"   # ogni 3 ore (orario UTC), può partire con qualche minuto di ritardo
+  workflow_dispatch:          # permette di lanciarlo a mano dalla scheda Actions
+
+permissions:
+  contents: write             # serve per salvare alert_state.json nel repository
+
+concurrency:
+  group: alert-onde
+  cancel-in-progress: false
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Controlla le previsioni e invia gli alert
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SURF_THRESHOLD: ${{ vars.SURF_THRESHOLD }}
+        run: python alert_telegram.py
+
+      - name: Salva lo stato degli alert già inviati
+        run: |
+          if [ -n "$(git status --porcelain alert_state.json)" ]; then
+            git config user.name "onde-bot"
+            git config user.email "onde-bot@users.noreply.github.com"
+            git add alert_state.json
+            git commit -m "Aggiorna stato alert"
+            git push
+          fi
