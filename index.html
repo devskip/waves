@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <style>
 :root{
   --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
@@ -100,7 +102,20 @@ input{background:var(--bg);border:1px solid var(--line);border-radius:8px;paddin
 .full{grid-column:1/-1}
 .err{color:var(--s4);margin-top:12px}
 
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+.pick{height:46vh;min-height:280px;border-radius:16px;border:1px solid var(--line);overflow:hidden;z-index:0}
+.step{margin-top:22px}
+.step h2{margin:0 0 4px}
+.compass{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:6px;margin-top:10px}
+.compass button{border:1px solid var(--line);background:var(--panel);border-radius:14px;font:600 1.05rem "Barlow Condensed",sans-serif}
+.compass button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.compass .c{display:grid;place-items:center;color:var(--muted);font-size:.75rem;text-align:center;line-height:1.1}
+.types{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.types button{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 14px;min-height:56px}
+.types button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.types b{display:block}
+.fieldname{width:100%;margin-top:10px;font-size:1rem}
+.addbtn{width:100%;justify-content:center;margin-top:24px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom,0px);z-index:1100}
 nav.tabs button{min-height:64px;border:0;background:transparent;color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 @media (prefers-reduced-motion:reduce){ .switch::after{transition:none} }
@@ -121,25 +136,50 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
     <div class="list" id="activeList"></div>
     <h2 class="muted">Non attivi</h2>
     <div class="list" id="offList"></div>
-    <details>
-      <summary>Aggiungi uno spot personale</summary>
-      <form id="spotForm">
-        <label class="full">Nome<input name="name" required></label>
-        <label>Latitudine (in mare)<input name="lat" type="number" step="0.001" required></label>
-        <label>Longitudine (in mare)<input name="lon" type="number" step="0.001" required></label>
-        <label>Esposizione costa (°)<input name="facing" type="number" min="0" max="359" value="270" required></label>
-        <label>Finestra swell (±°)<input name="window" type="number" min="10" max="90" value="45"></label>
-        <label>Onda minima (m)<input name="min" type="number" step="0.1" value="0.7"></label>
-        <label>Onda massima (m)<input name="max" type="number" step="0.1" value="3"></label>
-        <button class="btn primary full" type="submit">Salva spot</button>
-      </form>
-      <p class="small muted" style="margin-top:8px">Gli spot personali restano su questo dispositivo. Per averli anche negli alert Telegram aggiungili a spots.json.</p>
-    </details>
+    <button class="btn addbtn" id="addOpen">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Aggiungi uno spot</button>
     <p class="err" id="status" hidden></p>
   </section>
 
   <!-- DETTAGLIO -->
   <section id="v-detail" hidden></section>
+
+  <!-- NUOVO SPOT -->
+  <section id="v-add" hidden>
+    <button class="btn" id="addBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Annulla</button>
+    <h1 style="font-size:2.3rem;margin-top:14px">Nuovo spot</h1>
+
+    <div class="step">
+      <h2>Dov'è lo spot?</h2>
+      <p class="small muted">Tocca la mappa sul punto dove entri in acqua, oppure usa la tua posizione se sei lì.</p>
+      <div style="display:flex;gap:8px;margin:10px 0">
+        <button class="btn" id="addHere">Usa la mia posizione</button>
+        <button class="btn" id="addSat" aria-pressed="false">Satellite</button>
+      </div>
+      <div class="pick" id="pickMap"></div>
+    </div>
+
+    <div class="step">
+      <h2>Da che parte è il mare aperto?</h2>
+      <p class="small muted">Stando in spiaggia e guardando il mare, verso dove guardi? Sulla mappa compare una freccia per controllare.</p>
+      <div class="compass" id="compass"></div>
+    </div>
+
+    <div class="step">
+      <h2>Che tipo di spot è?</h2>
+      <div class="types" id="types"></div>
+    </div>
+
+    <div class="step">
+      <h2>Come si chiama?</h2>
+      <input class="fieldname" id="addName" placeholder="Es. Sa Mesa Longa" autocomplete="off">
+    </div>
+
+    <p class="err" id="addErr" hidden></p>
+    <button class="btn primary addbtn" id="addSave">Salva spot</button>
+    <p class="small muted" style="margin-top:10px">Lo spot resta su questo telefono. Dal suo dettaglio puoi copiare la configurazione da incollare in spots.json per riceverne gli alert su Telegram.</p>
+  </section>
 
   <!-- MAPPA -->
   <section id="v-map" hidden>
@@ -325,7 +365,7 @@ function badge(sc, small){
 
 // ---------- Viste ----------
 function renderSpot(){
-  const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, sp) : null}));
+  const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, sp.beachLat ? {lat:sp.beachLat, lon:sp.beachLon} : sp) : null}));
   rows.sort((a,b)=> userPos ? a.dist-b.dist : (b.ev?.score ?? -1)-(a.ev?.score ?? -1));
   const on = rows.filter(r=>(r.ev?.score ?? 0) >= ACTIVE_FROM), off = rows.filter(r=>(r.ev?.score ?? 0) < ACTIVE_FROM);
   document.getElementById('activeList').innerHTML = on.length ? on.map(r=>`
@@ -436,9 +476,18 @@ function openDetail(id){
     <h2>Giorno per giorno</h2>
     <ul class="days">${forecastDays(sp).map(d=>`<li><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score, true)}
       <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></li>`).join('')}</ul>
-    ${custom ? '<button class="btn" id="delSpot" style="margin-top:20px">Elimina questo spot</button>' : ''}`;
+    ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px"><button class="btn" id="copySpot">Copia per spots.json</button><button class="btn" id="delSpot">Elimina questo spot</button></div>
+      <p class="small muted" id="copyMsg" style="margin-top:8px">Incolla il testo copiato in spots.json, nella lista "spots", per ricevere gli alert Telegram di questo spot.</p>` : ''}`;
   showView('detail');
   document.getElementById('back').onclick = ()=>setTab(lastTab);
+  const cp = document.getElementById('copySpot');
+  if (cp) cp.onclick = async ()=>{
+    const {beachLat, beachLon, ...clean} = sp;
+    const txt = ',\n    ' + JSON.stringify({...clean, id: slug(sp.name) || sp.id, alert:true});
+    const msg = document.getElementById('copyMsg');
+    try{ await navigator.clipboard.writeText(txt); msg.textContent = 'Copiato. Su GitHub apri spots.json, matita, incolla prima della riga con ] e fai il commit.'; }
+    catch(e){ msg.textContent = txt; }
+  };
   const del = document.getElementById('delSpot');
   if (del) del.onclick = ()=>{
     store.set('surf.customSpots', store.get('surf.customSpots', []).filter(s=>s.id!==id));
@@ -447,7 +496,7 @@ function openDetail(id){
 }
 
 function showView(v){
-  ['spot','detail','map','alert'].forEach(x=>document.getElementById('v-'+x).hidden = x!==v);
+  ['spot','detail','add','map','alert'].forEach(x=>document.getElementById('v-'+x).hidden = x!==v);
   window.scrollTo(0,0);
 }
 function setTab(t){
@@ -495,13 +544,83 @@ document.getElementById('nearBtn').onclick = ()=>{
   navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; renderSpot(); },
     ()=>{ st.hidden=false; st.textContent='Posizione non concessa: gli spot restano ordinati per punteggio.'; });
 };
-document.getElementById('spotForm').onsubmit = e=>{
-  e.preventDefault();
-  const f = new FormData(e.target), facing = +f.get('facing');
-  const sp = {id:'c-'+Date.now(), name:f.get('name'), area:'Spot personale', lat:+f.get('lat'), lon:+f.get('lon'), facing,
-    window:+f.get('window')||45, offshore:(facing+180)%360, min:+f.get('min')||0.7, max:+f.get('max')||3, minPeriod:6, alert:true};
+// ---------- Nuovo spot ----------
+const DIRS = [['NO',315],['N',0],['NE',45],['O',270],null,['E',90],['SO',225],['S',180],['SE',135]];
+const TYPES = [
+  {id:'beach', t:'Spiaggia (beach break)', d:'Fondale di sabbia, lavora anche con onde piccole', min:0.5, max:2.5, window:50, minPeriod:6},
+  {id:'reef', t:'Scogliera o punta (reef, point)', d:'Fondale di roccia, vuole onda più formata', min:0.8, max:3.5, window:40, minPeriod:7},
+  {id:'big', t:'Solo con mareggiate', d:'Spot riparato, si attiva con mare grosso', min:1.2, max:4.5, window:35, minPeriod:8},
+];
+let add = {map:null, marker:null, arrow:null, osm:null, sat:null, pos:null, facing:null, type:'beach'};
+const slug = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function offshorePoint(lat, lon, bearing, km){
+  const b = bearing*Math.PI/180;
+  return [+(lat + km*Math.cos(b)/111.32).toFixed(4), +(lon + km*Math.sin(b)/(111.32*Math.cos(lat*Math.PI/180))).toFixed(4)];
+}
+function drawAdd(){
+  document.getElementById('compass').innerHTML = DIRS.map(d => d
+    ? `<button aria-pressed="${add.facing===d[1]}" data-dir="${d[1]}" aria-label="Mare verso ${d[0]}">${d[0]}</button>`
+    : `<span class="c">spiaggia</span>`).join('');
+  document.getElementById('types').innerHTML = TYPES.map(t =>
+    `<button aria-pressed="${add.type===t.id}" data-type="${t.id}"><b>${t.t}</b><span class="small muted">${t.d}</span></button>`).join('');
+  if (!add.map) return;
+  if (add.arrow){ add.map.removeLayer(add.arrow); add.arrow = null; }
+  if (add.pos && add.facing != null){
+    const end = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
+    add.arrow = L.polyline([add.pos, end], {color:'#1D5F8A', weight:4, dashArray:'6 6'}).addTo(add.map);
+  }
+}
+function setPos(lat, lon, zoom){
+  add.pos = [lat, lon];
+  if (add.marker) add.marker.setLatLng(add.pos);
+  else add.marker = L.circleMarker(add.pos, {radius:9, color:'#fff', weight:3, fillColor:'#1D5F8A', fillOpacity:1}).addTo(add.map);
+  if (zoom) add.map.setView(add.pos, zoom);
+  drawAdd();
+}
+function openAdd(){
+  add = {...add, pos:null, facing:null, type:'beach'};
+  document.getElementById('addName').value = '';
+  document.getElementById('addErr').hidden = true;
+  showView('add');
+  if (!window.L){ document.getElementById('pickMap').innerHTML = '<p class="muted" style="padding:14px">Mappa non disponibile: controlla la connessione e riapri.</p>'; drawAdd(); return; }
+  if (!add.map){
+    add.map = L.map('pickMap', {zoomControl:true}).setView([40.0, 8.5], 9);
+    add.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap'}).addTo(add.map);
+    add.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, attribution:'Esri, Maxar'});
+    add.map.on('click', e => setPos(+e.latlng.lat.toFixed(5), +e.latlng.lng.toFixed(5)));
+  } else {
+    if (add.marker){ add.map.removeLayer(add.marker); add.marker = null; }
+    add.map.setView([40.0, 8.5], 9);
+  }
+  setTimeout(()=>add.map.invalidateSize(), 50);
+  drawAdd();
+}
+document.getElementById('addOpen').onclick = openAdd;
+document.getElementById('addBack').onclick = ()=>setTab('spot');
+document.getElementById('addHere').onclick = ()=>{
+  navigator.geolocation?.getCurrentPosition(p=>setPos(+p.coords.latitude.toFixed(5), +p.coords.longitude.toFixed(5), 15),
+    ()=>{ const e = document.getElementById('addErr'); e.hidden = false; e.textContent = 'Posizione non concessa: tocca il punto sulla mappa.'; });
+};
+document.getElementById('addSat').onclick = e=>{
+  if (!add.map) return;
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', on);
+  e.currentTarget.textContent = on ? 'Mappa' : 'Satellite';
+  if (on){ add.map.removeLayer(add.osm); add.sat.addTo(add.map); } else { add.map.removeLayer(add.sat); add.osm.addTo(add.map); }
+};
+document.getElementById('v-add').addEventListener('click', e=>{
+  const d = e.target.closest('[data-dir]'); if (d){ add.facing = +d.dataset.dir; drawAdd(); return; }
+  const t = e.target.closest('[data-type]'); if (t){ add.type = t.dataset.type; drawAdd(); }
+});
+document.getElementById('addSave').onclick = ()=>{
+  const err = document.getElementById('addErr'), name = document.getElementById('addName').value.trim();
+  const miss = !add.pos ? 'Tocca la mappa per indicare lo spot.' : add.facing == null ? 'Scegli da che parte è il mare aperto.' : !name ? 'Dai un nome allo spot.' : '';
+  if (miss){ err.hidden = false; err.textContent = miss; return; }
+  const t = TYPES.find(x=>x.id===add.type), [lat, lon] = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
+  const sp = {id:'c-'+Date.now(), name, area:'Spot personale', lat, lon, beachLat:add.pos[0], beachLon:add.pos[1],
+    facing:add.facing, window:t.window, offshore:(add.facing+180)%360, min:t.min, max:t.max, minPeriod:t.minPeriod, alert:true};
   store.set('surf.customSpots', [...store.get('surf.customSpots', []), sp]);
-  spots.push(sp); e.target.reset(); refresh();
+  spots.push(sp); setTab('spot'); refresh().then(()=>openDetail(sp.id));
 };
 setInterval(refresh, 3*60*60*1000);
 refresh();
