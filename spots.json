@@ -1,0 +1,11 @@
+{
+  "_nota": "facing = direzione verso cui guarda la costa (swell ideale DA), window = ± gradi accettati, offshore = direzione DA cui soffia il vento ideale, min/max = onda surfabile a riva in metri, minPeriod in secondi, alert = true se lo spot va negli avvisi Telegram. Coordinate leggermente al largo. Valori indicativi da tarare.",
+  "spots": [
+    {"id": "capo-mannu", "name": "Capo Mannu", "area": "San Vero Milis", "lat": 40.035, "lon": 8.340, "facing": 295, "window": 50, "offshore": 115, "min": 0.8, "max": 3.5, "minPeriod": 7, "alert": true},
+    {"id": "mini-capo", "name": "Mini Capo", "area": "Putzu Idu", "lat": 40.020, "lon": 8.360, "facing": 275, "window": 40, "offshore": 95, "min": 1.2, "max": 4.0, "minPeriod": 7, "alert": true},
+    {"id": "is-arutas", "name": "Is Arutas", "area": "Cabras", "lat": 39.955, "lon": 8.350, "facing": 270, "window": 45, "offshore": 90, "min": 0.7, "max": 2.5, "minPeriod": 6, "alert": true},
+    {"id": "funtanamare", "name": "Funtanamare", "area": "Gonnesa", "lat": 39.265, "lon": 8.400, "facing": 265, "window": 50, "offshore": 85, "min": 0.7, "max": 3.0, "minPeriod": 6, "alert": false},
+    {"id": "porto-ferro", "name": "Porto Ferro", "area": "Sassari", "lat": 40.700, "lon": 8.160, "facing": 315, "window": 50, "offshore": 135, "min": 0.8, "max": 3.0, "minPeriod": 6, "alert": false},
+    {"id": "chia", "name": "Chia", "area": "Domus de Maria", "lat": 38.860, "lon": 8.870, "facing": 180, "window": 50, "offshore": 0, "min": 0.7, "max": 2.5, "minPeriod": 6, "alert": false}
+  ]
+}

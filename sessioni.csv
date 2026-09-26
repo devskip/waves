@@ -1,0 +1,2 @@
+data,ora,spot_id,punteggio_app,onda_app_m,onda_reale_m,qualita_reale_1_5,vento_reale,note
+2026-09-30,11:00,capo-mannu,4.5,2.4,,,,esempio: compila le colonne vuote dopo la sessione e cancella questa riga
