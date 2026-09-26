@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
 <meta name="theme-color" content="#EEF3F1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Onde">
 <title>Onde</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,110 +16,139 @@
 <style>
 :root{
   --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
-  --accent:#1D5F8A; --wind:#5E6E2E; --banner:#13283B;
+  --accent:#1D5F8A; --wind:#5E6E2E; --sea:#DCE8EA;
   --s0:#C5CFD3; --s1:#9CC0D3; --s2:#2E7D74; --s3:#E6B24A; --s4:#9E2A5C;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
 }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --bg:#0E1B24; --panel:#152733; --ink:#E5EEF0; --muted:#9AADB6; --line:#26404F;
-  --accent:#6FB2DE; --wind:#B5C46A; --banner:#1D3A4F; --s0:#4A5C66; --s1:#5E8FA8;
-}}
-:root[data-theme="dark"]{
-  --bg:#0E1B24; --panel:#152733; --ink:#E5EEF0; --muted:#9AADB6; --line:#26404F;
-  --accent:#6FB2DE; --wind:#B5C46A; --banner:#1D3A4F; --s0:#4A5C66; --s1:#5E8FA8;
-}
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Barlow,system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:640px;margin:0 auto;padding:20px 16px calc(110px + env(safe-area-inset-bottom,0px))}
-h1,h2,h3,.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
-h1{font-size:2.8rem;line-height:.95;margin:0;font-weight:700}
-h2{font-size:1.4rem;font-weight:600;margin:24px 0 8px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Barlow,"Helvetica Neue",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:560px;margin:0 auto;padding:24px 20px calc(110px + env(safe-area-inset-bottom,0px))}
+h1,h2,.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
+h1{margin:0;font-weight:700;font-size:48px;line-height:.95}
+h1.sub{font-size:40px;line-height:1}
+h2{margin:24px 0 8px;font-weight:600;font-size:22px}
 p{margin:0}
-.muted{color:var(--muted)} .small{font-size:.875rem}
-button,select,input{font:inherit;color:inherit}
-button,a{cursor:pointer}
+.muted{color:var(--muted)} .small{font-size:14px} .xs{font-size:13px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 
-.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
-.btn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--panel);font-weight:500;display:inline-flex;align-items:center;gap:6px}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.pillbtn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--panel);font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.pillbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:16px;min-height:48px;border-radius:24px;justify-content:center;width:100%}
+.backlink{display:inline-flex;align-items:center;gap:4px;min-height:44px;border:0;background:none;color:var(--accent);font-weight:600;padding:0}
 
-.banner{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--banner);color:#fff;border:0;width:100%;text-align:left}
-.banner .k{font-size:.8rem;color:#B9C8D0}
-.banner .t{font:600 1.35rem/1.1 "Barlow Condensed",sans-serif}
-.banner .d{font-size:.875rem;color:#D9E3E8}
+.badge{flex-shrink:0;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 19px "Barlow Condensed",sans-serif;background:var(--c);color:var(--fg,#13283B)}
+.badge.sm{width:34px;height:34px;font-size:16px}
+.badge.lg{width:48px;height:48px;font-size:20px}
+.badge.xs{width:28px;height:28px;font-size:14px}
+
+/* preferito */
+.fav{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px;width:100%;text-align:left;display:block}
+.fav .top{display:flex;align-items:center;gap:12px}
+.fav .k{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.fav .name{font:600 26px/1.05 "Barlow Condensed",sans-serif}
+.fav .big{font:700 34px/1 "Barlow Condensed",sans-serif}
+.fav .big span{font-size:17px;font-weight:500;color:var(--muted)}
+.fav .days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.fav .days div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.favhint{margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:16px;font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center}
+
+.banner{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:#fff;border:0;width:100%;text-align:left}
+.banner .k{font-size:13px;color:#B9C8D0}
+.banner .t{margin-top:2px;font:600 22px/1.1 "Barlow Condensed",sans-serif}
+.banner .d{margin-top:2px;font-size:14px;color:#D9E3E8}
 
 .list{display:flex;flex-direction:column;gap:8px}
-.spot{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
-.spot .grow{flex:1;min-width:0}
-.spot .name{font:600 1.3rem/1.1 "Barlow Condensed",sans-serif}
-.num{text-align:right}
-.num .h{font:700 1.9rem/1 "Barlow Condensed",sans-serif}
-.num .u{font-size:1rem;color:var(--muted);margin-left:2px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.row .grow{flex:1;min-width:0}
+.row .name{font:600 21px/1.1 "Barlow Condensed",sans-serif}
+.row .num{text-align:right}
+.row .h{font:700 30px/1 "Barlow Condensed",sans-serif}
+.row .h span{font-size:16px;font-weight:500;color:var(--muted)}
 .mini{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;width:100%;text-align:left}
 .mini .grow{flex:1;font-weight:600}
-.badge{flex-shrink:0;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 1.15rem "Barlow Condensed",sans-serif;background:var(--c);color:var(--fg,#13283B)}
-.badge.sm{width:34px;height:34px;font-size:1rem}
+.addspot{margin-top:20px;width:100%;justify-content:center;border-style:dashed;background:transparent}
 
-.dial circle.ring{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
-.dial path.win{fill:none;stroke:var(--s2);stroke-width:6;stroke-linecap:round;opacity:.45}
-.dial .swell{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round}
-.dial .swellhead{fill:var(--accent)}
-.dial .windl{stroke:var(--wind);stroke-width:2;stroke-dasharray:3 3;fill:none}
-.dial text{font:600 4px Barlow,sans-serif;fill:var(--muted)}
+.dial{flex-shrink:0}
+.dial .ring{fill:var(--panel);stroke:var(--line)}
+.dial .win{fill:none;stroke:var(--s2);stroke-linecap:round;opacity:.45}
+.dial .sw{stroke:var(--accent);stroke-linecap:round;fill:none}
+.dial .swh{fill:var(--accent)}
+.dial .wd{stroke:var(--wind);fill:none}
+.dial text{font:600 3.6px Barlow,sans-serif;fill:var(--muted)}
 
-.dhead{display:flex;gap:16px;align-items:center;margin-top:8px}
-.pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:.875rem}
-.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:16px}
+/* dettaglio */
+.dhead{display:flex;gap:16px;align-items:center;margin-top:4px}
+.dhead h1{font-size:38px}
+.pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:14px}
+.star{margin-top:8px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
+.star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.facts{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .facts div{background:var(--panel);padding:10px 14px}
-.facts b{display:block;font:700 1.5rem "Barlow Condensed",sans-serif}
-.chart{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 8px 8px;overflow-x:auto}
-.chart svg{display:block}
-.chart text{font:500 11px Barlow,sans-serif;fill:var(--muted)}
-.days{list-style:none;margin:0;padding:0}
-.days li{display:grid;grid-template-columns:90px 36px minmax(0,1fr);gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.facts b{display:block;font:700 26px/1.2 "Barlow Condensed",sans-serif}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 12px 8px}
+.bars{position:relative;height:110px}
+.bars .band{position:absolute;left:0;right:0;background:var(--s2);opacity:.08;border-radius:4px}
+.bars .scale{position:absolute;left:0;top:-2px;font-size:11px;color:var(--muted)}
+.bars .cols{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:flex-end}
+.bars .g{display:flex;gap:3px;align-items:flex-end}
+.bars .g span{width:8px;border-radius:2px;background:var(--c)}
+.bars .g span.past{opacity:.25}
+.labels{display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--muted)}
+.labels span{width:41px;text-align:center}
+.labels .best{color:var(--ink);font-weight:600}
+.dlist{display:flex;flex-direction:column}
+.dlist div{display:grid;grid-template-columns:86px 36px minmax(0,1fr);gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.dlist div:last-child{border-bottom:0}
+.dlist div.best{background:var(--panel);border-radius:10px;padding-left:8px;padding-right:8px}
 
+/* mappa */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+.chips button{flex-shrink:0;min-height:38px;padding:0 14px;border-radius:19px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
+.chips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.mapwrap{position:relative;margin-top:10px;height:calc(100vh - 330px);min-height:360px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--sea)}
+#leaf,#windy{position:absolute;inset:0;width:100%;height:100%;border:0}
+.leaflet-container{background:var(--sea);font-family:Barlow,sans-serif}
+.pin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 15px "Barlow Condensed",sans-serif;background:var(--c);color:var(--fg);border:2px solid #fff;box-shadow:0 1px 4px rgba(19,40,59,.35)}
+.pin.sel{box-shadow:0 0 0 3px var(--ink)}
+.mapcard{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border-radius:18px;border:1px solid var(--line);text-align:left;width:auto}
+.maptoggle{position:absolute;right:12px;top:12px;z-index:500}
+
+/* alert */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}
+.alist button{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;width:100%;text-align:left}
+.alist button:last-child{border-bottom:0}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:24px}
+.seg button{min-height:44px;border-radius:20px;border:0;background:transparent;font:600 17px "Barlow Condensed",sans-serif}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:8px 14px;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:0}
 .switch{width:52px;height:32px;border-radius:16px;border:0;background:var(--s0);position:relative;flex-shrink:0}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .15s}
 .switch[aria-pressed="true"]{background:var(--accent)}
 .switch[aria-pressed="true"]::after{left:23px}
-.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:24px}
-.seg button{min-height:44px;border-radius:20px;border:0;background:transparent;font:600 1.05rem "Barlow Condensed",sans-serif}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
-.alerts a,.alerts button{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;width:100%;text-align:left}
-.alerts button:last-child{border-bottom:0}
 
-.windy{width:100%;height:55vh;min-height:320px;border:0;border-radius:16px;display:block;background:var(--panel)}
-
-details{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
-summary{font-weight:600;cursor:pointer;min-height:32px;display:flex;align-items:center}
-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
-label{display:flex;flex-direction:column;font-size:.875rem;color:var(--muted);gap:4px}
-input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px}
-.full{grid-column:1/-1}
-.err{color:var(--s4);margin-top:12px}
-
+/* nuovo spot */
 .pick{height:46vh;min-height:280px;border-radius:16px;border:1px solid var(--line);overflow:hidden;z-index:0}
-.step{margin-top:22px}
-.step h2{margin:0 0 4px}
+.step h2{margin-bottom:4px}
 .compass{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:6px;margin-top:10px}
-.compass button{border:1px solid var(--line);background:var(--panel);border-radius:14px;font:600 1.05rem "Barlow Condensed",sans-serif}
+.compass button{border:1px solid var(--line);background:var(--panel);border-radius:14px;font:600 17px "Barlow Condensed",sans-serif}
 .compass button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.compass .c{display:grid;place-items:center;color:var(--muted);font-size:.75rem;text-align:center;line-height:1.1}
+.compass .c{display:grid;place-items:center;color:var(--muted);font-size:12px}
 .types{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .types button{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 14px;min-height:56px}
 .types button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .types b{display:block}
-.fieldname{width:100%;margin-top:10px;font-size:1rem}
-.addbtn{width:100%;justify-content:center;margin-top:24px}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom,0px);z-index:1100}
-nav.tabs button{min-height:64px;border:0;background:transparent;color:var(--muted);font-size:.8rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.field{width:100%;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
+.err{color:var(--s4);margin-top:12px;font-weight:500}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{min-height:64px;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 @media (prefers-reduced-motion:reduce){ .switch::after{transition:none} }
 </style>
@@ -125,114 +157,115 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 <main>
   <!-- SPOT -->
   <section id="v-spot">
-    <div class="top">
-      <div><h1>Onde</h1><p class="muted small" id="updated">Scarico le previsioni…</p></div>
-      <button class="btn" id="nearBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>
-        Vicino a me</button>
+    <div class="head">
+      <div><h1>Onde</h1><p class="muted small" id="updated" style="margin-top:4px">Scarico le previsioni…</p></div>
+      <button class="pillbtn" id="nearBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>Vicino a me</button>
     </div>
+    <div id="fav"></div>
     <button class="banner" id="banner" hidden></button>
     <h2>Attivi ora</h2>
     <div class="list" id="activeList"></div>
     <h2 class="muted">Non attivi</h2>
-    <div class="list" id="offList"></div>
-    <button class="btn addbtn" id="addOpen">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-      Aggiungi uno spot</button>
+    <div class="list" id="offList" style="gap:6px"></div>
+    <button class="pillbtn addspot" id="addOpen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi uno spot</button>
     <p class="err" id="status" hidden></p>
   </section>
 
   <!-- DETTAGLIO -->
   <section id="v-detail" hidden></section>
 
+  <!-- MAPPA -->
+  <section id="v-map" hidden>
+    <h1 class="sub">Mappa</h1>
+    <p class="muted small" id="mapSub" style="margin-top:4px">Adesso</p>
+    <div class="chips" id="chips"></div>
+    <div class="mapwrap">
+      <div id="leaf"></div>
+      <iframe id="windy" title="Onde animate Windy" hidden></iframe>
+      <button class="pillbtn maptoggle" id="windyBtn" aria-pressed="false">Onde animate</button>
+      <button class="mapcard" id="mapCard" hidden></button>
+    </div>
+  </section>
+
+  <!-- ALERT -->
+  <section id="v-alert" hidden>
+    <h1 class="sub">Alert</h1>
+    <p class="muted small" style="margin-top:4px">Ti avvisiamo quando uno spot che segui entra in condizione nei prossimi 7 giorni.</p>
+    <h2>In arrivo</h2>
+    <div class="card alist" id="alertList"></div>
+    <h2>Avvisami da</h2>
+    <div class="seg" id="seg"></div>
+    <p class="xs muted" style="margin-top:6px">3 vuol dire onda nel range dello spot e vento accettabile.</p>
+    <h2>Come</h2>
+    <div class="card">
+      <div class="srow"><div><p style="font-weight:600">Notifiche dell'app</p><p class="xs muted" id="notifState"></p></div><button class="pillbtn" id="notifBtn">Attiva</button></div>
+      <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot con "alert": true in spots.json.</p></div></div>
+      <div class="srow"><div><p style="font-weight:600">Solo ore di luce</p><p class="xs muted">Dalle 7 alle 19</p></div></div>
+    </div>
+    <h2>Spot seguiti</h2>
+    <div class="card" id="followList"></div>
+  </section>
+
   <!-- NUOVO SPOT -->
   <section id="v-add" hidden>
-    <button class="btn" id="addBack"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Annulla</button>
-    <h1 style="font-size:2.3rem;margin-top:14px">Nuovo spot</h1>
-
+    <button class="backlink" id="addBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Annulla</button>
+    <h1 class="sub" style="margin-top:6px">Nuovo spot</h1>
     <div class="step">
       <h2>Dov'è lo spot?</h2>
       <p class="small muted">Tocca la mappa sul punto dove entri in acqua, oppure usa la tua posizione se sei lì.</p>
       <div style="display:flex;gap:8px;margin:10px 0">
-        <button class="btn" id="addHere">Usa la mia posizione</button>
-        <button class="btn" id="addSat" aria-pressed="false">Satellite</button>
+        <button class="pillbtn" id="addHere">Usa la mia posizione</button>
+        <button class="pillbtn" id="addSat" aria-pressed="false">Satellite</button>
       </div>
       <div class="pick" id="pickMap"></div>
     </div>
-
     <div class="step">
       <h2>Da che parte è il mare aperto?</h2>
       <p class="small muted">Stando in spiaggia e guardando il mare, verso dove guardi? Sulla mappa compare una freccia per controllare.</p>
       <div class="compass" id="compass"></div>
     </div>
-
     <div class="step">
       <h2>Che tipo di spot è?</h2>
       <div class="types" id="types"></div>
     </div>
-
     <div class="step">
       <h2>Come si chiama?</h2>
-      <input class="fieldname" id="addName" placeholder="Es. Sa Mesa Longa" autocomplete="off">
+      <input class="field" id="addName" placeholder="Es. Sa Mesa Longa" autocomplete="off">
     </div>
-
     <p class="err" id="addErr" hidden></p>
-    <button class="btn primary addbtn" id="addSave">Salva spot</button>
-    <p class="small muted" style="margin-top:10px">Lo spot resta su questo telefono. Dal suo dettaglio puoi copiare la configurazione da incollare in spots.json per riceverne gli alert su Telegram.</p>
-  </section>
-
-  <!-- MAPPA -->
-  <section id="v-map" hidden>
-    <h1 style="font-size:2.3rem">Mappa</h1>
-    <p class="muted small" style="margin:4px 0 12px">Onde e swell animati da Windy, punteggi degli spot qui sotto.</p>
-    <iframe class="windy" id="windy" title="Mappa onde Windy" loading="lazy"></iframe>
-    <h2>Punteggi adesso</h2>
-    <div class="list" id="mapList"></div>
-  </section>
-
-  <!-- ALERT -->
-  <section id="v-alert" hidden>
-    <h1 style="font-size:2.3rem">Alert</h1>
-    <p class="muted small" style="margin-top:4px">Gli spot che segui e che raggiungono la soglia nei prossimi 7 giorni, nelle ore di luce.</p>
-    <h2>In arrivo</h2>
-    <div class="card alerts" id="alertList"></div>
-    <h2>Avvisami da</h2>
-    <div class="seg" id="seg"></div>
-    <p class="small muted" style="margin-top:6px">3 vuol dire onda nel range dello spot e vento accettabile.</p>
-    <h2>Come</h2>
-    <div class="card">
-      <div class="row"><div><p style="font-weight:600">Notifiche del browser</p><p class="small muted" id="notifState"></p></div><button class="btn" id="notifBtn">Attiva</button></div>
-      <div class="row"><div><p style="font-weight:600">Telegram</p><p class="small muted">Arrivano dal bot anche con l'app chiusa. Si configurano nel repository.</p></div></div>
-    </div>
-    <h2>Spot seguiti</h2>
-    <div class="card" id="followList"></div>
+    <button class="pillbtn primary" id="addSave" style="margin-top:24px">Salva spot</button>
+    <p class="xs muted" style="margin-top:10px">Lo spot resta su questo telefono. Dal suo dettaglio puoi copiare la configurazione da incollare in spots.json per riceverne gli alert su Telegram.</p>
   </section>
 </main>
 
 <nav class="tabs" aria-label="Sezioni">
-  <button data-tab="spot" aria-current="page">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/></svg>Spot</button>
-  <button data-tab="map">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Mappa</button>
-  <button data-tab="alert">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Alert</button>
+  <button data-tab="spot" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/></svg>Spot</button>
+  <button data-tab="map"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Mappa</button>
+  <button data-tab="alert"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Alert</button>
 </nav>
 
 <script>
 // ---------- Costanti ----------
-const ACTIVE_FROM = 2;
-const DAY_START = 7, DAY_END = 19;
-const TZ = 'Europe/Rome';
+const ACTIVE_FROM = 2, DAY_START = 7, DAY_END = 19, TZ = 'Europe/Rome';
+const CHART_HOURS = ['08','11','14','17'];
 const WINDY_URL = 'https://embed.windy.com/embed2.html?lat=40.0&lon=8.7&detailLat=40.0&detailLon=8.4&width=650&height=450&zoom=7&level=surface&overlay=waves&product=ecmwfWaves&menu=&message=true&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1';
+const ICON = {
+  back:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+  chev:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--muted);flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>',
+  star:(on)=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="${on?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>`,
+  bell:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>'
+};
 
 // ---------- Stato ----------
 const store = {
   get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
-let baseSpots = [], spots = [], data = {}, userPos = null;
+let baseSpots = [], spots = [], data = {}, userPos = null, lastTab = 'spot';
 let threshold = store.get('surf.threshold', 3);
-let followed = store.get('surf.followed', null); // null = usa "alert" di spots.json
+let followed = store.get('surf.followed', null);
+let favorite = store.get('surf.favorite', null);
+let mapDay = 'now', mapSel = null, leaf = null, leafPins = {};
 
 // ---------- Calcoli (stessa logica di alert_telegram.py) ----------
 const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
@@ -261,28 +294,36 @@ function evaluate(spot, s, i){
   const score = Math.min(5, Math.round(5*hScore*periodF*windF*2)/2);
   return {score, face, hs, dir, T, ws, wd, windType};
 }
-function scoreTone(sc){
+function tone(sc){
   if (sc == null || sc < 1.5) return ['var(--s0)','#13283B'];
   if (sc < 2.5) return ['var(--s1)','#13283B'];
   if (sc < 3.5) return ['var(--s2)','#FFFFFF'];
   if (sc < 4.5) return ['var(--s3)','#13283B'];
   return ['var(--s4)','#FFFFFF'];
 }
-function scoreLabel(sc){
-  if (sc == null) return 'Nessun dato';
-  return sc < 1.5 ? 'Non surfabile' : sc < 2.5 ? 'Scarso' : sc < 3.5 ? 'Discreto' : sc < 4.5 ? 'Buono' : 'Ottimo';
-}
+const scoreLabel = sc => sc == null ? 'Nessun dato' : sc < 1.5 ? 'Non surfabile' : sc < 2.5 ? 'Scarso' : sc < 3.5 ? 'Discreto' : sc < 4.5 ? 'Buono' : 'Ottimo';
 function nowKey(){
   const p = new Intl.DateTimeFormat('sv-SE',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hour12:false}).format(new Date());
   return p.replace(' ','T').slice(0,13)+':00';
 }
+const todayIso = () => nowKey().slice(0,10);
 const currentIndex = s => Math.max(0, s.time.indexOf(nowKey()));
 function distanceKm(a,b){
   const R=6371, r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
   const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
   return 2*R*Math.asin(Math.sqrt(x));
 }
+const beach = sp => sp.beachLat ? {lat:sp.beachLat, lon:sp.beachLon} : sp;
 const isFollowed = sp => followed ? followed.includes(sp.id) : !!sp.alert;
+const nowEval = sp => { const s = data[sp.id]; return s ? evaluate(sp, s, currentIndex(s)) : null; };
+
+// ---------- Testi ----------
+const esc = t => String(t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const wdFmt = new Intl.DateTimeFormat('it-IT',{weekday:'long', timeZone:'UTC'});
+const weekday = iso => { const t = wdFmt.format(new Date(iso+'T12:00:00Z')); return t.charAt(0).toUpperCase()+t.slice(1); };
+const dayLabel = iso => iso === todayIso() ? 'Oggi' : weekday(iso);
+const dayShort = iso => iso === todayIso() ? 'Oggi' : weekday(iso).slice(0,3);
+const dayChip = iso => iso === todayIso() ? 'Oggi' : `${weekday(iso).slice(0,3)} ${+iso.slice(8,10)}`;
 
 // ---------- Dati ----------
 async function loadSpots(){
@@ -296,7 +337,7 @@ async function fetchForecast(){
   const q = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=7`;
   const [mr, wr] = await Promise.all([
     fetch(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`),
-    fetch(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m`)
+    fetch(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
   ]);
   if (!mr.ok || !wr.ok) throw new Error(`Open-Meteo ha risposto ${mr.status}/${wr.status}`);
   let m = await mr.json(), w = await wr.json();
@@ -313,8 +354,7 @@ async function fetchForecast(){
   });
   return out;
 }
-const nowEval = sp => { const s = data[sp.id]; return s ? evaluate(sp, s, currentIndex(s)) : null; };
-
+// migliore situazione di ogni giorno, nelle ore di luce, da adesso in poi
 function forecastDays(sp){
   const s = data[sp.id]; if (!s) return [];
   const days = {};
@@ -334,152 +374,134 @@ function upcomingAlerts(){
   spots.filter(isFollowed).forEach(sp => forecastDays(sp).forEach(d => { if (d.firstHit != null) hits.push({sp, d}); }));
   return hits.sort((a,b)=> a.d.day.localeCompare(b.d.day) || b.d.best.score - a.d.best.score);
 }
+function allDays(){
+  const s = Object.values(data)[0]; if (!s) return [];
+  return [...new Set(s.time.map(t=>t.slice(0,10)))].filter(d=>d >= todayIso()).slice(0,7);
+}
 
 // ---------- Componenti ----------
-const esc = t => String(t).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const dayFmt = new Intl.DateTimeFormat('it-IT',{weekday:'long', day:'numeric', timeZone:'UTC'});
-const dayName = iso => { const t = dayFmt.format(new Date(iso+'T12:00:00Z')); return t.charAt(0).toUpperCase()+t.slice(1); };
-const todayIso = () => nowKey().slice(0,10);
-const dayLabel = iso => iso === todayIso() ? 'Oggi' : dayName(iso);
-
+function badge(sc, size=''){
+  const [bg,fg] = tone(sc);
+  return `<span class="badge ${size}" style="--c:${bg};--fg:${fg}" aria-label="Punteggio ${sc ?? 'non disponibile'} su 5">${sc ?? '–'}</span>`;
+}
 function pt(c,r,deg){ const a=deg*Math.PI/180; return [+(c+r*Math.sin(a)).toFixed(1), +(c-r*Math.cos(a)).toFixed(1)]; }
 function dial(sp, ev, px=56){
-  const c=28, r=22, a0=sp.facing-sp.window, a1=sp.facing+sp.window;
-  const [x0,y0]=pt(c,r,a0), [x1,y1]=pt(c,r,a1);
-  let arrows='';
+  const big = px >= 100, a0 = sp.facing-sp.window, a1 = sp.facing+sp.window;
+  const [x0,y0]=pt(28,22,a0), [x1,y1]=pt(28,22,a1);
+  let arrows = '';
   if (ev){
-    const [sx,sy]=pt(c,r,ev.dir), [ex,ey]=pt(c,r*0.25,ev.dir);
-    const [h1x,h1y]=pt(0,6,ev.dir+35).map((v,i)=>v+(i?ey:ex)), [h2x,h2y]=pt(0,6,ev.dir-35).map((v,i)=>v+(i?ey:ex));
-    arrows += `<path class="swell" d="M${sx},${sy} L${ex},${ey}"/><path class="swellhead" d="M${ex},${ey} L${h1x},${h1y} L${h2x},${h2y}Z"/>`;
-    if (ev.ws >= 3){ const [wx,wy]=pt(c,r-2,ev.wd), [wx2,wy2]=pt(c,r*0.45,ev.wd); arrows += `<path class="windl" d="M${wx},${wy} L${wx2},${wy2}"/>`; }
+    const pxy = (cx,cy,r,deg)=>{ const a=deg*Math.PI/180; return [+(cx+r*Math.sin(a)).toFixed(1), +(cy-r*Math.cos(a)).toFixed(1)]; };
+    const [sx,sy]=pt(28,22,ev.dir), [ex,ey]=pt(28,5.5,ev.dir);
+    const [h1x,hy1]=pxy(ex,ey,6,ev.dir+35), [h2x,hy2]=pxy(ex,ey,6,ev.dir-35);
+    arrows += `<path class="sw" stroke-width="${big?1.8:3}" d="M${sx},${sy} L${ex},${ey}"/><path class="swh" d="M${ex},${ey} L${h1x},${hy1} L${h2x},${hy2}Z"/>`;
+    if (ev.ws >= 3){ const [wx,wy]=pt(28,20,ev.wd), [wx2,wy2]=pt(28,10,ev.wd); arrows += `<path class="wd" stroke-width="${big?1.2:2}" stroke-dasharray="${big?'2 2':'3 3'}" d="M${wx},${wy} L${wx2},${wy2}"/>`; }
   }
   const label = ev ? `Swell da ${cardinal(ev.dir)}, vento da ${cardinal(ev.wd)}, finestra utile da ${cardinal(a0)} a ${cardinal(a1)}` : 'Nessun dato';
-  return `<svg class="dial" width="${px}" height="${px}" viewBox="0 0 56 56" role="img" aria-label="${label}" style="flex-shrink:0">
-    <circle class="ring" cx="28" cy="28" r="22"/><path class="win" d="M${x0},${y0} A22,22 0 ${sp.window*2>180?1:0} 1 ${x1},${y1}"/>
-    ${px>=100?'<text x="28" y="5" text-anchor="middle">N</text>':''}${arrows}</svg>`;
-}
-function badge(sc, small){
-  const [bg,fg] = scoreTone(sc);
-  return `<span class="badge${small?' sm':''}" style="--c:${bg};--fg:${fg}" aria-label="Punteggio ${sc ?? 'non disponibile'} su 5">${sc ?? '–'}</span>`;
+  return `<svg class="dial" width="${px}" height="${px}" viewBox="0 0 56 56" role="img" aria-label="${label}">
+    <circle class="ring" cx="28" cy="28" r="22" stroke-width="${big?0.8:1.5}"/>
+    <path class="win" stroke-width="${big?4:6}" d="M${x0},${y0} A22,22 0 ${sp.window*2>180?1:0} 1 ${x1},${y1}"/>
+    ${big?'<text x="28" y="5" text-anchor="middle">N</text>':''}${arrows}</svg>`;
 }
 
-// ---------- Viste ----------
+// ---------- Home ----------
 function renderSpot(){
-  const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, sp.beachLat ? {lat:sp.beachLat, lon:sp.beachLon} : sp) : null}));
+  // preferito
+  const fav = spots.find(s=>s.id===favorite), favEl = document.getElementById('fav');
+  if (fav && data[fav.id]){
+    const ev = nowEval(fav), days = forecastDays(fav).slice(0,5);
+    favEl.innerHTML = `<button class="fav" data-open="${fav.id}">
+      <div class="top">${dial(fav, ev, 72)}
+        <div style="flex:1;min-width:0"><p class="k">${ICON.star(true)} Il tuo spot</p><p class="name">${esc(fav.name)}</p>
+          <p class="xs muted">${ev ? `${Math.round(ev.T)} s da ${cardinal(ev.dir)}, vento ${ev.windType} ${Math.round(ev.ws)} km/h` : 'Nessun dato'}</p></div>
+        <div style="text-align:right"><p class="big">${ev ? ev.face.toFixed(1) : '–'}<span> m</span></p></div>
+        ${badge(ev?.score,'lg')}</div>
+      <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
+    </button>`;
+  } else {
+    favEl.innerHTML = `<div class="favhint">${ICON.star(false)}<span>Apri uno spot e tocca "Preferito" per averlo sempre qui in cima.</span></div>`;
+  }
+
+  const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, beach(sp)) : null}));
   rows.sort((a,b)=> userPos ? a.dist-b.dist : (b.ev?.score ?? -1)-(a.ev?.score ?? -1));
   const on = rows.filter(r=>(r.ev?.score ?? 0) >= ACTIVE_FROM), off = rows.filter(r=>(r.ev?.score ?? 0) < ACTIVE_FROM);
   document.getElementById('activeList').innerHTML = on.length ? on.map(r=>`
-    <button class="spot" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
+    <button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
       <div class="grow"><p class="name">${esc(r.sp.name)}</p>
-        <p class="small muted">${esc(r.sp.area||'')}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</p>
-        <p class="small muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
-      <div class="num"><span class="h">${r.ev.face.toFixed(1)}</span><span class="u">m</span><p class="small muted">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
+        <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</p>
+        <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
+      <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
       ${badge(r.ev.score)}</button>`).join('')
-    : `<p class="muted">Nessuno spot attivo adesso. Controlla gli alert per i prossimi giorni.</p>`;
+    : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
   document.getElementById('offList').innerHTML = off.map(r=>`
     <button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
-      <span class="small muted">${r.ev ? `${r.ev.face.toFixed(1)} m, ${r.ev.windType} ${Math.round(r.ev.ws)} km/h` : 'Nessun dato'}</span>${badge(r.ev?.score, true)}</button>`).join('');
+      <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</span>${badge(r.ev?.score,'sm')}</button>`).join('');
 
   const b = document.getElementById('banner'), next = upcomingAlerts()[0];
   if (next){
     b.hidden = false;
     b.innerHTML = `<div><p class="k">Onde in arrivo</p><p class="t">${esc(next.sp.name)}, ${dayLabel(next.d.day).toLowerCase()} dalle ${next.d.firstHit}</p>
-      <p class="d">${next.d.best.face.toFixed(1)} m, ${Math.round(next.d.best.T)} s da ${cardinal(next.d.best.dir)}, vento ${next.d.best.windType}</p></div>${badge(next.d.best.score)}`;
-    b.onclick = ()=>openDetail(next.sp.id);
+      <p class="d">${next.d.maxFace.toFixed(1)} m, ${Math.round(next.d.best.T)} s da ${cardinal(next.d.best.dir)}, vento ${next.d.best.windType}</p></div>${badge(next.d.best.score,'lg')}`;
+    b.dataset.open = next.sp.id;
   } else b.hidden = true;
 }
-
-function renderMap(){
-  const f = document.getElementById('windy');
-  if (!f.src) f.src = WINDY_URL;
-  const rows = spots.map(sp=>({sp, ev:nowEval(sp)})).sort((a,b)=>b.sp.lat-a.sp.lat);
-  document.getElementById('mapList').innerHTML = rows.map(r=>`
-    <button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
-      <span class="small muted">${r.ev ? `${r.ev.face.toFixed(1)} m da ${cardinal(r.ev.dir)}` : 'Nessun dato'}</span>${badge(r.ev?.score, true)}</button>`).join('');
+function offReason(sp, ev){
+  if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)} m al largo, swell fuori finestra` : 'Piatto';
+  if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)} m, onshore ${Math.round(ev.ws)} km/h`;
+  return `${ev.face.toFixed(1)} m, ${ev.windType} ${Math.round(ev.ws)} km/h`;
 }
 
-function renderAlert(){
-  const hits = upcomingAlerts();
-  document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>`
-    <button data-open="${h.sp.id}">${badge(h.d.best.score)}<div><p style="font-weight:600">${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()}</p>
-      <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m, vento ${h.d.best.windType}</p></div></button>`).join('')
-    : `<p class="muted" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
-  document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold?v+' / 5':v}</button>`).join('');
-  document.getElementById('followList').innerHTML = spots.map(sp=>`
-    <div class="row"><span style="font-weight:600">${esc(sp.name)}</span>
-      <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
-  const ns = document.getElementById('notifState'), nb = document.getElementById('notifBtn');
-  if (!('Notification' in window)){ ns.textContent = 'Non supportate da questo browser.'; nb.hidden = true; }
-  else if (Notification.permission === 'granted'){ ns.textContent = 'Attive, arrivano quando l\'app è aperta.'; nb.hidden = true; }
-  else if (Notification.permission === 'denied'){ ns.textContent = 'Bloccate nelle impostazioni del browser.'; nb.hidden = true; }
-  else { ns.textContent = 'Arrivano solo con l\'app aperta.'; nb.hidden = false; }
+// ---------- Dettaglio ----------
+function chartHtml(sp){
+  const s = data[sp.id], ci = currentIndex(s), days = allDays();
+  const cols = days.map(day => CHART_HOURS.map(h => {
+    const i = s.time.indexOf(`${day}T${h}:00`);
+    return i < 0 ? null : {e: evaluate(sp, s, i), past: i < ci};
+  }));
+  const faces = cols.flat().filter(c=>c?.e).map(c=>c.e.face);
+  const maxF = Math.ceil(Math.max(1, ...faces)*1.15*2)/2, H = 110;
+  const px = v => Math.min(v, maxF)/maxF*H;
+  const bandB = px(sp.min), bandH = sp.min < maxF ? px(sp.max) - px(sp.min) : 0;
+  const best = forecastDays(sp).reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
+  return `<div class="chart"><div class="bars">
+      ${bandH ? `<div class="band" style="bottom:${bandB}px;height:${bandH}px"></div>` : ''}
+      <span class="scale">${maxF} m</span>
+      <div class="cols">${cols.map(g=>`<div class="g">${g.map(c=>{
+        if (!c || !c.e) return '<span style="height:3px;--c:var(--line)"></span>';
+        return `<span class="${c.past?'past':''}" style="height:${Math.max(3, px(c.e.face)).toFixed(0)}px;--c:${tone(c.e.score)[0]}" title="${c.e.face.toFixed(1)} m, ${c.e.score}/5"></span>`;
+      }).join('')}</div>`).join('')}</div></div>
+    <div class="labels">${days.map(d=>`<span class="${best && best.day===d && best.best.score>=ACTIVE_FROM ? 'best':''}">${dayShort(d)}</span>`).join('')}</div></div>`;
 }
-
-function notify(){
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const sent = store.get('surf.sent', {});
-  upcomingAlerts().forEach(h=>{
-    const key = `${h.sp.id}|${h.d.day}`;
-    if ((sent[key] ?? -1) >= h.d.best.score) return;
-    new Notification(`${h.sp.name}: ${h.d.best.score}/5`, {body:`${dayLabel(h.d.day)} dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m`});
-    sent[key] = h.d.best.score;
-  });
-  store.set('surf.sent', sent);
-}
-
-let lastTab = 'spot';
 function openDetail(id){
   const sp = spots.find(s=>s.id===id), s = data[id];
   if (!sp || !s) return;
-  const ev = evaluate(sp, s, currentIndex(s));
-  // un punto ogni 3 ore, allineato a 0, 3, 6… così i giorni si leggono bene
-  let start = currentIndex(s);
-  while (start < s.time.length && +s.time[start].slice(11,13) % 3) start++;
-  const pts = [];
-  for (let i=start; i<s.time.length; i+=3) pts.push({t:s.time[i], e:evaluate(sp, s, i)});
-  const faces = pts.map(p=>Math.max(p.e?.face||0, p.e?.hs||0));
-  const maxF = Math.ceil(Math.max(1.5, ...faces)*1.15*2)/2;       // scala adattiva, a passi di 0,5 m
-  const bw=7, gap=3, H=130, top=6, L=30, W = L + pts.length*(bw+gap) + 6;
-  const y = v => H-(Math.min(v,maxF)/maxF)*(H-top);
-  let g = `<rect x="${L}" y="${y(sp.max)}" width="${W-L}" height="${y(sp.min)-y(sp.max)}" fill="var(--s2)" opacity=".12"/>`;
-  for (let v=0; v<=maxF+0.001; v+=maxF>3?1:0.5){
-    g += `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="${v?0.5:1}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v%1?v.toFixed(1):v} m</text>`;
-  }
-  let prevDay = '';
-  const perDay = pts.reduce((m,p)=>(m[p.t.slice(0,10)]=(m[p.t.slice(0,10)]||0)+1, m), {});
-  pts.forEach((p,k)=>{
-    const x = L+4+k*(bw+gap), day = p.t.slice(0,10);
-    if (day !== prevDay){
-      prevDay = day;
-      const lab = day === todayIso() ? 'Oggi' : dayName(day).slice(0,3)+' '+(+day.slice(8,10));
-      g += `<line x1="${x-2}" x2="${x-2}" y1="${top}" y2="${H}" stroke="var(--line)"/>${perDay[day] >= 4 ? `<text x="${x}" y="${H+16}">${lab}</text>` : ''}`;
-    }
-    if (p.e){
-      const hh = Math.max(2, H-y(p.e.hs)), h = Math.max(2, H-y(p.e.face));
-      g += `<rect x="${x}" y="${H-hh}" width="${bw}" height="${hh}" rx="2" fill="var(--muted)" opacity=".22"/>`;
-      g += `<rect x="${x}" y="${H-h}" width="${bw}" height="${h}" rx="2" fill="${scoreTone(p.e.score)[0]}"><title>${p.t.slice(11)}: a riva ${p.e.face.toFixed(1)} m, al largo ${p.e.hs.toFixed(1)} m, ${p.e.score}/5</title></rect>`;
-    }
-  });
-  const custom = !baseSpots.some(b=>b.id===id);
+  const ev = nowEval(sp), days = forecastDays(sp);
+  const best = days.reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
+  const custom = !baseSpots.some(b=>b.id===id), isFav = favorite === id, fol = isFollowed(sp);
+  const backTo = {spot:'Tutti gli spot', map:'Mappa', alert:'Alert'}[lastTab];
   const el = document.getElementById('v-detail');
-  el.innerHTML = `<button class="btn" id="back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Indietro</button>
-    <div class="dhead">${dial(sp, ev, 124)}<div><h1 style="font-size:2.3rem">${esc(sp.name)}</h1><p class="muted small">${esc(sp.area||'')}</p>
-      <div class="pill">${badge(ev?.score, true)}${scoreLabel(ev?.score)} adesso</div></div></div>
+  el.innerHTML = `<button class="backlink" id="back">${ICON.back}${backTo}</button>
+    <div class="dhead">${dial(sp, ev, 132)}
+      <div><h1>${esc(sp.name)}</h1><p class="muted small" style="margin-top:4px">${esc(sp.area||'')}</p>
+        <div class="pill">${badge(ev?.score,'xs')}${scoreLabel(ev?.score)} adesso</div><br>
+        <button class="star" id="favBtn" aria-pressed="${isFav}">${ICON.star(isFav)}${isFav?'Preferito':'Metti tra i preferiti'}</button></div></div>
     <div class="facts">
-      <div><span class="small muted">Onda a riva</span><b>${ev? ev.face.toFixed(1)+' m':'–'}</b></div>
-      <div><span class="small muted">Al largo</span><b>${ev? ev.hs.toFixed(1)+' m, '+Math.round(ev.T)+' s':'–'}</b></div>
-      <div><span class="small muted">Swell da</span><b>${ev? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°':'–'}</b></div>
-      <div><span class="small muted">Vento</span><b>${ev? Math.round(ev.ws)+' km/h '+ev.windType:'–'}</b></div></div>
-    <h2>Prossimi 7 giorni</h2>
-    <p class="small muted" style="margin-bottom:8px">Ogni 3 ore: barra colorata = onda stimata a riva (colore = punteggio), barra grigia = onda al largo. La fascia verde è il range surfabile (${sp.min}–${sp.max} m).</p>
-    <div class="chart"><svg width="${W}" height="${H+24}" role="img" aria-label="Altezza stimata a riva e al largo nei prossimi 7 giorni">${g}</svg></div>
-    <h2>Giorno per giorno</h2>
-    <ul class="days">${forecastDays(sp).map(d=>`<li><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score, true)}
-      <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></li>`).join('')}</ul>
-    ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px"><button class="btn" id="copySpot">Copia per spots.json</button><button class="btn" id="delSpot">Elimina questo spot</button></div>
-      <p class="small muted" id="copyMsg" style="margin-top:8px">Incolla il testo copiato in spots.json, nella lista "spots", per ricevere gli alert Telegram di questo spot.</p>` : ''}`;
+      <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
+      <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m, '+Math.round(ev.T)+' s' : '–'}</b></div>
+      <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
+      <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div></div>
+    <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
+    <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17. La fascia chiara è il range surfabile (${sp.min}–${sp.max} m).</p>
+    ${chartHtml(sp)}
+    <h2 style="margin-bottom:4px">Giorno per giorno</h2>
+    <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
+      <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></div>`).join('')}</div>
+    <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
+    ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button></div>
+      <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}`;
   showView('detail');
   document.getElementById('back').onclick = ()=>setTab(lastTab);
+  document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
+  document.getElementById('followBtn').onclick = ()=>{ toggleFollow(id); openDetail(id); };
   const cp = document.getElementById('copySpot');
   if (cp) cp.onclick = async ()=>{
     const {beachLat, beachLon, ...clean} = sp;
@@ -491,59 +513,94 @@ function openDetail(id){
   const del = document.getElementById('delSpot');
   if (del) del.onclick = ()=>{
     store.set('surf.customSpots', store.get('surf.customSpots', []).filter(s=>s.id!==id));
-    spots = spots.filter(s=>s.id!==id); delete data[id]; setTab('spot');
+    spots = spots.filter(s=>s.id!==id); delete data[id];
+    if (favorite === id){ favorite = null; store.set('surf.favorite', null); }
+    if (leafPins[id]){ leaf.removeLayer(leafPins[id]); delete leafPins[id]; }
+    setTab('spot');
   };
 }
-
-function showView(v){
-  ['spot','detail','add','map','alert'].forEach(x=>document.getElementById('v-'+x).hidden = x!==v);
-  window.scrollTo(0,0);
-}
-function setTab(t){
-  lastTab = t;
-  document.querySelectorAll('nav.tabs button').forEach(b=> b.dataset.tab===t ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
-  showView(t); renderAll();
-}
-function renderAll(){
-  if (!Object.keys(data).length) return;
-  if (lastTab==='spot') renderSpot();
-  if (lastTab==='map') renderMap();
-  if (lastTab==='alert') renderAlert();
+function toggleFollow(id){
+  const list = spots.filter(isFollowed).map(s=>s.id);
+  followed = list.includes(id) ? list.filter(x=>x!==id) : [...list, id];
+  store.set('surf.followed', followed);
 }
 
-async function refresh(){
-  const up = document.getElementById('updated'), st = document.getElementById('status');
-  up.textContent = 'Scarico le previsioni…'; st.hidden = true;
-  try{
-    if (!baseSpots.length) await loadSpots();
-    data = await fetchForecast();
-    up.textContent = 'Aggiornato alle ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) + ', dati Open-Meteo';
-    renderAll(); notify();
-  }catch(e){
-    up.textContent = 'Previsioni non disponibili';
-    st.hidden = false; st.textContent = `Download non riuscito (${e.message}). Controlla la connessione e ricarica la pagina.`;
+// ---------- Mappa ----------
+function mapScore(sp){
+  if (mapDay === 'now') return nowEval(sp);
+  const d = forecastDays(sp).find(x=>x.day===mapDay);
+  return d ? {...d.best, face:d.maxFace} : null;
+}
+function renderMap(){
+  const days = allDays();
+  document.getElementById('chips').innerHTML = [['now','Adesso'], ...days.map(d=>[d, dayChip(d)])]
+    .map(([k,l])=>`<button aria-pressed="${mapDay===k}" data-day="${k}">${l}</button>`).join('');
+  document.getElementById('mapSub').textContent = mapDay === 'now' ? 'Punteggi di adesso' : `Il meglio di ${dayLabel(mapDay).toLowerCase()} nelle ore di luce`;
+  if (!window.L){ document.getElementById('leaf').innerHTML = '<p class="muted" style="padding:16px">Mappa non disponibile: controlla la connessione.</p>'; return; }
+  if (!leaf){
+    leaf = L.map('leaf', {zoomControl:false, attributionControl:true}).setView([40.0, 8.9], 8);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap, &copy; CARTO'}).addTo(leaf);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {maxZoom:18, pane:'shadowPane'}).addTo(leaf);
+    leaf.on('click', ()=>{ mapSel = null; renderMap(); });
   }
+  if (!mapSel) mapSel = favorite && spots.some(s=>s.id===favorite) ? favorite : spots.map(sp=>({sp, e:mapScore(sp)})).sort((a,b)=>(b.e?.score??-1)-(a.e?.score??-1))[0]?.sp.id;
+  spots.forEach(sp=>{
+    const e = mapScore(sp), [bg,fg] = tone(e?.score), b = beach(sp);
+    const icon = L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17],
+      html:`<div class="pin${mapSel===sp.id?' sel':''}" style="--c:${bg};--fg:${fg}" aria-label="${esc(sp.name)}, ${e?.score ?? 'n.d.'} su 5">${e?.score ?? '–'}</div>`});
+    if (leafPins[sp.id]) leafPins[sp.id].setIcon(icon);
+    else {
+      leafPins[sp.id] = L.marker([b.lat, b.lon], {icon, keyboard:true, title:sp.name}).addTo(leaf);
+      leafPins[sp.id].on('click', ev=>{ L.DomEvent.stopPropagation(ev); mapSel = sp.id; renderMap(); });
+    }
+  });
+  const card = document.getElementById('mapCard'), sel = spots.find(s=>s.id===mapSel);
+  if (sel && document.getElementById('windy').hidden){
+    const e = mapScore(sel);
+    card.hidden = false; card.dataset.open = sel.id;
+    card.innerHTML = `${badge(e?.score)}<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(sel.name)}</p>
+      <p class="small muted">${e ? `${e.face.toFixed(1)} m, ${Math.round(e.T)} s da ${cardinal(e.dir)}, ${e.windType} ${Math.round(e.ws)} km/h` : 'Nessun dato'}</p></div>${ICON.chev}`;
+  } else card.hidden = true;
+  setTimeout(()=>leaf.invalidateSize(), 60);
 }
-
-// ---------- Eventi ----------
-document.addEventListener('click', e=>{
-  const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
-  const t = e.target.closest('[data-tab]'); if (t){ setTab(t.dataset.tab); return; }
-  const th = e.target.closest('[data-thr]'); if (th){ threshold = +th.dataset.thr; store.set('surf.threshold', threshold); renderAlert(); return; }
-  const f = e.target.closest('[data-follow]');
-  if (f){
-    const list = spots.filter(isFollowed).map(s=>s.id), id = f.dataset.follow;
-    followed = list.includes(id) ? list.filter(x=>x!==id) : [...list, id];
-    store.set('surf.followed', followed); renderAlert();
-  }
-});
-document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
-document.getElementById('nearBtn').onclick = ()=>{
-  const st = document.getElementById('status');
-  if (!navigator.geolocation){ st.hidden=false; st.textContent='Questo browser non fornisce la posizione.'; return; }
-  navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; renderSpot(); },
-    ()=>{ st.hidden=false; st.textContent='Posizione non concessa: gli spot restano ordinati per punteggio.'; });
+document.getElementById('windyBtn').onclick = e=>{
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true', f = document.getElementById('windy');
+  e.currentTarget.setAttribute('aria-pressed', on);
+  e.currentTarget.textContent = on ? 'Punteggi spot' : 'Onde animate';
+  if (on && !f.src) f.src = WINDY_URL;
+  f.hidden = !on; document.getElementById('leaf').hidden = on;
+  renderMap();
 };
+
+// ---------- Alert ----------
+function renderAlert(){
+  const hits = upcomingAlerts();
+  document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>`
+    <button data-open="${h.sp.id}">${badge(h.d.best.score)}<div><p style="font-weight:600">${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()} ${+h.d.day.slice(8,10)}</p>
+      <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m, vento ${h.d.best.windType}</p></div></button>`).join('')
+    : `<p class="muted small" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
+  document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold ? v+' / 5' : v}</button>`).join('');
+  document.getElementById('followList').innerHTML = spots.map(sp=>`
+    <div class="srow"><span style="font-weight:600">${esc(sp.name)}</span>
+      <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
+  const ns = document.getElementById('notifState'), nb = document.getElementById('notifBtn');
+  if (!('Notification' in window)){ ns.textContent = 'Non supportate: su iPhone aggiungi prima l\'app alla schermata Home.'; nb.hidden = true; }
+  else if (Notification.permission === 'granted'){ ns.textContent = 'Attive, arrivano quando apri l\'app.'; nb.hidden = true; }
+  else if (Notification.permission === 'denied'){ ns.textContent = 'Bloccate nelle impostazioni del browser.'; nb.hidden = true; }
+  else { ns.textContent = 'Arrivano quando apri l\'app.'; nb.hidden = false; }
+}
+function notify(){
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const sent = store.get('surf.sent', {});
+  upcomingAlerts().forEach(h=>{
+    const key = `${h.sp.id}|${h.d.day}`;
+    if ((sent[key] ?? -1) >= h.d.best.score) return;
+    try{ new Notification(`${h.sp.name}: ${h.d.best.score}/5`, {body:`${dayLabel(h.d.day)} dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m`}); }catch(e){}
+    sent[key] = h.d.best.score;
+  });
+  store.set('surf.sent', sent);
+}
+
 // ---------- Nuovo spot ----------
 const DIRS = [['NO',315],['N',0],['NE',45],['O',270],null,['E',90],['SO',225],['S',180],['SE',135]];
 const TYPES = [
@@ -562,12 +619,11 @@ function drawAdd(){
     ? `<button aria-pressed="${add.facing===d[1]}" data-dir="${d[1]}" aria-label="Mare verso ${d[0]}">${d[0]}</button>`
     : `<span class="c">spiaggia</span>`).join('');
   document.getElementById('types').innerHTML = TYPES.map(t =>
-    `<button aria-pressed="${add.type===t.id}" data-type="${t.id}"><b>${t.t}</b><span class="small muted">${t.d}</span></button>`).join('');
+    `<button aria-pressed="${add.type===t.id}" data-type="${t.id}"><b>${t.t}</b><span class="xs muted">${t.d}</span></button>`).join('');
   if (!add.map) return;
   if (add.arrow){ add.map.removeLayer(add.arrow); add.arrow = null; }
   if (add.pos && add.facing != null){
-    const end = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
-    add.arrow = L.polyline([add.pos, end], {color:'#1D5F8A', weight:4, dashArray:'6 6'}).addTo(add.map);
+    add.arrow = L.polyline([add.pos, offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5)], {color:'#1D5F8A', weight:4, dashArray:'6 6'}).addTo(add.map);
   }
 }
 function setPos(lat, lon, zoom){
@@ -584,7 +640,7 @@ function openAdd(){
   showView('add');
   if (!window.L){ document.getElementById('pickMap').innerHTML = '<p class="muted" style="padding:14px">Mappa non disponibile: controlla la connessione e riapri.</p>'; drawAdd(); return; }
   if (!add.map){
-    add.map = L.map('pickMap', {zoomControl:true}).setView([40.0, 8.5], 9);
+    add.map = L.map('pickMap').setView([40.0, 8.5], 9);
     add.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap'}).addTo(add.map);
     add.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, attribution:'Esri, Maxar'});
     add.map.on('click', e => setPos(+e.latlng.lat.toFixed(5), +e.latlng.lng.toFixed(5)));
@@ -592,7 +648,7 @@ function openAdd(){
     if (add.marker){ add.map.removeLayer(add.marker); add.marker = null; }
     add.map.setView([40.0, 8.5], 9);
   }
-  setTimeout(()=>add.map.invalidateSize(), 50);
+  setTimeout(()=>add.map.invalidateSize(), 60);
   drawAdd();
 }
 document.getElementById('addOpen').onclick = openAdd;
@@ -621,6 +677,51 @@ document.getElementById('addSave').onclick = ()=>{
     facing:add.facing, window:t.window, offshore:(add.facing+180)%360, min:t.min, max:t.max, minPeriod:t.minPeriod, alert:true};
   store.set('surf.customSpots', [...store.get('surf.customSpots', []), sp]);
   spots.push(sp); setTab('spot'); refresh().then(()=>openDetail(sp.id));
+};
+
+// ---------- Navigazione ----------
+function showView(v){
+  ['spot','detail','add','map','alert'].forEach(x=>document.getElementById('v-'+x).hidden = x!==v);
+  window.scrollTo(0,0);
+}
+function setTab(t){
+  lastTab = t;
+  document.querySelectorAll('nav.tabs button').forEach(b=> b.dataset.tab===t ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
+  showView(t); renderAll();
+}
+function renderAll(){
+  if (!Object.keys(data).length) return;
+  if (lastTab==='spot') renderSpot();
+  if (lastTab==='map') renderMap();
+  if (lastTab==='alert') renderAlert();
+}
+async function refresh(){
+  const up = document.getElementById('updated'), st = document.getElementById('status');
+  up.textContent = 'Scarico le previsioni…'; st.hidden = true;
+  try{
+    if (!baseSpots.length) await loadSpots();
+    data = await fetchForecast();
+    up.textContent = 'Sardegna, aggiornato alle ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    renderAll(); notify();
+  }catch(e){
+    up.textContent = 'Previsioni non disponibili';
+    st.hidden = false; st.textContent = `Download non riuscito (${e.message}). Controlla la connessione e ricarica la pagina.`;
+  }
+}
+
+document.addEventListener('click', e=>{
+  const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
+  const t = e.target.closest('[data-tab]'); if (t){ setTab(t.dataset.tab); return; }
+  const th = e.target.closest('[data-thr]'); if (th){ threshold = +th.dataset.thr; store.set('surf.threshold', threshold); renderAlert(); return; }
+  const dy = e.target.closest('[data-day]'); if (dy){ mapDay = dy.dataset.day; renderMap(); return; }
+  const f = e.target.closest('[data-follow]'); if (f){ toggleFollow(f.dataset.follow); renderAlert(); }
+});
+document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
+document.getElementById('nearBtn').onclick = ()=>{
+  const st = document.getElementById('status');
+  if (!navigator.geolocation){ st.hidden = false; st.textContent = 'Questo browser non fornisce la posizione.'; return; }
+  navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; renderSpot(); },
+    ()=>{ st.hidden = false; st.textContent = 'Posizione non concessa: gli spot restano ordinati per punteggio.'; });
 };
 setInterval(refresh, 3*60*60*1000);
 refresh();
