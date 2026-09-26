@@ -28,7 +28,7 @@ main{max-width:560px;margin:0 auto;padding:24px 20px calc(110px + env(safe-area-
 h1,h2,.cond{font-family:"Barlow Condensed","Arial Narrow",Barlow,sans-serif}
 h1{margin:0;font-weight:700;font-size:48px;line-height:.95}
 h1.sub{font-size:40px;line-height:1}
-h1.brand{font-size:clamp(34px,10.5vw,48px);white-space:nowrap}
+h1.brand{font-size:clamp(32px,9.5vw,48px);white-space:nowrap;min-width:0}
 h2{margin:24px 0 8px;font-weight:600;font-size:22px}
 p{margin:0}
 .muted{color:var(--muted)} .small{font-size:14px} .xs{font-size:13px}
@@ -37,7 +37,11 @@ button{cursor:pointer}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
-.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.locbtn{flex-shrink:0;min-height:44px;padding:0 14px 0 5px;border-radius:22px;border:1px solid var(--line);background:var(--panel);color:var(--ink);display:inline-flex;align-items:center;gap:8px;font:600 15px Barlow,sans-serif}
+.locbtn .ic{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;flex-shrink:0}
+.locbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.locbtn[aria-pressed="true"] .ic{background:#fff;color:var(--accent)}
 .pillbtn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--panel);font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
 .pillbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:16px;min-height:48px;border-radius:24px;justify-content:center;width:100%}
 .backlink{display:inline-flex;align-items:center;gap:4px;min-height:44px;border:0;background:none;color:var(--accent);font-weight:600;padding:0}
@@ -46,17 +50,26 @@ a{color:var(--accent)}
 .badge.lg{width:48px;height:48px;font-size:20px}
 .badge.xs{width:28px;height:28px;font-size:14px}
 /* preferito */
-.fav{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:14px;width:100%;text-align:left;display:block}
-.fav .top{display:flex;align-items:center;gap:12px}
-.fav .k{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px}
-.fav .name{font:600 26px/1.05 "Barlow Condensed",sans-serif}
-.fav .big{font:700 34px/1 "Barlow Condensed",sans-serif}
-.fav .big span{font-size:17px;font-weight:500;color:var(--muted)}
-.fav .days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-.fav .days div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.fav{position:relative;overflow:hidden;margin-top:18px;background:var(--ink);color:#fff;border:0;border-radius:22px;padding:16px 16px 14px;width:100%;text-align:left;display:block}
+.fav .favwave{position:absolute;left:0;bottom:0;width:100%;height:78px;pointer-events:none}
+.fav .top{position:relative;display:flex;align-items:flex-start;gap:12px}
+.fav .grow{flex:1;min-width:0}
+.fav .k{font-size:13px;color:#E6B24A;display:flex;align-items:center;gap:5px;font-weight:600}
+.fav .name{margin-top:4px;font:700 34px/1 "Barlow Condensed",sans-serif;overflow-wrap:anywhere}
+.fav .meas{margin-top:10px;font:700 32px/1 "Barlow Condensed",sans-serif}
+.fav .meas span{font-size:16px;font-weight:500;color:#B9C8D0}
+.fav .cond2{margin-top:4px;font-size:14px;color:#D9E3E8}
+.fav .side{position:relative;flex-shrink:0}
+.fav .side .badge{position:absolute;right:-6px;bottom:-6px;box-shadow:0 0 0 3px var(--ink)}
+.fav .dial .ring{fill:rgba(255,255,255,.06);stroke:rgba(255,255,255,.3)}
+.fav .dial .win{stroke:#5DBFAE;opacity:.7}
+.fav .dial .sw{stroke:#9CC0D3} .fav .dial .swh{fill:#9CC0D3}
+.fav .dial .wd{stroke:#C9D68A}
+.fav .days{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16)}
+.fav .days div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:#B9C8D0}
 .favhint{margin-top:16px;padding:12px 14px;border:1px dashed var(--line);border-radius:16px;font-size:14px;color:var(--muted);display:flex;gap:10px;align-items:center}
-.banner{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:#fff;border:0;width:100%;text-align:left}
-.banner .k{font-size:13px;color:#B9C8D0}
+.banner{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--accent);color:#fff;border:0;width:100%;text-align:left}
+.banner .k{font-size:13px;color:#CFE0EA}
 .banner .t{margin-top:2px;font:600 22px/1.1 "Barlow Condensed",sans-serif}
 .banner .d{margin-top:2px;font-size:14px;color:#D9E3E8}
 .list{display:flex;flex-direction:column;gap:8px}
@@ -68,6 +81,25 @@ a{color:var(--accent)}
 .row .h span{font-size:16px;font-weight:500;color:var(--muted)}
 .mini{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;width:100%;text-align:left}
 .mini .grow{flex:1;font-weight:600}
+.lhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:24px 0 8px}
+.lhead h2{margin:0}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;min-height:44px;padding:0}
+.hint{margin:-2px 0 10px;font-size:13px;color:var(--muted)}
+.item{display:flex;align-items:stretch;gap:4px;position:relative}
+.item>button{flex:1;min-width:0}
+.grip{flex-shrink:0;width:26px;margin-left:-6px;display:grid;place-items:center;color:var(--muted);touch-action:none;cursor:grab;border-radius:10px;-webkit-user-select:none;user-select:none}
+.item.dragging{z-index:20}
+.item.dragging>button{box-shadow:0 10px 24px rgba(19,40,59,.2);border-color:var(--accent);background:var(--panel)}
+.item.dragging .grip{color:var(--accent);cursor:grabbing}
+body.sorting{-webkit-user-select:none;user-select:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;background:var(--c);flex-shrink:0}
+.legend em{font-style:normal;color:var(--muted)}
+.chart .legend{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.thrinfo{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.thrinfo .tt{font:600 20px/1.1 "Barlow Condensed",sans-serif}
+.thrinfo .legend{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
 .addspot{margin-top:20px;width:100%;justify-content:center;border-style:dashed;background:transparent}
 .dial{flex-shrink:0}
 .dial .ring{fill:var(--panel);stroke:var(--line)}
@@ -162,12 +194,14 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 <!-- SPOT -->
 <section id="v-spot">
  <div class="head">
-  <div><h1 class="brand">Sinis Waves</h1><p class="muted small" id="updated" style="margin-top:4px">Scarico le previsioni…</p></div>
-  <button class="pillbtn" id="nearBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>Vicino a me</button>
+  <h1 class="brand">Sinis Waves</h1>
+  <button class="locbtn" id="nearBtn" aria-pressed="false"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg></span>Vicino a me</button>
  </div>
+ <p class="muted small" id="updated" style="margin-top:6px">Scarico le previsioni…</p>
  <div id="fav"></div>
  <button class="banner" id="banner" hidden></button>
- <h2>Attivi ora</h2>
+ <div class="lhead"><h2>Attivi ora</h2><button class="linkbtn" id="resetOrder" hidden>Ordina per punteggio</button></div>
+ <p class="hint" id="orderHint"></p>
  <div class="list" id="activeList"></div>
  <h2 class="muted">Non attivi</h2>
  <div class="list" id="offList" style="gap:6px"></div>
@@ -198,12 +232,13 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <h2>In arrivo</h2>
  <div class="card alist" id="alertList"></div>
  <h2>Avvisami da</h2>
+ <p class="small muted" style="margin-bottom:10px">Ogni spot ha un punteggio da 0 a 5 che mette insieme tre cose: l'onda a riva rispetto al range surfabile dello spot, il periodo dello swell e il vento (offshore o debole aiuta, laterale e onshore tolgono punti). Scegli da che punteggio vuoi essere avvisato.</p>
  <div class="seg" id="seg"></div>
- <p class="xs muted" style="margin-top:6px">3 vuol dire onda nel range dello spot e vento accettabile.</p>
+ <div class="thrinfo" id="thrInfo"></div>
  <h2>Come</h2>
  <div class="card">
   <div class="srow"><div><p style="font-weight:600">Notifiche dell'app</p><p class="xs muted" id="notifState"></p></div><button class="pillbtn" id="notifBtn">Attiva</button></div>
-  <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot con "alert": true in spots.json.</p></div></div>
+  <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot con "alert": true in spots.json. La loro soglia è separata: è la variabile SURF_THRESHOLD su GitHub (se non c'è vale 3).</p></div></div>
   <div class="srow"><div><p style="font-weight:600">Solo ore di luce</p><p class="xs muted">Dalle 7 alle 19</p></div></div>
  </div>
  <h2>Spot seguiti</h2>
@@ -311,6 +346,22 @@ function tone(sc){
  if (sc < 4.5) return ['var(--s3)','#13283B'];
  return ['var(--s4)','#FFFFFF'];
 }
+const LEVELS = [
+ {c:'var(--s0)', t:'Non surfabile', r:'0–1'},
+ {c:'var(--s1)', t:'Scarso', r:'1.5–2'},
+ {c:'var(--s2)', t:'Discreto', r:'2.5–3'},
+ {c:'var(--s3)', t:'Buono', r:'3.5–4'},
+ {c:'var(--s4)', t:'Ottimo', r:'4.5–5'},
+];
+const legendHtml = (extra='') => `<div class="legend">${LEVELS.map(l=>`<span><i style="--c:${l.c}"></i>${l.t} <em>${l.r}</em></span>`).join('')}${extra}</div>`;
+const THR = {
+ 2.5:{t:'Anche giornate al limite', d:"Onda nel range dello spot ma penalizzata: vento laterale o onshore, periodo corto, oppure mare un po' troppo grosso.", f:'Molti avvisi, qualcuno a vuoto.'},
+ 3:{t:'Giornate surfabili', d:'Onda almeno al minimo del range dello spot, con periodo e vento che non la rovinano.', f:'Il giusto equilibrio: è la soglia consigliata.'},
+ 3.5:{t:'Giornate buone', d:'Onda ben formata dentro il range, non solo al minimo, con vento debole o offshore.', f:'Meno avvisi, più affidabili.'},
+ 4:{t:'Solo giornate belle', d:'Onda comoda nel range, periodo sopra il minimo dello spot e vento debole o offshore.', f:'Pochi avvisi, quasi sempre da non perdere.'}
+};
+const FAV_WAVE = '<svg class="favwave" viewBox="0 0 400 78" preserveAspectRatio="none" aria-hidden="true"><path d="M0 38 C50 18 100 58 150 38 S250 18 300 38 S370 54 400 32 V78 H0Z" fill="rgba(156,192,211,.10)"/><path d="M0 54 C60 40 110 68 170 54 S280 38 330 54 S385 62 400 50 V78 H0Z" fill="rgba(156,192,211,.09)"/></svg>';
+const GRIP = '<svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.7"/><circle cx="10" cy="4" r="1.7"/><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="4" cy="16" r="1.7"/><circle cx="10" cy="16" r="1.7"/></svg>';
 const scoreLabel = sc => sc == null ? 'Nessun dato' : sc < 1.5 ? 'Non surfabile' : sc < 2.5 ? 'Scarso' : sc < 3.5 ? 'Discreto' : sc < 4.5 ? 'Buono' : 'Ottimo';
 
 function nowKey(){
@@ -422,12 +473,13 @@ function renderSpot(){
  const fav = spots.find(s=>s.id===favorite), favEl = document.getElementById('fav');
  if (fav && data[fav.id]){
   const ev = nowEval(fav), days = forecastDays(fav).slice(0,5);
-  favEl.innerHTML = `<button class="fav" data-open="${fav.id}">
-   <div class="top">${dial(fav, ev, 72)}
-    <div style="flex:1;min-width:0"><p class="k">${ICON.star(true)} Il tuo spot</p><p class="name">${esc(fav.name)}</p>
-    <p class="xs muted">${ev ? `${Math.round(ev.T)} s da ${cardinal(ev.dir)}, vento ${ev.windType} ${Math.round(ev.ws)} km/h` : 'Nessun dato'}</p></div>
-    <div style="text-align:right"><p class="big">${ev ? ev.face.toFixed(1) : '–'}<span> m</span></p></div>
-    ${badge(ev?.score,'lg')}</div>
+  favEl.innerHTML = `<button class="fav" data-open="${fav.id}">${FAV_WAVE}
+   <div class="top"><div class="grow">
+    <p class="k">${ICON.star(true)}Il tuo spot</p>
+    <p class="name">${esc(fav.name)}</p>
+    <p class="meas">${ev ? ev.face.toFixed(1) : '–'}<span> m a riva${ev ? `, ${Math.round(ev.T)} s da ${cardinal(ev.dir)}` : ''}</span></p>
+    <p class="cond2">${ev ? `${scoreLabel(ev.score)}, vento ${ev.windType} ${Math.round(ev.ws)} km/h` : 'Nessun dato'}</p></div>
+    <div class="side">${dial(fav, ev, 88)}${badge(ev?.score)}</div></div>
    <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
   </button>`;
  } else {
@@ -435,21 +487,26 @@ function renderSpot(){
  }
 
  const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, beach(sp)) : null}));
- rows.sort((a,b)=> userPos ? a.dist-b.dist : (b.ev?.score ?? -1)-(a.ev?.score ?? -1));
+ const order = store.get('surf.order', null);
+ const pos = id => { const i = order ? order.indexOf(id) : -1; return i < 0 ? Infinity : i; };
+ const byScore = (a,b)=>(b.ev?.score ?? -1)-(a.ev?.score ?? -1);
+ rows.sort((a,b)=> userPos ? a.dist-b.dist : order ? ((pos(a.sp.id)-pos(b.sp.id)) || byScore(a,b)) : byScore(a,b));
+ const grip = sp => userPos ? '' : `<span class="grip" role="button" tabindex="0" aria-label="Sposta ${esc(sp.name)}: frecce su e giù">${GRIP}</span>`;
  const on = rows.filter(r=>(r.ev?.score ?? 0) >= ACTIVE_FROM), off = rows.filter(r=>(r.ev?.score ?? 0) < ACTIVE_FROM);
 
  document.getElementById('activeList').innerHTML = on.length ? on.map(r=>`
-  <button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
+  <div class="item" data-id="${r.sp.id}">${grip(r.sp)}<button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
    <div class="grow"><p class="name">${esc(r.sp.name)}</p>
     <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</p>
     <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
    <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
-   ${badge(r.ev.score)}</button>`).join('')
+   ${badge(r.ev.score)}</button></div>`).join('')
   : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
 
  document.getElementById('offList').innerHTML = off.map(r=>`
-  <button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
-   <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</span>${badge(r.ev?.score,'sm')}</button>`).join('');
+  <div class="item" data-id="${r.sp.id}">${grip(r.sp)}<button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
+   <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</span>${badge(r.ev?.score,'sm')}</button></div>`).join('');
+ updateOrderUi();
 
  const b = document.getElementById('banner'), next = upcomingAlerts()[0];
  if (next){
@@ -459,6 +516,66 @@ function renderSpot(){
   b.dataset.open = next.sp.id;
  } else b.hidden = true;
 }
+function updateOrderUi(){
+ const custom = !!store.get('surf.order', null);
+ document.getElementById('resetOrder').hidden = !custom || !!userPos;
+ document.getElementById('orderHint').textContent = userPos
+  ? 'Ordinati dal più vicino. Tocca di nuovo "Vicino a me" per tornare al tuo ordine.'
+  : custom ? '' : 'Trascina la maniglia a sinistra per mettere gli spot nell\'ordine che vuoi.';
+ document.getElementById('orderHint').hidden = !document.getElementById('orderHint').textContent;
+}
+function saveOrder(){
+ const ids = [...document.querySelectorAll('#activeList .item, #offList .item')].map(x=>x.dataset.id);
+ const rest = (store.get('surf.order', []) || []).filter(id=>!ids.includes(id));
+ store.set('surf.order', [...ids, ...rest]);
+ updateOrderUi();
+}
+function initDrag(list){
+ list.addEventListener('pointerdown', e=>{
+  const g = e.target.closest('.grip'); if (!g) return;
+  e.preventDefault();
+  const item = g.closest('.item'), grab = e.clientY - item.getBoundingClientRect().top;
+  item.classList.add('dragging'); document.body.classList.add('sorting');
+  if (navigator.vibrate) navigator.vibrate(10);
+  const pid = e.pointerId;
+  const move = ev=>{
+   if (ev.pointerId !== pid) return;
+   const y = ev.clientY;
+   item.style.transform = '';
+   let before = null;
+   for (const sib of list.querySelectorAll('.item')){
+    if (sib === item) continue;
+    const r = sib.getBoundingClientRect();
+    if (y < r.top + r.height/2){ before = sib; break; }
+   }
+   if (before ? item.nextElementSibling !== before : list.lastElementChild !== item){
+    list.insertBefore(item, before);
+    if (navigator.vibrate) navigator.vibrate(5);
+   }
+   item.style.transform = `translateY(${Math.round(y - grab - item.getBoundingClientRect().top)}px)`;
+   if (y < 70) window.scrollBy(0, -12); else if (y > window.innerHeight - 150) window.scrollBy(0, 12);
+  };
+  const up = ev=>{
+   if (ev.pointerId !== pid) return;
+   window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+   item.style.transform = ''; item.classList.remove('dragging'); document.body.classList.remove('sorting');
+   saveOrder();
+  };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+ });
+ list.addEventListener('keydown', e=>{
+  const g = e.target.closest('.grip'); if (!g) return;
+  const item = g.closest('.item');
+  if (e.key === 'ArrowUp' && item.previousElementSibling){ e.preventDefault(); list.insertBefore(item, item.previousElementSibling); }
+  else if (e.key === 'ArrowDown' && item.nextElementSibling){ e.preventDefault(); list.insertBefore(item.nextElementSibling, item); }
+  else return;
+  g.focus(); saveOrder();
+ });
+}
+initDrag(document.getElementById('activeList'));
+initDrag(document.getElementById('offList'));
+document.getElementById('resetOrder').onclick = ()=>{ store.set('surf.order', null); renderSpot(); };
+
 function offReason(sp, ev){
  if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)} m al largo, swell fuori finestra` : 'Piatto';
  if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)} m, onshore ${Math.round(ev.ws)} km/h`;
@@ -484,7 +601,8 @@ function chartHtml(sp){
    if (!c || !c.e) return '<span style="height:3px;--c:var(--line)"></span>';
    return `<span class="${c.past?'past':''}" style="height:${Math.max(3, px(c.e.face)).toFixed(0)}px;--c:${tone(c.e.score)[0]}" title="${c.e.face.toFixed(1)} m, ${c.e.score}/5"></span>`;
   }).join('')}</div>`).join('')}</div></div>
-  <div class="labels">${days.map(d=>`<span class="${best && best.day===d && best.best.score>=ACTIVE_FROM ? 'best':''}">${dayShort(d)}</span>`).join('')}</div></div>`;
+  <div class="labels">${days.map(d=>`<span class="${best && best.day===d && best.best.score>=ACTIVE_FROM ? 'best':''}">${dayShort(d)}</span>`).join('')}</div>
+  ${legendHtml('<span><i style="--c:var(--s2);opacity:.25"></i>Range surfabile</span><span><i style="--c:var(--s3);opacity:.3"></i>Ore già passate (barre sbiadite)</span>')}</div>`;
 }
 
 function openDetail(id){
@@ -506,7 +624,7 @@ function openDetail(id){
    <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
    <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div></div>
   <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
-  <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17. La fascia chiara è il range surfabile (${sp.min}–${sp.max} m).</p>
+  <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17: l'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
   ${chartHtml(sp)}
   <h2 style="margin-bottom:4px">Giorno per giorno</h2>
   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
@@ -597,6 +715,8 @@ function renderAlert(){
   <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m, vento ${h.d.best.windType}</p></div></button>`).join('')
   : `<p class="muted small" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
  document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold ? v+' / 5' : v}</button>`).join('');
+ const ti = THR[threshold] || THR[3];
+ document.getElementById('thrInfo').innerHTML = `<p class="tt">Da ${threshold}: ${ti.t}</p><p class="small" style="margin-top:4px">${ti.d}</p><p class="xs muted" style="margin-top:4px">${ti.f} Vale per le notifiche dell'app e per l'elenco "In arrivo".</p>${legendHtml()}`;
  document.getElementById('followList').innerHTML = spots.map(sp=>`
   <div class="srow"><span style="font-weight:600">${esc(sp.name)}</span>
   <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
@@ -808,11 +928,12 @@ document.addEventListener('click', e=>{
  const f = e.target.closest('[data-follow]'); if (f){ toggleFollow(f.dataset.follow); renderAlert(); }
 });
 document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
-document.getElementById('nearBtn').onclick = ()=>{
- const st = document.getElementById('status');
+document.getElementById('nearBtn').onclick = e=>{
+ const btn = e.currentTarget, st = document.getElementById('status');
+ if (userPos){ userPos = null; btn.setAttribute('aria-pressed','false'); renderSpot(); return; }
  if (!navigator.geolocation){ st.hidden = false; st.textContent = 'Questo browser non fornisce la posizione.'; return; }
- navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; renderSpot(); },
-  ()=>{ st.hidden = false; st.textContent = 'Posizione non concessa: gli spot restano ordinati per punteggio.'; });
+ navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; btn.setAttribute('aria-pressed','true'); st.hidden = true; renderSpot(); },
+  ()=>{ st.hidden = false; st.textContent = 'Posizione non concessa: gli spot restano nel tuo ordine.'; });
 };
 
 setInterval(refresh, 3*60*60*1000);
