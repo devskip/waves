@@ -1018,7 +1018,8 @@ function openDetail(id){
 
   <div class="dfoot">
   <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
-  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button></div>
+  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn primary" id="saveGit" style="width:auto">Salva nell'elenco (GitHub)</button><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button>
+  <a class="pillbtn" href="https://www.openstreetmap.org/edit#map=18/${beach(sp).lat}/${beach(sp).lon}" target="_blank" rel="noopener" style="text-decoration:none">Segnalalo su OpenStreetMap ↗</a></div>
   <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}
   </div>`;
  showView('detail');
@@ -1032,6 +1033,28 @@ function openDetail(id){
  sheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closeSheet(); });
  document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
  document.getElementById('followBtn').onclick = ()=>{ toggleFollow(id); openDetail(id); };
+ const repo = (()=>{ const h = location.hostname, p = location.pathname.split('/').filter(Boolean);
+  return h.endsWith('.github.io') ? `https://github.com/${h.split('.')[0]}/${p[0] || h}/edit/main/spots.json` : null; })();
+ const sg = document.getElementById('saveGit');
+ if (sg) sg.onclick = async ()=>{
+  const txt = ',\n  ' + JSON.stringify({...sp, id: slug(sp.name) || sp.id, area: sp.area === 'Spot personale' ? 'I miei spot' : sp.area, alert:true});
+  const msg = document.getElementById('copyMsg');
+  try{ await navigator.clipboard.writeText(txt); }catch(e){}
+  msg.textContent = "Riga copiata. Si apre spots.json su GitHub: incollala subito prima dell'ultima riga con ] e fai Commit. Poi da questo telefono puoi eliminare la copia personale.";
+  if (repo) window.open(repo, '_blank', 'noopener'); else msg.textContent = txt;
+ };
+ const ca = document.getElementById('camAdd');
+ if (ca) ca.onclick = ()=>{
+  const url = prompt('Incolla il link della webcam'); if (!url || !/^https?:\/\//.test(url.trim())) return;
+  const name = prompt('Come la chiamo?', sp.name) || sp.name;
+  let src = 'Webcam'; try{ src = new URL(url.trim()).hostname.replace(/^www\./,''); }catch(e){}
+  const list = store.get('surf.customSpots', []), i = list.findIndex(x=>x.id===id);
+  if (i < 0) return;
+  list[i].cams = [...(list[i].cams || []), {name, url:url.trim(), src}];
+  store.set('surf.customSpots', list);
+  spots = spots.map(x => x.id === id ? list[i] : x);
+  openDetail(id);
+ };
  const cp = document.getElementById('copySpot');
  if (cp) cp.onclick = async ()=>{
   const txt = ',\n  ' + JSON.stringify({...sp, id: slug(sp.name) || sp.id, alert:true});
@@ -1054,7 +1077,11 @@ const CAM = {
  arco:{lat:40.016, lon:8.406, name:"Putzu Idu, arco di S'Architteddu", src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-putzu-idu-beach-arco-di-sarchitteddu-oristano-livecam-sardinia-italy/'},
  sg1:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis', src:'Panoramicams', url:'https://panoramicams.com/san-giovanni-di-sinis/'},
  sg2:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis, spiaggia', src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-san-giovanni-di-sinis-beach-oristano-sardinia-tourism-italy/'},
- sg3:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis, con dati meteo', src:'Vedetta', url:'https://vedetta.org/en/webcam/Italy/Sardinia/oristano/San-Giovanni-Sinis/'}
+ sg3:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis, con dati meteo', src:'Vedetta', url:'https://vedetta.org/en/webcam/Italy/Sardinia/oristano/San-Giovanni-Sinis/'},
+ // Lazio, Santa Marinella
+ banzai:{lat:42.029, lon:11.849, name:'Banzai, lineup', src:'SurfCamItalia', url:'https://surfcamitalia.it/spot/banzai-santa-marinella/'},
+ toscana:{lat:42.031, lon:11.847, name:'La Toscana (a nord di Banzai)', src:'SurfCamItalia', url:'https://surfcamitalia.it/spot/la-toscana-santa-marinella/'},
+ banzaisc:{lat:42.029, lon:11.849, name:'Banzai Sporting Club', src:'Banzai SC', url:'https://webcam.banzaisportingclub.it/'}
 };
 const SPOT_CAMS = {
  'capo-mannu':['capo'], 'mini-capo':['capo'], 'godzilla':['capo'], 'la-punta':['capo'], 'lo-scivolo':['capo','arco'], 'putzu-idu':['capo','arco'],
@@ -1063,10 +1090,12 @@ const SPOT_CAMS = {
 // webcam entro 4 km dalla spiaggia: così anche gli spot che aggiungi tu se le ritrovano
 const camsNear = p => Object.values(CAM).filter(c => distanceKm(p, c) <= 4);
 function camsHtml(sp){
- const list = SPOT_CAMS[sp.id] ? SPOT_CAMS[sp.id].map(k=>CAM[k]) : camsNear(beach(sp));
- if (!list.length) return '';
- return `<div class="cams"><p class="xs muted">Webcam live nella zona: guarda onde e gente con i tuoi occhi</p><div class="list">${list.map(c=>
-  `<a href="${c.url}" target="_blank" rel="noopener"><i class="live" aria-hidden="true"></i><span>${esc(c.name)}</span><span class="xs muted" style="flex:0 0 auto;font-weight:500">${c.src} ↗</span></a>`).join('')}</div></div>`;
+ const list = [...(SPOT_CAMS[sp.id] ? SPOT_CAMS[sp.id].map(k=>CAM[k]) : camsNear(beach(sp))), ...(sp.cams || [])];
+ const custom = !baseSpots.some(b=>b.id===sp.id);
+ if (!list.length && !custom) return '';
+ return `<div class="cams"><p class="xs muted">${list.length ? 'Webcam live nella zona: guarda onde e gente con i tuoi occhi' : 'Nessuna webcam conosciuta in zona'}</p><div class="list">${list.map(c=>
+  `<a href="${esc(c.url)}" target="_blank" rel="noopener"><i class="live" aria-hidden="true"></i><span>${esc(c.name)}</span><span class="xs muted" style="flex:0 0 auto;font-weight:500">${esc(c.src)} ↗</span></a>`).join('')}</div>
+  ${custom ? `<button class="pillbtn" id="camAdd" style="margin-top:8px;min-height:40px;font-size:13px">+ Aggiungi una webcam</button>` : ''}</div>`;
 }
 
 // ---------- Affollamento stimato (una previsione, non una misura) ----------
