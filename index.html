@@ -156,8 +156,8 @@ body.locked{overflow:hidden}
 .pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:14px}
 .star{margin-top:8px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
 .star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
-.dnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:14px -20px 0;padding:0 20px;background:var(--bg);border-bottom:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-.dnav button{min-height:46px;border:0;background:none;color:var(--muted);font-size:15px;font-weight:500;position:relative;padding:0 2px}
+.dnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:14px -20px 0;padding:0 20px;background:var(--bg);border-bottom:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.dnav button{min-height:46px;border:0;background:none;color:var(--muted);font-size:14px;font-weight:500;position:relative;padding:0 2px}
 .dnav button::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--tacc);transform:scaleX(0);transition:transform .2s}
 .dnav button[aria-current="true"]{color:var(--ink);font-weight:600}
 .dnav button[aria-current="true"]::after{transform:scaleX(1)}
@@ -165,6 +165,15 @@ body.locked{overflow:hidden}
 .t-wx{--sbg:#F6EBD3;--tacc:#95660F}
 .t-tide{--sbg:#D8EEF2;--tacc:#1C6A80}
 .t-week{--sbg:#E5E8EB;--tacc:#4A5A66}
+.t-season{--sbg:#E4EFE2;--tacc:#3B6E45}
+.mbars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:130px;margin-top:6px}
+.mbars div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
+.mbars span.v{font-size:10px;color:var(--muted);font-weight:600}
+.mbars i{display:block;width:100%;border-radius:4px 4px 2px 2px;background:var(--tacc);min-height:2px}
+.mbars i.lo{opacity:.35}
+.mlab{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;margin-top:4px;text-align:center;font-size:11px;color:var(--muted);font-weight:600}
+.mlab .top{color:var(--ink)}
+.sbox{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}
 /* sezioni della pagina spot: contenuti diretti sul fondo, come la card preferito in home, ma chiare */
 .dsec{position:relative;overflow:hidden;margin-top:16px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 16px 18px;border-radius:22px;background:var(--sbg);color:var(--ink);
  --panel:rgba(255,255,255,.6);--line:rgba(19,40,59,.13);--bg:rgba(255,255,255,.6);--sea:rgba(19,40,59,.07)}
@@ -979,7 +988,7 @@ function openDetail(id){
     ${dialLegend(sp, ev)}
    </div></div>
   <nav class="dnav" id="dnav" aria-label="Sezioni della pagina">
-   <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">7 giorni</button></nav>
+   <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">7 giorni</button><button class="t-season" data-jump="sec-season">Stagioni</button></nav>
 
   <section class="dsec t-now" id="sec-now">
    ${MOTIF.now}
@@ -1016,6 +1025,12 @@ function openDetail(id){
     <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()}</span></span></div>`).join('')}</div>
   </section>
 
+  <section class="dsec t-season" id="sec-season">
+   ${MOTIF.season}
+   ${secHead('', 'Stagioni', 'Quando lo spot lavora, mese per mese')}
+   <div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div>
+  </section>
+
   <div class="dfoot">
   <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
   ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn primary" id="saveGit" style="width:auto">Salva nell'elenco (GitHub)</button><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button>
@@ -1025,6 +1040,7 @@ function openDetail(id){
  showView('detail');
  initDetailNav();
  loadExtra(sp);
+ bindSeason(sp);
  document.getElementById('back').onclick = ()=>setTab(lastTab);
  const sheet = document.getElementById('dialSheet'), opener = document.getElementById('dialBtn');
  const closeSheet = ()=>{ sheet.hidden = true; document.body.classList.remove('locked'); document.removeEventListener('keydown', onKey); opener.focus(); };
@@ -1156,6 +1172,7 @@ const MOTIF = {
  // luna e orbita: la marea
  tide:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/><path d="M132 52 A52 52 0 1 0 150 132 A40 40 0 1 1 132 52Z" fill="currentColor"/></svg>`,
  // calendario: i prossimi giorni
+ season:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="86" fill="none" stroke="currentColor" stroke-width="5"/><g fill="currentColor">${Array.from({length:12},(_, i)=>{const a=i*30*Math.PI/180, r=[26,22,16,12,10,8,8,10,16,22,28,30][i]; return `<circle cx="${(100+64*Math.sin(a)).toFixed(1)}" cy="${(100-64*Math.cos(a)).toFixed(1)}" r="${r/2.4}"/>`;}).join('')}</g></svg>`,
  week:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"><rect x="22" y="36" width="156" height="142" rx="16"/><path d="M22 76h156M62 18v34M138 18v34"/></g><g fill="currentColor">${Array.from({length:12},(_, i)=>`<rect x="${40+(i%4)*34}" y="${92+Math.floor(i/4)*28}" width="18" height="14" rx="3"/>`).join('')}</g></svg>`
 };
 const SEC_ICONS = {
@@ -1181,6 +1198,78 @@ function initDetailNav(){
   if (vis) mark(vis.target.id);
  }, {rootMargin:'-80px 0px -55% 0px'});
  document.querySelectorAll('#v-detail .dsec').forEach(sec => secObserver.observe(sec));
+}
+
+// ---------- Stagioni: statistiche storiche per mese ----------
+// Scarica 3 anni di onde (Open-Meteo Marine) e vento (archivio ERA5), valuta ogni giorno alle 8, 11, 14 e 17
+// con la stessa formula delle previsioni e conta, mese per mese, quanti giorni lo spot sarebbe stato surfabile.
+const MONTHS = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const MONTHS_LONG = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const statKey = sp => 'surf.stats.' + sp.id + '.' + [sp.lat, sp.lon, sp.facing, sp.window, sp.offshore, sp.min, sp.max, sp.minPeriod].join('|');
+function seasonHtml(sp){
+ const st = store.get(statKey(sp), null);
+ if (!st) return `<p class="small">Quanti giorni al mese questo spot è stato surfabile negli ultimi anni: utile per scegliere il periodo di un viaggio.</p>
+  <button class="pillbtn primary" id="seasonGo" style="margin-top:12px">Calcola le statistiche</button>
+  <p class="xs muted" style="margin-top:8px">Scarica circa 3 anni di dati storici (qualche MB): meglio col Wi-Fi. Si fa una volta sola, poi resta salvato.</p>`;
+ const pct = m => m.n ? Math.round(m.good / m.n * 100) : 0, pctA = m => m.n ? Math.round(m.act / m.n * 100) : 0;
+ const maxP = Math.max(10, ...st.months.map(pctA));
+ const order = st.months.map((m,i)=>({i, p:pct(m)})).sort((a,b)=>b.p-a.p);
+ const top = order.filter(x=>x.p>0).slice(0,3).map(x=>x.i);
+ const best = order[0], bm = st.months[best.i];
+ const perMonth = bm.n ? Math.round(bm.good / bm.n * 30) : 0;
+ return `<p class="xs muted">Percentuale di giorni surfabili in ogni mese</p><div class="mbars" role="img" aria-label="Percentuale di giorni surfabili per mese">${st.months.map(m=>`<div><span class="v">${pct(m)}</span>
+   <i style="height:${Math.max(2, pctA(m)/maxP*100 - pct(m)/maxP*100)}%" class="lo"></i><i style="height:${Math.max(2, pct(m)/maxP*100)}%;margin-top:-3px"></i></div>`).join('')}</div>
+  <div class="mlab">${MONTHS.map((n,i)=>`<span class="${top.includes(i)?'top':''}">${n}</span>`).join('')}</div>
+  <div class="legend" style="margin-top:10px"><span><i style="--c:var(--tacc)"></i>Giorni surfabili (punteggio 3 o più)</span><span><i style="--c:var(--tacc);opacity:.35"></i>Solo attivo (2–2.5)</span></div>
+  <div class="sbox">${best.p > 0 ? `<p><b>Mesi migliori:</b> ${top.map(i=>MONTHS_LONG[i]).join(', ')}.</p>
+   <p style="margin-top:4px">A ${MONTHS_LONG[best.i]} in media <b>${perMonth} giorni surfabili</b> su 30, con onda a riva media di ${bm.avg.toFixed(1)} m nei giorni buoni.</p>`
+   : '<p>Negli anni analizzati lo spot non ha mai raggiunto un punteggio di 3: forse i parametri dello spot (direzione, range di onda) vanno rivisti.</p>'}
+   <p class="xs muted" style="margin-top:6px">Dati ${st.years}, modello Open-Meteo: sono medie indicative, non una garanzia. Se cambi i parametri dello spot le statistiche si ricalcolano.</p>
+   <button class="pillbtn" id="seasonRedo" style="margin-top:8px;min-height:36px;font-size:13px">Ricalcola</button></div>`;
+}
+function bindSeason(sp){
+ const box = document.getElementById('seasonBox'); if (!box) return;
+ const go = ()=>computeSeason(sp);
+ const a = document.getElementById('seasonGo'), r = document.getElementById('seasonRedo');
+ if (a) a.onclick = go; if (r) r.onclick = go;
+}
+async function computeSeason(sp){
+ const box = document.getElementById('seasonBox');
+ const say = t => { if (box && box.dataset.spot === sp.id) box.innerHTML = `<p class="small">${t}</p>`; };
+ const y = +todayIso().slice(0,4), start = `${y-3}-01-01`, end = `${y-1}-12-31`;
+ const b = beach(sp);
+ say('Scarico onde e vento degli ultimi tre anni…');
+ try{
+  const [m, w] = await Promise.all([
+   getJson(`https://marine-api.open-meteo.com/v1/marine?latitude=${sp.lat}&longitude=${sp.lon}&cell_selection=sea&timezone=${encodeURIComponent(TZ)}&start_date=${start}&end_date=${end}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`, {}, 2, 90000),
+   getJson(`https://archive-api.open-meteo.com/v1/archive?latitude=${b.lat}&longitude=${b.lon}&timezone=${encodeURIComponent(TZ)}&start_date=${start}&end_date=${end}&hourly=wind_speed_10m,wind_direction_10m`, {}, 2, 90000)
+  ]);
+  say('Calcolo mese per mese…');
+  const mh = m.hourly, wh = w.hourly, wi = new Map(wh.time.map((t,i)=>[t,i]));
+  const pick = (arr, t) => { const i = wi.get(t); return i == null ? null : arr[i]; };
+  const s = {time:mh.time, hs:mh.wave_height, dir:mh.wave_direction, per:mh.wave_period, sh:mh.swell_wave_height, sd:mh.swell_wave_direction, sp:mh.swell_wave_period,
+   ws:mh.time.map(t=>pick(wh.wind_speed_10m,t)), wd:mh.time.map(t=>pick(wh.wind_direction_10m,t))};
+  const days = {};
+  for (let i = 0; i < s.time.length; i++){
+   const h = s.time[i].slice(11,13); if (!['08','11','14','17'].includes(h)) continue;
+   const e = evaluate(sp, s, i); if (!e) continue;
+   const d = s.time[i].slice(0,10), cur = days[d];
+   if (!cur || e.score > cur.score) days[d] = {score:e.score, face:e.face};
+  }
+  const months = MONTHS.map(()=>({n:0, good:0, act:0, sum:0}));
+  let first = null, last = null;
+  Object.entries(days).forEach(([d, v])=>{
+   const mo = +d.slice(5,7) - 1, M = months[mo];
+   M.n++; if (v.score >= 2) M.act++; if (v.score >= 3){ M.good++; M.sum += v.face; }
+   first = !first || d < first ? d : first; last = !last || d > last ? d : last;
+  });
+  if (!first) throw new Error('nessun dato storico per questo punto');
+  months.forEach(M => M.avg = M.good ? M.sum / M.good : 0);
+  store.set(statKey(sp), {at:Date.now(), years:`${first.slice(0,4)}–${last.slice(0,4)}`, months});
+  if (box && box.dataset.spot === sp.id){ box.innerHTML = seasonHtml(sp); bindSeason(sp); }
+ }catch(e){
+  if (box && box.dataset.spot === sp.id){ box.innerHTML = `<p class="small">Statistiche non disponibili (${esc(e.message)}).</p><button class="pillbtn" id="seasonGo" style="margin-top:8px">Riprova</button>`; bindSeason(sp); }
+ }
 }
 
 // ---------- Qualità del periodo ----------
