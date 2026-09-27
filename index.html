@@ -33,7 +33,7 @@ h1{margin:0;font-weight:700;font-size:48px;line-height:.95}
 h1.sub{font-size:40px;line-height:1}
 h1.brand{font-size:clamp(32px,9.5vw,48px);white-space:nowrap;min-width:0}
 .logo{display:flex;align-items:center;gap:10px}
-.logo .brandlogo{height:50px;width:auto;display:block;filter:drop-shadow(0 2px 5px rgba(19,40,59,.18))}
+.logo .brandlogo{height:50px;width:auto;display:block}
 .logo .wm{display:flex;flex-direction:column;line-height:.86}
 .logo .w1{font:700 38px/0.9 "Barlow Condensed",sans-serif;letter-spacing:.01em;color:var(--ink)}
 .logo .w2{font:600 13px/1 Barlow,sans-serif;letter-spacing:.52em;color:var(--accent);margin-top:3px}
@@ -46,9 +46,8 @@ a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 .head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.locbtn{flex-shrink:0;width:50px;height:50px;border-radius:9px;border:3px solid #C4D4DC;background:#DFE9EE;color:#13283B;display:grid;place-items:center;padding:0}
-.locbtn[aria-pressed="true"]{background:var(--accent);border-color:#174D70}
-.locbtn[aria-pressed="true"] svg{color:#fff}
+.locbtn{flex-shrink:0;width:50px;height:50px;border-radius:16px;border:1px solid var(--line);background:var(--panel);color:var(--ink);display:grid;place-items:center;padding:0;transition:background .15s,color .15s}
+.locbtn[aria-pressed="true"]{background:#007AFF;border-color:#007AFF;color:#fff}
 .pillbtn{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:var(--panel);font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
 .pillbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;font-size:16px;min-height:48px;border-radius:24px;justify-content:center;width:100%}
 .backlink{display:inline-flex;align-items:center;gap:4px;min-height:44px;border:0;background:none;color:var(--accent);font-weight:600;padding:0}
@@ -57,7 +56,7 @@ a{color:var(--accent)}
 .badge.lg{width:48px;height:48px;font-size:20px}
 .badge.xs{width:28px;height:28px;font-size:14px}
 /* preferito */
-.fav{position:relative;overflow:hidden;margin-top:18px;background:var(--ink);color:#fff;border:0;border-radius:22px;padding:16px 16px 14px;width:100%;text-align:left;display:block}
+.fav{position:relative;overflow:hidden;margin-top:18px;background:var(--ink);color:#fff;border:0;border-radius:16px;padding:16px 16px 14px;width:100%;text-align:left;display:block}
 .fav .favwave{position:absolute;left:0;bottom:0;width:100%;height:78px;pointer-events:none}
 .fav .top{position:relative;display:flex;align-items:flex-start;gap:12px}
 .fav .grow{flex:1;min-width:0}
@@ -86,7 +85,7 @@ a{color:var(--accent)}
 .row .num{text-align:right}
 .row .h{font:700 30px/1 "Barlow Condensed",sans-serif}
 .row .h span{font-size:16px;font-weight:500;color:var(--muted)}
-.mini{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;width:100%;text-align:left}
+.mini{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:16px;border:1px solid var(--line);background:transparent;width:100%;text-align:left}
 .mini .grow{flex:1;font-weight:600}
 .nearbox{margin-top:16px;padding:4px 12px 12px;border-radius:20px;background:var(--sea);border:1px solid #C3D6DA}
 .nearbox .lhead{margin:8px 0}
@@ -130,7 +129,7 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .dial .wd{stroke:var(--wind);fill:none}
 .dial text{font:600 3.6px Barlow,sans-serif;fill:var(--muted)}
 /* dettaglio */
-.hero{margin-top:6px;border-radius:22px;padding:16px;background:var(--c);color:var(--hfg)}
+.hero{margin-top:6px;border-radius:16px;padding:16px;background:var(--c);color:var(--hfg)}
 .hero .badge{background:#fff!important;color:#13283B!important}
 .htop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .harea{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--hmut)}
@@ -180,7 +179,7 @@ body.locked{overflow:hidden}
 .mlab .top{color:var(--ink)}
 .sbox{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}
 /* sezioni della pagina spot: contenuti diretti sul fondo, come la card preferito in home, ma chiare */
-.dsec{position:relative;overflow:hidden;margin-top:16px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 16px 18px;border-radius:22px;background:var(--sbg);color:var(--ink);
+.dsec{position:relative;overflow:hidden;margin-top:16px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 16px 18px;border-radius:16px;background:var(--sbg);color:var(--ink);
  --panel:rgba(255,255,255,.6);--line:rgba(19,40,59,.13);--bg:rgba(255,255,255,.6);--sea:rgba(19,40,59,.07)}
 .dsec > *{position:relative}
 .dsec > .motif{position:absolute;right:-34px;top:-30px;width:170px;height:170px;color:var(--tacc);opacity:.13;pointer-events:none}
@@ -291,12 +290,12 @@ body.locked{overflow:hidden}
 .chips{display:flex;gap:6px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
 .chips button{flex-shrink:0;min-height:38px;padding:0 14px;border-radius:19px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
 .chips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
-.mapwrap{position:relative;margin-top:10px;height:calc(100vh - 330px);min-height:360px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--sea)}
+.mapwrap{position:relative;margin-top:10px;height:calc(100vh - 330px);min-height:360px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--sea)}
 #leaf,#windy{position:absolute;inset:0;width:100%;height:100%;border:0}
 .leaflet-container{background:var(--sea);font-family:Barlow,sans-serif}
 .pin{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 15px "Barlow Condensed",sans-serif;background:var(--c);color:var(--fg);border:2px solid #fff;box-shadow:0 1px 4px rgba(19,40,59,.35)}
 .pin.sel{box-shadow:0 0 0 3px var(--ink)}
-.mapcard{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border-radius:18px;border:1px solid var(--line);text-align:left;width:auto}
+.mapcard{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border-radius:16px;border:1px solid var(--line);text-align:left;width:auto}
 .maptoggle{position:absolute;right:12px;top:12px;z-index:500}
 .cattoggle{position:absolute;left:12px;top:12px;z-index:500}
 .cattoggle[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -358,7 +357,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 <!-- SPOT -->
 <section id="v-spot">
  <div class="head">
-  <h1 class="brand logo" aria-label="Sinis Waves"><svg class="brandlogo" viewBox="0 0 1558 551" aria-hidden="true"><rect width="1558" height="551" rx="92" fill="#13283B"/><path fill="#fff" d="M70 424 L70 471 L225 471 L305 474 L552 474 L552 443 L356 443 L313 439 L270 429 L236 425Z M1199 394 L1198 471 L1213 471 L1213 394Z M994 394 L993 471 L1008 471 L1009 419 L1047 471 L1062 471 L1062 394 L1048 394 L1047 445 L1043 442 L1008 394Z M843 394 L843 471 L857 471 L858 398 L857 394Z M1369 393 L1360 397 L1353 404 L1350 412 L1350 420 L1352 426 L1358 432 L1364 435 L1390 442 L1394 446 L1395 450 L1394 453 L1388 458 L1374 459 L1363 455 L1355 449 L1347 460 L1353 465 L1367 471 L1386 472 L1398 468 L1405 462 L1409 454 L1409 442 L1406 436 L1399 430 L1370 422 L1365 417 L1365 412 L1371 406 L1384 405 L1400 413 L1407 403 L1400 397 L1393 394 L1383 392Z M671 393 L659 399 L654 405 L652 410 L653 424 L659 431 L664 434 L693 442 L696 446 L696 453 L692 457 L687 459 L675 459 L665 455 L656 448 L648 460 L653 464 L669 471 L688 472 L702 467 L708 461 L712 450 L711 441 L703 431 L691 426 L675 423 L669 420 L667 417 L667 411 L675 405 L686 405 L696 409 L701 413 L709 402 L702 397 L691 393Z M70 364 L71 392 L234 392 L274 397 L313 407 L342 411 L552 411 L552 384 L351 384 L309 379 L271 369 L235 364Z M906 271 L906 322 L1150 322 L1150 271Z M640 176 L619 216 L660 231 L698 250 L719 211 L680 191Z M870 199 L832 167 L818 191 L800 217 L781 238 L756 259 L733 273 L699 288 L658 300 L633 304 L647 353 L689 344 L714 336 L758 316 L777 304 L802 285 L829 258 L850 231Z M552 308 L540 291 L510 158 L508 153 L504 149 L499 147 L373 147 L368 149 L364 153 L337 203 L331 208 L325 211 L211 235 L204 241 L186 278 L175 289 L154 300 L144 303 L70 304 L70 332 L231 333 L270 338 L306 347 L344 353 L552 353Z M930 134 L930 181 L1127 181 L1126 134Z M1207 120 L1207 165 L1338 166 L1336 172 L1313 206 L1286 239 L1263 262 L1238 283 L1212 301 L1193 311 L1221 349 L1239 341 L1273 318 L1294 300 L1321 273 L1328 277 L1356 303 L1406 353 L1410 351 L1444 319 L1399 274 L1352 234 L1376 198 L1394 166 L1410 130 L1399 120Z M673 99 L652 141 L693 157 L716 168 L734 179 L756 138 L718 117Z"/></svg></h1>
+  <h1 class="brand logo" aria-label="Sinis Waves"><svg class="brandlogo" viewBox="0 0 1558 551" aria-hidden="true"><rect width="1558" height="551" rx="0" fill="#13283B"/><path fill="#fff" d="M70 424 L70 471 L225 471 L305 474 L552 474 L552 443 L356 443 L313 439 L270 429 L236 425Z M1199 394 L1198 471 L1213 471 L1213 394Z M994 394 L993 471 L1008 471 L1009 419 L1047 471 L1062 471 L1062 394 L1048 394 L1047 445 L1043 442 L1008 394Z M843 394 L843 471 L857 471 L858 398 L857 394Z M1369 393 L1360 397 L1353 404 L1350 412 L1350 420 L1352 426 L1358 432 L1364 435 L1390 442 L1394 446 L1395 450 L1394 453 L1388 458 L1374 459 L1363 455 L1355 449 L1347 460 L1353 465 L1367 471 L1386 472 L1398 468 L1405 462 L1409 454 L1409 442 L1406 436 L1399 430 L1370 422 L1365 417 L1365 412 L1371 406 L1384 405 L1400 413 L1407 403 L1400 397 L1393 394 L1383 392Z M671 393 L659 399 L654 405 L652 410 L653 424 L659 431 L664 434 L693 442 L696 446 L696 453 L692 457 L687 459 L675 459 L665 455 L656 448 L648 460 L653 464 L669 471 L688 472 L702 467 L708 461 L712 450 L711 441 L703 431 L691 426 L675 423 L669 420 L667 417 L667 411 L675 405 L686 405 L696 409 L701 413 L709 402 L702 397 L691 393Z M70 364 L71 392 L234 392 L274 397 L313 407 L342 411 L552 411 L552 384 L351 384 L309 379 L271 369 L235 364Z M906 271 L906 322 L1150 322 L1150 271Z M640 176 L619 216 L660 231 L698 250 L719 211 L680 191Z M870 199 L832 167 L818 191 L800 217 L781 238 L756 259 L733 273 L699 288 L658 300 L633 304 L647 353 L689 344 L714 336 L758 316 L777 304 L802 285 L829 258 L850 231Z M552 308 L540 291 L510 158 L508 153 L504 149 L499 147 L373 147 L368 149 L364 153 L337 203 L331 208 L325 211 L211 235 L204 241 L186 278 L175 289 L154 300 L144 303 L70 304 L70 332 L231 333 L270 338 L306 347 L344 353 L552 353Z M930 134 L930 181 L1127 181 L1126 134Z M1207 120 L1207 165 L1338 166 L1336 172 L1313 206 L1286 239 L1263 262 L1238 283 L1212 301 L1193 311 L1221 349 L1239 341 L1273 318 L1294 300 L1321 273 L1328 277 L1356 303 L1406 353 L1410 351 L1444 319 L1399 274 L1352 234 L1376 198 L1394 166 L1410 130 L1399 120Z M673 99 L652 141 L693 157 L716 168 L734 179 L756 138 L718 117Z"/></svg></h1>
   <button class="locbtn" id="nearBtn" aria-pressed="false" aria-label="Spot vicino a me" title="Spot vicino a me"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg></button>
  </div>
  <p class="muted small" id="updated" style="margin-top:6px">Scarico le previsioni…</p>
