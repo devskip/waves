@@ -180,19 +180,22 @@ body.locked{overflow:hidden}
 .dsec > *{position:relative}
 .dsec > .motif{position:absolute;right:-34px;top:-30px;width:170px;height:170px;color:var(--tacc);opacity:.13;pointer-events:none}
 .shead{margin:0 0 14px}
-.sbtn{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit;cursor:pointer;min-height:48px}
-.sbtn > div:first-child{flex:1;min-width:0}
-.sbtn .chev{flex-shrink:0;color:var(--tacc);transition:transform .2s}
-.dsec.open .sbtn .chev{transform:rotate(180deg)}
-.dsec:not(.open){padding-top:12px;padding-bottom:12px}
+.sbtn{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:10px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit;cursor:pointer;min-height:48px}
+.sbtn > div:first-child{min-width:0}
+.sbtn .tog{flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--tacc);color:#fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(19,40,59,.18)}
+.sbtn .tog .v{transition:transform .2s;transform-origin:center}
+.dsec.open .sbtn .tog .v{transform:scaleY(0)}
+.dsec:not(.open){padding-top:12px;padding-bottom:12px;border-radius:16px}
+.sinfo{grid-column:1 / -1;margin-top:4px;font-size:13px;line-height:1.3}
+.dsec.open .sinfo{display:none}
 .dsec:not(.open) .shead{margin:0}
-.dsec:not(.open) .shead p{display:none}
+.dsec:not(.open) .shead p.sub{display:none}
 .dsec:not(.open) > .motif{width:120px;height:120px;top:-20px;right:-20px;opacity:.09}
 .ssum{display:flex;align-items:center;gap:8px;text-align:right;font-size:13px;color:var(--muted);line-height:1.2}
 .ssum b{display:block;font:700 20px/1.05 "Barlow Condensed",sans-serif;color:var(--ink)}
 .ssum .si{font-size:26px;line-height:1}
 .dsec.open .ssum{display:none}
-@media (prefers-reduced-motion:reduce){.sbtn .chev{transition:none}}
+@media (prefers-reduced-motion:reduce){.sbtn .tog .v{transition:none}}
 .shead h2{margin:0;line-height:1.05;color:var(--ink);font-size:26px}
 .shead p{color:var(--tacc)!important;font-weight:600}
 .dsec .facts{margin-top:0;background:transparent;border:0;border-radius:0;gap:0;overflow:visible}
@@ -1018,19 +1021,19 @@ function openDetail(id){
 
   <section class="dsec t-wx" id="sec-wx">
    ${MOTIF.wx}
-   ${secToggle('wx', 'Meteo', 'Cielo, acqua e prossime ore sullo spot', '<span>…</span>')}
+   ${secToggle('wx', 'Meteo', 'Cielo, acqua e prossime ore sullo spot', '<span>…</span>', 'Carico…')}
    <div id="body-wx" hidden><div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div></div>
   </section>
 
   <section class="dsec t-tide" id="sec-tide">
    ${MOTIF.tide}
-   ${secToggle('tide', 'Marea', 'Alte e basse di oggi', '<span>…</span>')}
+   ${secToggle('tide', 'Marea', 'Alte e basse di oggi', '<span>…</span>', 'Carico…')}
    <div id="body-tide" hidden><div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div></div>
   </section>
 
   <section class="dsec t-week" id="sec-week">
    ${MOTIF.week}
-   ${secToggle('week', '7 giorni', 'Onda a riva alle 8, 11, 14 e 17', weekSummary(best))}
+   ${secToggle('week', '7 giorni', 'Onda a riva alle 8, 11, 14 e 17', weekSummary(best), weekInfo(days))}
    <div id="body-week" hidden>
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
@@ -1042,7 +1045,7 @@ function openDetail(id){
 
   <section class="dsec t-season" id="sec-season">
    ${MOTIF.season}
-   ${secToggle('season', 'Stagioni', 'Quando lo spot lavora, mese per mese', seasonSummary(sp))}
+   ${secToggle('season', 'Stagioni', 'Quando lo spot lavora, mese per mese', seasonSummary(sp), seasonInfo(sp))}
    <div id="body-season" hidden><div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div></div>
   </section>
 
@@ -1198,10 +1201,11 @@ const SEC_ICONS = {
 };
 const secHead = (icon, title, sub) => `<div class="shead"><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div>`;
 // intestazione di una sezione a fisarmonica: chiusa mostra il riassunto a destra, aperta il dettaglio
-const secToggle = (key, title, sub, summary) => `<button class="shead sbtn" aria-expanded="false" aria-controls="body-${key}" data-toggle="${key}">
- <div><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div>
+const secToggle = (key, title, sub, summary, info='') => `<button class="shead sbtn" aria-expanded="false" aria-controls="body-${key}" data-toggle="${key}">
+ <div><h2>${title}</h2><p class="xs muted sub" style="margin-top:2px">${sub}</p></div>
  <span class="ssum" id="sum-${key}">${summary}</span>
- <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>`;
+ <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
+ <p class="sinfo" id="info-${key}">${info}</p></button>`;
 function openSection(key, open){
  const sec = document.getElementById('sec-' + key); if (!sec) return;
  const btn = sec.querySelector('[data-toggle]'), body = document.getElementById('body-' + key);
@@ -1232,6 +1236,17 @@ function initDetailNav(){
 function weekSummary(best){
  if (!best || best.best.score < 2) return '<span><b>Niente</b>in vista</span>';
  return `<span><b>${dayShort(best.day)}</b>il giorno migliore</span>${badge(best.best.score,'sm')}`;
+}
+function weekInfo(days){
+ if (!days.length) return 'Nessun dato';
+ const mx = days.reduce((a,d)=> d.maxFace > a.maxFace ? d : a, days[0]);
+ return `Onda a riva fino a ${mx.maxFace.toFixed(1)} m, ${dayLabel(mx.day).toLowerCase()}`;
+}
+function seasonInfo(sp){
+ const st = store.get(statKey(sp), null);
+ if (!st) return 'Quando conviene andarci, dai dati storici';
+ const m = st.months, tot = m.reduce((a,x)=>a+x.good,0), n = m.reduce((a,x)=>a+x.n,0);
+ return `Surfabile in media ${n ? Math.round(tot/n*365) : 0} giorni l'anno (${st.years})`;
 }
 function seasonSummary(sp){
  const st = store.get(statKey(sp), null);
@@ -1306,7 +1321,7 @@ async function computeSeason(sp){
   if (!first) throw new Error('nessun dato storico per questo punto');
   months.forEach(M => M.avg = M.good ? M.sum / M.good : 0);
   store.set(statKey(sp), {at:Date.now(), years:`${first.slice(0,4)}–${last.slice(0,4)}`, months});
-  if (box && box.dataset.spot === sp.id){ box.innerHTML = seasonHtml(sp); bindSeason(sp); const sm = document.getElementById('sum-season'); if (sm) sm.innerHTML = seasonSummary(sp); }
+  if (box && box.dataset.spot === sp.id){ box.innerHTML = seasonHtml(sp); bindSeason(sp); const sm = document.getElementById('sum-season'); if (sm) sm.innerHTML = seasonSummary(sp); const si = document.getElementById('info-season'); if (si) si.textContent = seasonInfo(sp); }
  }catch(e){
   if (box && box.dataset.spot === sp.id){ box.innerHTML = `<p class="small">Statistiche non disponibili (${esc(e.message)}).</p><button class="pillbtn" id="seasonGo" style="margin-top:8px">Riprova</button>`; bindSeason(sp); }
  }
@@ -1368,6 +1383,7 @@ async function loadExtra(sp){
  }catch(e){
   ['extraWx','extraTide'].forEach(id=>{ const el = document.getElementById(id);
    if (el && el.dataset.spot === sp.id) el.innerHTML = `<p class="small muted">Non disponibile adesso (${esc(e.message)}).</p>`; });
+  ['wx','tide'].forEach(k=>{ const i = document.getElementById('info-'+k), m = document.getElementById('sum-'+k); if (i) i.textContent = 'Non disponibile ora'; if (m) m.innerHTML = ''; });
  }
 }
 function tideExtremes(time, h){
@@ -1442,6 +1458,10 @@ function renderExtra(sp, {fc, mr}){
  elW.innerHTML = wx; elT.innerHTML = tide;
  const sw = document.getElementById('sum-wx');
  if (sw) sw.innerHTML = `<span><b>${Math.round(H.temperature_2m[i0])}°</b>${label}</span><span class="si" aria-hidden="true">${ic}</span>`;
+ const iw = document.getElementById('info-wx');
+ if (iw) iw.textContent = `${sst != null ? 'Acqua ' + sst.toFixed(1) + '°, ' : ''}vento ${cardinal(H.wind_direction_10m[i0])} ${Math.round(H.wind_speed_10m[i0])} km/h`;
+ const it = document.getElementById('info-tide');
+ if (it){ const v = idx.map(i=>L[i]); it.textContent = idx.length >= 12 ? `Escursione di oggi ${Math.round((Math.max(...v)-Math.min(...v))*100)} cm` : 'Dato non disponibile qui'; }
  const st = document.getElementById('sum-tide');
  if (st){
   const nowMs = new Date(key + ':00Z').getTime() + new Date().getMinutes()*60000;
