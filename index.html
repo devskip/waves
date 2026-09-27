@@ -753,7 +753,7 @@ async function loadEurope(){
  if (c && Date.now() - c.at < 30*86400000){ europeState = 'ok'; addCatPins(c.list); return; }
  europeState = 'loading';
  const hint = document.getElementById('mapHint');
- hint.hidden = false; hint.textContent = 'Carico gli spot noti in Europa…';
+ hint.hidden = false; hint.textContent = 'Carico gli spot noti…';
  // prima il catalogo preparato da GitHub Actions (stesso sito, veloce e affidabile)
  try{
   const cat = await getJson('catalog.json', {cache:'no-cache'}, 1, 30000);
@@ -1309,7 +1309,7 @@ function renderMap(){
   const all = spots.map(sp=>beach(sp)), home = all.filter(b => distanceKm(b, {lat:SINIS[0], lon:SINIS[1]}) < 100);
   const pts = (home.length > 1 ? home : all).map(b=>[b.lat, b.lon]);
   if (pts.length > 1) leaf.fitBounds(pts, {paddingTopLeft:[30,70], paddingBottomRight:[30,110], maxZoom:13});
-  const cluster = (cls, fn) => L.markerClusterGroup ? L.markerClusterGroup({showCoverageOnHover:false, maxClusterRadius:48, disableClusteringAtZoom:13, spiderfyOnMaxZoom:false, iconCreateFunction:fn}) : L.layerGroup();
+  const cluster = (cls, fn) => L.markerClusterGroup ? L.markerClusterGroup({chunkedLoading:true, showCoverageOnHover:false, maxClusterRadius:48, disableClusteringAtZoom:13, spiderfyOnMaxZoom:false, iconCreateFunction:fn}) : L.layerGroup();
   myLayer = cluster('my', c => {
    const best = Math.max(...c.getAllChildMarkers().map(m => m.options.score ?? -1));
    const [bg,fg] = tone(best < 0 ? null : best);
