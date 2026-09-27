@@ -17,7 +17,7 @@
 :root{
  --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
  --accent:#1D5F8A; --wind:#5E6E2E; --sea:#DCE8EA;
- --s0:#C5CFD3; --s1:#9CC0D3; --s2:#2E7D74; --s3:#E6B24A; --s4:#9E2A5C;
+ --s0:#C5CFD3; --s1:#EBCB6B; --s2:#9FD18B; --s3:#25864B; --s4:#4B3A9E;
  box-sizing:border-box;
  padding-top:env(safe-area-inset-top,0px);
 }
@@ -81,6 +81,20 @@ a{color:var(--accent)}
 .row .h span{font-size:16px;font-weight:500;color:var(--muted)}
 .mini{display:flex;align-items:center;gap:12px;min-height:52px;padding:6px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;width:100%;text-align:left}
 .mini .grow{flex:1;font-weight:600}
+.nearbox{margin-top:16px;padding:4px 12px 12px;border-radius:20px;background:var(--sea);border:1px solid #C3D6DA}
+.nearbox .lhead{margin:8px 0}
+.nearbox h2{white-space:nowrap;display:flex;align-items:center;gap:6px}
+.kmchips{display:flex;gap:4px}
+.kmchips button{white-space:nowrap;min-height:36px;padding:0 10px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:13px;font-weight:600}
+.kmchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.nearbox .empty{font-size:14px;color:var(--muted);padding:4px 2px 2px}
+.osm{margin-top:12px;padding-top:10px;border-top:1px solid #C3D6DA}
+.osm .k{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.osmrow{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-top:6px;background:var(--panel);border:1px dashed var(--line);border-radius:14px}
+.osmrow .grow{flex:1;min-width:0}
+.osmrow b{display:block;font-weight:600}
+.osmrow .pillbtn{min-height:40px;font-size:13px;padding:0 12px}
+.osm .attr{margin-top:8px;font-size:12px;color:var(--muted)}
 .lhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:24px 0 8px}
 .lhead h2{margin:0}
 .linkbtn{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;min-height:44px;padding:0}
@@ -202,10 +216,15 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <div class="err" id="status" hidden></div>
  <div id="fav"></div>
  <button class="banner" id="banner" hidden></button>
- <div class="lhead"><h2>Attivi ora</h2><button class="linkbtn" id="resetOrder" hidden>Ordina per punteggio</button></div>
+ <section class="nearbox" id="nearBox" hidden aria-label="Spot vicino a te">
+  <div class="lhead"><h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg>Vicino a te</h2><div class="kmchips" id="kmChips"></div></div>
+  <div class="list" id="nearList"></div>
+  <div class="osm" id="osmBox"></div>
+ </section>
+ <div class="lhead"><h2 id="activeTitle">Attivi ora</h2><button class="linkbtn" id="resetOrder" hidden>Ordina per punteggio</button></div>
  <p class="hint" id="orderHint"></p>
  <div class="list" id="activeList"></div>
- <h2 class="muted">Non attivi</h2>
+ <h2 class="muted" id="offTitle">Non attivi</h2>
  <div class="list" id="offList" style="gap:6px"></div>
  <button class="pillbtn addspot" id="addOpen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi uno spot</button>
 </section>
@@ -343,8 +362,8 @@ function evaluate(spot, s, i){
 function tone(sc){
  if (sc == null || sc < 1.5) return ['var(--s0)','#13283B'];
  if (sc < 2.5) return ['var(--s1)','#13283B'];
- if (sc < 3.5) return ['var(--s2)','#FFFFFF'];
- if (sc < 4.5) return ['var(--s3)','#13283B'];
+ if (sc < 3.5) return ['var(--s2)','#13283B'];
+ if (sc < 4.5) return ['var(--s3)','#FFFFFF'];
  return ['var(--s4)','#FFFFFF'];
 }
 const LEVELS = [
@@ -499,22 +518,40 @@ function renderSpot(){
  const order = store.get('surf.order', null);
  const pos = id => { const i = order ? order.indexOf(id) : -1; return i < 0 ? Infinity : i; };
  const byScore = (a,b)=>(b.ev?.score ?? -1)-(a.ev?.score ?? -1);
- rows.sort((a,b)=> userPos ? a.dist-b.dist : order ? ((pos(a.sp.id)-pos(b.sp.id)) || byScore(a,b)) : byScore(a,b));
- const grip = sp => userPos ? '' : `<span class="grip" role="button" tabindex="0" aria-label="Sposta ${esc(sp.name)}: frecce su e giù">${GRIP}</span>`;
- const on = rows.filter(r=>(r.ev?.score ?? 0) >= ACTIVE_FROM), off = rows.filter(r=>(r.ev?.score ?? 0) < ACTIVE_FROM);
-
- document.getElementById('activeList').innerHTML = on.length ? on.map(r=>`
-  <div class="item" data-id="${r.sp.id}">${grip(r.sp)}<button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
+ rows.sort((a,b)=> order ? ((pos(a.sp.id)-pos(b.sp.id)) || byScore(a,b)) : byScore(a,b));
+ const km = d => d == null ? '' : d < 1 ? `${Math.round(d*1000/50)*50} m` : `${d < 10 ? d.toFixed(1) : Math.round(d)} km`;
+ const gripHtml = sp => `<span class="grip" role="button" tabindex="0" aria-label="Sposta ${esc(sp.name)}: frecce su e giù">${GRIP}</span>`;
+ const fullRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
    <div class="grow"><p class="name">${esc(r.sp.name)}</p>
-    <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</p>
+    <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${km(r.dist)}`:''}</p>
     <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
    <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
-   ${badge(r.ev.score)}</button></div>`).join('')
-  : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
+   ${badge(r.ev.score)}</button></div>`;
+ const miniRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
+   <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${km(r.dist)}`:''}</span>${badge(r.ev?.score,'sm')}</button></div>`;
+ const isOn = r => (r.ev?.score ?? 0) >= ACTIVE_FROM;
 
- document.getElementById('offList').innerHTML = off.map(r=>`
-  <div class="item" data-id="${r.sp.id}">${grip(r.sp)}<button class="mini" data-open="${r.sp.id}"><span class="grow">${esc(r.sp.name)}</span>
-   <span class="small muted">${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${Math.round(r.dist)} km`:''}</span>${badge(r.ev?.score,'sm')}</button></div>`).join('');
+ // vicino a te: spot entro il raggio scelto, dal più vicino
+ const nearKm = store.get('surf.nearKm', 5), box = document.getElementById('nearBox');
+ const near = userPos ? rows.filter(r=>r.dist <= nearKm).sort((a,b)=>a.dist-b.dist) : [];
+ const nearIds = new Set(near.map(r=>r.sp.id));
+ box.hidden = !userPos;
+ if (userPos){
+  document.getElementById('kmChips').innerHTML = [5,15,30].map(k=>`<button data-km="${k}" aria-pressed="${k===nearKm}">${k} km</button>`).join('');
+  const closest = [...rows].sort((a,b)=>a.dist-b.dist)[0];
+  document.getElementById('nearList').innerHTML = near.length
+   ? near.map(r => isOn(r) ? fullRow(r, false) : miniRow(r, false)).join('')
+   : `<p class="empty">Nessuno spot entro ${nearKm} km da te.${closest ? ` Il più vicino è ${esc(closest.sp.name)}, a ${km(closest.dist)}.` : ''}</p>`;
+ }
+ renderOsm();
+ document.getElementById('activeTitle').textContent = userPos ? 'Gli altri spot attivi' : 'Attivi ora';
+ document.getElementById('offTitle').textContent = userPos ? 'Gli altri non attivi' : 'Non attivi';
+
+ const rest = rows.filter(r=>!nearIds.has(r.sp.id));
+ const on = rest.filter(isOn), off = rest.filter(r=>!isOn(r));
+ document.getElementById('activeList').innerHTML = on.length ? on.map(r=>fullRow(r, true)).join('')
+  : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
+ document.getElementById('offList').innerHTML = off.map(r=>miniRow(r, true)).join('');
  updateOrderUi();
 
  const b = document.getElementById('banner'), next = upcomingAlerts()[0];
@@ -525,18 +562,74 @@ function renderSpot(){
   b.dataset.open = next.sp.id;
  } else b.hidden = true;
 }
+// ---------- Spot pubblici da OpenStreetMap ----------
+let osm = {key:null, state:'idle', list:[]};
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+async function loadOsm(){
+ if (!userPos) return;
+ const km = store.get('surf.nearKm', 5);
+ const key = `${userPos.lat.toFixed(2)},${userPos.lon.toFixed(2)},${km}`;
+ if (osm.key === key && osm.state !== 'error') return;
+ const cached = store.get('surf.osm', {})[key];
+ if (cached && Date.now() - cached.at < 24*3600*1000){ osm = {key, state:'ok', list:cached.list}; renderSpot(); return; }
+ osm = {key, state:'loading', list:[]}; renderSpot();
+ const q = `[out:json][timeout:25];nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"](around:${km*1000},${userPos.lat.toFixed(5)},${userPos.lon.toFixed(5)});out center tags 80;`;
+ let res = null, lastErr = null;
+ for (const url of OVERPASS){
+  try{ res = await getJson(`${url}?data=${encodeURIComponent(q)}`, {}, 1); break; }catch(e){ lastErr = e; }
+ }
+ if (osm.key !== key) return;
+ if (!res){ osm = {key, state:'error', list:[], msg:lastErr?.message}; renderSpot(); return; }
+ const list = res.elements.map(el=>{
+  const t = el.tags || {}, lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
+  if (lat == null) return null;
+  return {osmId:`${el.type}/${el.id}`, lat:+lat.toFixed(5), lon:+lon.toFixed(5), name: t.name || t.loc_name || t['name:it'] || t['name:en'] || null,
+   kind: t.natural === 'reef' || /reef|point/i.test(t.surfing || '') ? 'reef' : t.natural === 'beach' ? 'beach' : null};
+ }).filter(Boolean)
+  // niente doppioni con gli spot che hai già (entro 400 m)
+  .filter(o => !spots.some(sp => distanceKm(o, beach(sp)) < 0.4))
+  .map(o => ({...o, dist: distanceKm(userPos, o)}))
+  .sort((a,b)=>a.dist-b.dist);
+ const uniq = list.filter((o,i)=> !list.slice(0,i).some(x=>distanceKm(x,o) < 0.15)).slice(0,15);
+ const all = store.get('surf.osm', {}); all[key] = {at:Date.now(), list:uniq};
+ const keys = Object.keys(all); if (keys.length > 20) delete all[keys[0]];
+ store.set('surf.osm', all);
+ osm = {key, state:'ok', list:uniq}; renderSpot();
+}
+function renderOsm(){
+ const box = document.getElementById('osmBox'); if (!box || !userPos) return;
+ const km = store.get('surf.nearKm', 5), attr = '<p class="attr">Dati © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Se conosci uno spot che manca, puoi aggiungerlo tu su OpenStreetMap.</p>';
+ const kindLabel = k => k === 'reef' ? 'Reef o punta' : k === 'beach' ? 'Spiaggia' : 'Spot';
+ const dist = d => d < 1 ? `${Math.round(d*1000/50)*50} m` : `${d < 10 ? d.toFixed(1) : Math.round(d)} km`;
+ let body;
+ if (osm.state === 'loading') body = '<p class="small muted">Cerco spot pubblici nella zona…</p>';
+ else if (osm.state === 'error') body = `<p class="small muted">Elenco pubblico non raggiungibile adesso${osm.msg ? ` (${esc(osm.msg)})` : ''}.</p><button class="pillbtn" data-osmretry style="margin-top:6px">Riprova</button>`;
+ else if (!osm.list.length) body = `<p class="small muted">Nessun altro spot segnato entro ${km} km.${km < 30 ? ' Prova ad allargare il raggio.' : ''}</p>`;
+ else body = osm.list.map((o,i)=>`<div class="osmrow"><div class="grow"><b>${esc(o.name || 'Spot senza nome')}</b><span class="xs muted">${kindLabel(o.kind)}, ${dist(o.dist)}</span></div>
+   <button class="pillbtn" data-osmadd="${i}" aria-label="Aggiungi ${esc(o.name || 'questo spot')} ai tuoi spot">Aggiungi</button></div>`).join('');
+ box.innerHTML = `<p class="k">Altri spot nella zona, dall'elenco pubblico</p>${body}${attr}`;
+}
+function addFromOsm(o){
+ openAdd();
+ if (add.map) setPos(o.lat, o.lon, 15);
+ else add.pos = [o.lat, o.lon];
+ if (o.kind) add.type = o.kind;
+ document.getElementById('addName').value = o.name || '';
+ drawAdd();
+}
+
 function updateOrderUi(){
  const custom = !!store.get('surf.order', null);
- document.getElementById('resetOrder').hidden = !custom || !!userPos;
- document.getElementById('orderHint').textContent = userPos
-  ? 'Ordinati dal più vicino. Tocca di nuovo "Vicino a me" per tornare al tuo ordine.'
-  : custom ? '' : 'Trascina la maniglia a sinistra per mettere gli spot nell\'ordine che vuoi.';
+ document.getElementById('resetOrder').hidden = !custom;
+ document.getElementById('orderHint').textContent = custom ? '' : 'Trascina la maniglia a sinistra per mettere gli spot nell\'ordine che vuoi.';
  document.getElementById('orderHint').hidden = !document.getElementById('orderHint').textContent;
 }
 function saveOrder(){
- const ids = [...document.querySelectorAll('#activeList .item, #offList .item')].map(x=>x.dataset.id);
- const rest = (store.get('surf.order', []) || []).filter(id=>!ids.includes(id));
- store.set('surf.order', [...ids, ...rest]);
+ const shown = [...document.querySelectorAll('#activeList .item, #offList .item')].map(x=>x.dataset.id);
+ const set = new Set(shown), old = store.get('surf.order', null) || [];
+ const full = [...old.filter(id=>spots.some(s=>s.id===id)), ...[...document.querySelectorAll('#nearList .item')].map(x=>x.dataset.id).filter(id=>!old.includes(id)), ...shown.filter(id=>!old.includes(id))];
+ let k = 0;
+ store.set('surf.order', full.map(id => set.has(id) ? shown[k++] : id).concat(shown.slice(k)));
  updateOrderUi();
 }
 function initDrag(list){
@@ -915,11 +1008,11 @@ function renderAll(){
  if (lastTab==='map') renderMap();
  if (lastTab==='alert') renderAlert();
 }
-function showStatus(msg){
+function showStatus(msg, retry=true){
  const st = document.getElementById('status');
  st.hidden = false;
- st.innerHTML = `<p>${esc(msg)}</p><button class="pillbtn" id="retryBtn">Riprova</button>`;
- document.getElementById('retryBtn').onclick = ()=>refresh();
+ st.innerHTML = `<p>${esc(msg)}</p>${retry ? '<button class="pillbtn" id="retryBtn">Riprova</button>' : ''}`;
+ if (retry) document.getElementById('retryBtn').onclick = ()=>refresh();
 }
 const hhmm = d => new Date(d).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
 let busy = false;
@@ -957,6 +1050,9 @@ document.addEventListener('click', e=>{
  const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
  const t = e.target.closest('[data-tab]'); if (t){ setTab(t.dataset.tab); return; }
  const th = e.target.closest('[data-thr]'); if (th){ threshold = +th.dataset.thr; store.set('surf.threshold', threshold); renderAlert(); return; }
+ const kmb = e.target.closest('[data-km]'); if (kmb){ store.set('surf.nearKm', +kmb.dataset.km); renderSpot(); loadOsm(); return; }
+ const oa = e.target.closest('[data-osmadd]'); if (oa){ const o = osm.list[+oa.dataset.osmadd]; if (o) addFromOsm(o); return; }
+ if (e.target.closest('[data-osmretry]')){ osm.key = null; loadOsm(); return; }
  const dy = e.target.closest('[data-day]'); if (dy){ mapDay = dy.dataset.day; renderMap(); return; }
  const f = e.target.closest('[data-follow]'); if (f){ toggleFollow(f.dataset.follow); renderAlert(); }
 });
@@ -965,8 +1061,8 @@ document.getElementById('nearBtn').onclick = e=>{
  const btn = e.currentTarget, st = document.getElementById('status');
  if (userPos){ userPos = null; btn.setAttribute('aria-pressed','false'); renderSpot(); return; }
  if (!navigator.geolocation){ st.hidden = false; st.textContent = 'Questo browser non fornisce la posizione.'; return; }
- navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; btn.setAttribute('aria-pressed','true'); st.hidden = true; renderSpot(); },
-  ()=>{ st.hidden = false; st.textContent = 'Posizione non concessa: gli spot restano nel tuo ordine.'; });
+ navigator.geolocation.getCurrentPosition(p=>{ userPos = {lat:p.coords.latitude, lon:p.coords.longitude}; btn.setAttribute('aria-pressed','true'); st.hidden = true; renderSpot(); loadOsm(); },
+  ()=>showStatus('Posizione non disponibile: controlla che Safari possa usare la posizione.', false), {enableHighAccuracy:false, timeout:15000, maximumAge:300000});
 };
 
 setInterval(refresh, 3*60*60*1000);
