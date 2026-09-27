@@ -1,33 +1,57 @@
-"""Scarica da OpenStreetMap gli spot di surf di Europa, Canarie e Marocco e li salva in catalog.json.
-Lo lancia GitHub Actions una volta al mese: l'app poi legge il file dal sito, senza interrogare Overpass dal telefono."""
-import json, time, urllib.parse, urllib.request
+"""Scarica da OpenStreetMap gli spot di surf e li salva in catalog.json.
+Lo lancia GitHub Actions una volta al mese: l'app poi legge il file dal sito, senza interrogare Overpass dal telefono.
+
+Prima prova con una sola richiesta per tutto il mondo (è la più veloce per Overpass, perché usa l'indice dei tag).
+Se non riesce, ripiega su riquadri da 10 gradi di Europa, Canarie e Marocco."""
+import json, sys, time, urllib.parse, urllib.request
 
 MIRRORS = [
     "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
 ]
-# Europa + Canarie + Marocco, a riquadri da 10 gradi per non chiedere troppo in una volta sola
-SOUTH, NORTH, WEST, EAST, STEP = 27, 71, -26, 45, 10
+FILTER = 'nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"]'
 
 
-def query(bbox):
-    s, w, n, e = bbox
-    q = ('[out:json][timeout:180];'
-         'nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"]'
-         f'({s},{w},{n},{e});out center tags;')
+def log(msg):
+    print(msg, flush=True)
+
+
+def ask(q, timeout):
     data = urllib.parse.urlencode({"data": q}).encode()
     last = None
-    for attempt in range(3):
-        for url in MIRRORS:
+    for url in MIRRORS:
+        t0 = time.time()
+        try:
+            req = urllib.request.Request(url, data=data, headers={"User-Agent": "sinis-waves-catalog/1.1"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                els = json.load(r)["elements"]
+            log(f"  {url}: {len(els)} elementi in {time.time()-t0:.0f}s")
+            return els
+        except Exception as ex:
+            last = ex
+            log(f"  {url}: errore dopo {time.time()-t0:.0f}s ({ex})")
+            time.sleep(5)
+    raise RuntimeError(last)
+
+
+def world():
+    log("Richiesta unica per tutto il mondo…")
+    return ask(f"[out:json][timeout:900];{FILTER};out center tags;", 960)
+
+
+def tiles():
+    out = []
+    for lat in range(27, 71, 10):
+        for lon in range(-26, 45, 10):
+            bbox = (lat, lon, min(lat + 10, 71), min(lon + 10, 45))
+            log(f"Riquadro {bbox}")
             try:
-                req = urllib.request.Request(url, data=data, headers={"User-Agent": "sinis-waves-catalog/1.0"})
-                with urllib.request.urlopen(req, timeout=200) as r:
-                    return json.load(r)["elements"]
-            except Exception as ex:  # server occupato o lento: riprova con un altro mirror
-                last = ex
-                time.sleep(10)
-    raise RuntimeError(f"Overpass non risponde per {bbox}: {last}")
+                out += ask(f"[out:json][timeout:120];{FILTER}({','.join(map(str, bbox))});out center tags;", 150)
+            except Exception as ex:
+                log(f"  saltato: {ex}")
+            time.sleep(2)
+    return out
 
 
 def kind(t):
@@ -39,33 +63,30 @@ def kind(t):
 
 
 def main():
+    try:
+        els = world()
+    except Exception as ex:
+        log(f"Richiesta unica non riuscita ({ex}), passo ai riquadri")
+        els = tiles()
     spots, seen = [], set()
-    lat = SOUTH
-    while lat < NORTH:
-        lon = WEST
-        while lon < EAST:
-            bbox = (lat, lon, min(lat + STEP, NORTH), min(lon + STEP, EAST))
-            for el in query(bbox):
-                sid = f"{el['type']}/{el['id']}"
-                if sid in seen:
-                    continue
-                t = el.get("tags", {})
-                la = el.get("lat", el.get("center", {}).get("lat"))
-                lo = el.get("lon", el.get("center", {}).get("lon"))
-                if la is None or lo is None:
-                    continue
-                seen.add(sid)
-                spots.append({"id": sid, "lat": round(la, 4), "lon": round(lo, 4),
-                              "name": t.get("name") or t.get("loc_name") or t.get("name:it") or t.get("name:en"),
-                              "kind": kind(t)})
-            print(f"{bbox}: {len(spots)} spot finora", flush=True)
-            time.sleep(3)
-            lon += STEP
-        lat += STEP
+    for el in els:
+        sid = f"{el['type']}/{el['id']}"
+        la = el.get("lat", el.get("center", {}).get("lat"))
+        lo = el.get("lon", el.get("center", {}).get("lon"))
+        if sid in seen or la is None or lo is None:
+            continue
+        seen.add(sid)
+        t = el.get("tags", {})
+        spots.append({"id": sid, "lat": round(la, 4), "lon": round(lo, 4),
+                      "name": t.get("name") or t.get("loc_name") or t.get("name:it") or t.get("name:en"),
+                      "kind": kind(t)})
+    if not spots:
+        log("Nessuno spot scaricato: catalog.json non viene toccato")
+        sys.exit(1)
     with open("catalog.json", "w", encoding="utf-8") as f:
         json.dump({"generated": time.strftime("%Y-%m-%d"), "source": "© OpenStreetMap contributors (ODbL)", "spots": spots},
                   f, ensure_ascii=False, separators=(",", ":"))
-    print(f"Salvati {len(spots)} spot in catalog.json")
+    log(f"Salvati {len(spots)} spot in catalog.json")
 
 
 if __name__ == "__main__":
