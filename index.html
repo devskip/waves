@@ -180,6 +180,19 @@ body.locked{overflow:hidden}
 .dsec > *{position:relative}
 .dsec > .motif{position:absolute;right:-34px;top:-30px;width:170px;height:170px;color:var(--tacc);opacity:.13;pointer-events:none}
 .shead{margin:0 0 14px}
+.sbtn{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit;cursor:pointer;min-height:48px}
+.sbtn > div:first-child{flex:1;min-width:0}
+.sbtn .chev{flex-shrink:0;color:var(--tacc);transition:transform .2s}
+.dsec.open .sbtn .chev{transform:rotate(180deg)}
+.dsec:not(.open){padding-top:12px;padding-bottom:12px}
+.dsec:not(.open) .shead{margin:0}
+.dsec:not(.open) .shead p{display:none}
+.dsec:not(.open) > .motif{width:120px;height:120px;top:-20px;right:-20px;opacity:.09}
+.ssum{display:flex;align-items:center;gap:8px;text-align:right;font-size:13px;color:var(--muted);line-height:1.2}
+.ssum b{display:block;font:700 20px/1.05 "Barlow Condensed",sans-serif;color:var(--ink)}
+.ssum .si{font-size:26px;line-height:1}
+.dsec.open .ssum{display:none}
+@media (prefers-reduced-motion:reduce){.sbtn .chev{transition:none}}
 .shead h2{margin:0;line-height:1.05;color:var(--ink);font-size:26px}
 .shead p{color:var(--tacc)!important;font-weight:600}
 .dsec .facts{margin-top:0;background:transparent;border:0;border-radius:0;gap:0;overflow:visible}
@@ -1005,30 +1018,32 @@ function openDetail(id){
 
   <section class="dsec t-wx" id="sec-wx">
    ${MOTIF.wx}
-   ${secHead(SEC_ICONS.wx, 'Meteo', 'Cielo, acqua e prossime ore sullo spot')}
-   <div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div>
+   ${secToggle('wx', 'Meteo', 'Cielo, acqua e prossime ore sullo spot', '<span>…</span>')}
+   <div id="body-wx" hidden><div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div></div>
   </section>
 
   <section class="dsec t-tide" id="sec-tide">
    ${MOTIF.tide}
-   ${secHead(SEC_ICONS.tide, 'Marea', 'Alte e basse di oggi')}
-   <div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div>
+   ${secToggle('tide', 'Marea', 'Alte e basse di oggi', '<span>…</span>')}
+   <div id="body-tide" hidden><div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div></div>
   </section>
 
   <section class="dsec t-week" id="sec-week">
    ${MOTIF.week}
-   ${secHead(SEC_ICONS.week, 'Prossimi 7 giorni', 'Onda a riva alle 8, 11, 14 e 17')}
+   ${secToggle('week', '7 giorni', 'Onda a riva alle 8, 11, 14 e 17', weekSummary(best))}
+   <div id="body-week" hidden>
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
    <h3 style="margin:18px 0 6px;font:600 19px 'Barlow Condensed',sans-serif">Giorno per giorno</h3>
    <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
     <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()}</span></span></div>`).join('')}</div>
+   </div>
   </section>
 
   <section class="dsec t-season" id="sec-season">
    ${MOTIF.season}
-   ${secHead('', 'Stagioni', 'Quando lo spot lavora, mese per mese')}
-   <div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div>
+   ${secToggle('season', 'Stagioni', 'Quando lo spot lavora, mese per mese', seasonSummary(sp))}
+   <div id="body-season" hidden><div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div></div>
   </section>
 
   <div class="dfoot">
@@ -1182,13 +1197,27 @@ const SEC_ICONS = {
  week:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
 };
 const secHead = (icon, title, sub) => `<div class="shead"><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div>`;
+// intestazione di una sezione a fisarmonica: chiusa mostra il riassunto a destra, aperta il dettaglio
+const secToggle = (key, title, sub, summary) => `<button class="shead sbtn" aria-expanded="false" aria-controls="body-${key}" data-toggle="${key}">
+ <div><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div>
+ <span class="ssum" id="sum-${key}">${summary}</span>
+ <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>`;
+function openSection(key, open){
+ const sec = document.getElementById('sec-' + key); if (!sec) return;
+ const btn = sec.querySelector('[data-toggle]'), body = document.getElementById('body-' + key);
+ if (!btn || !body) return;
+ const on = open ?? btn.getAttribute('aria-expanded') !== 'true';
+ btn.setAttribute('aria-expanded', on); body.hidden = !on; sec.classList.toggle('open', on);
+}
 let secObserver = null;
 function initDetailNav(){
  const nav = document.getElementById('dnav'); if (!nav) return;
  const mark = id => nav.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', b.dataset.jump === id));
+ document.querySelectorAll('#v-detail [data-toggle]').forEach(t => t.onclick = () => openSection(t.dataset.toggle));
  nav.onclick = e => {
   const b = e.target.closest('[data-jump]'); if (!b) return;
   mark(b.dataset.jump);
+  openSection(b.dataset.jump.replace('sec-',''), true);
   document.getElementById(b.dataset.jump).scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
  };
  if (secObserver) secObserver.disconnect();
@@ -1198,6 +1227,17 @@ function initDetailNav(){
   if (vis) mark(vis.target.id);
  }, {rootMargin:'-80px 0px -55% 0px'});
  document.querySelectorAll('#v-detail .dsec').forEach(sec => secObserver.observe(sec));
+}
+
+function weekSummary(best){
+ if (!best || best.best.score < 2) return '<span><b>Niente</b>in vista</span>';
+ return `<span><b>${dayShort(best.day)}</b>il giorno migliore</span>${badge(best.best.score,'sm')}`;
+}
+function seasonSummary(sp){
+ const st = store.get(statKey(sp), null);
+ if (!st) return '<span>Da calcolare</span>';
+ const top = st.months.map((m,i)=>({i, p:m.n ? m.good/m.n : 0})).sort((a,b)=>b.p-a.p).filter(x=>x.p>0).slice(0,3).map(x=>MONTHS[x.i]);
+ return top.length ? `<span><b>${top.join(' · ')}</b>mesi migliori</span>` : '<span>Nessun mese buono</span>';
 }
 
 // ---------- Stagioni: statistiche storiche per mese ----------
@@ -1266,7 +1306,7 @@ async function computeSeason(sp){
   if (!first) throw new Error('nessun dato storico per questo punto');
   months.forEach(M => M.avg = M.good ? M.sum / M.good : 0);
   store.set(statKey(sp), {at:Date.now(), years:`${first.slice(0,4)}–${last.slice(0,4)}`, months});
-  if (box && box.dataset.spot === sp.id){ box.innerHTML = seasonHtml(sp); bindSeason(sp); }
+  if (box && box.dataset.spot === sp.id){ box.innerHTML = seasonHtml(sp); bindSeason(sp); const sm = document.getElementById('sum-season'); if (sm) sm.innerHTML = seasonSummary(sp); }
  }catch(e){
   if (box && box.dataset.spot === sp.id){ box.innerHTML = `<p class="small">Statistiche non disponibili (${esc(e.message)}).</p><button class="pillbtn" id="seasonGo" style="margin-top:8px">Riprova</button>`; bindSeason(sp); }
  }
@@ -1400,6 +1440,14 @@ function renderExtra(sp, {fc, mr}){
    <p class="xs muted" style="margin-top:8px">${cm < 40 ? 'Nel Mediterraneo la marea sposta il mare di pochi centimetri: conta poco sulle onde, ma sui reef bassi può fare la differenza.' : 'La linea tratteggiata è adesso.'} Dato modellistico, indicativo.</p></div>`;
  }
  elW.innerHTML = wx; elT.innerHTML = tide;
+ const sw = document.getElementById('sum-wx');
+ if (sw) sw.innerHTML = `<span><b>${Math.round(H.temperature_2m[i0])}°</b>${label}</span><span class="si" aria-hidden="true">${ic}</span>`;
+ const st = document.getElementById('sum-tide');
+ if (st){
+  const nowMs = new Date(key + ':00Z').getTime() + new Date().getMinutes()*60000;
+  const nx = tideExtremes(T, L).find(e => e.t > nowMs);
+  st.innerHTML = nx ? `<span><b>${nx.hi ? '↑ Alta' : '↓ Bassa'} ${hm(nx.t)}</b>${nx.day === today ? 'prossima' : 'domani'}</span>` : '<span>Non disponibile</span>';
+ }
 }
 
 function toggleFollow(id){
