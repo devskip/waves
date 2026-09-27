@@ -526,9 +526,9 @@ const dayShort = iso => iso === todayIso() ? 'Oggi' : weekday(iso).slice(0,3);
 const dayChip = iso => iso === todayIso() ? 'Oggi' : `${weekday(iso).slice(0,3)} ${+iso.slice(8,10)}`;
 
 // ---------- Dati ----------
-async function getJson(url, opts={}, tries=2){
+async function getJson(url, opts={}, tries=2, ms=20000){
  for (let k = 1; ; k++){
-  const ctrl = new AbortController(), timer = setTimeout(()=>ctrl.abort(), 20000);
+  const ctrl = new AbortController(), timer = setTimeout(()=>ctrl.abort(), ms);
   try{
    const r = await fetch(url, {...opts, signal:ctrl.signal});
    if (!r.ok) throw new Error(`${new URL(url, location.href).hostname} ha risposto ${r.status}`);
@@ -732,7 +732,46 @@ function renderOsm(){
 // ---------- Spot noti sulla mappa (OpenStreetMap), aggiungibili con + ----------
 let myLayer = null, catLayer = null, catSel = null;
 const catPins = {}, catData = {};
+// Spot sardi ben noti, con posizione indicativa: completano OpenStreetMap dove è scarno
+const SEED = [
+ ['Is Arutas',39.955,8.392,'beach'],['Mari Ermi',39.967,8.394,'beach'],['Maimoni',39.924,8.408,'beach'],['Is Benas',40.067,8.448,'beach'],
+ ["S'Archittu",40.085,8.494,'reef'],['Santa Caterina di Pittinuri',40.101,8.492,'reef'],['Bosa Marina',40.288,8.473,'beach'],['La Speranza (Poglina)',40.505,8.316,'beach'],
+ ['Alghero, Le Bombarde',40.585,8.240,'beach'],['Alghero, Lazzaretto',40.590,8.249,'reef'],['Porto Ferro',40.680,8.197,'beach'],['Argentiera',40.738,8.140,'reef'],
+ ['Platamona',40.822,8.470,'beach'],['Marina di Sorso',40.842,8.563,'beach'],['Valledoria, La Ciaccia',40.931,8.800,'beach'],['Isola Rossa',41.010,8.870,'beach'],
+ ['Rena Majore',41.130,9.058,'beach'],['Santa Teresa, Rena Bianca',41.244,9.188,'beach'],['Capo Testa',41.240,9.150,'reef'],
+ ['San Teodoro, La Cinta',40.800,9.683,'beach'],['Budoni',40.702,9.720,'beach'],['Cala Liberotto',40.431,9.785,'beach'],['Cala Ginepro',40.445,9.793,'beach'],
+ ['Arbatax, Porto Frailis',39.930,9.710,'beach'],['Bari Sardo, Torre di Bari',39.843,9.681,'beach'],['Marina di Cardedu',39.790,9.660,'beach'],
+ ['Poetto',39.205,9.165,'beach'],['Chia',38.892,8.873,'beach'],['Porto Pino',38.968,8.600,'beach'],
+ ['Porto Paglia',39.270,8.420,'beach'],['Plagemesu',39.293,8.428,'beach'],['Funtanamare',39.283,8.425,'beach'],
+ ['Buggerru',39.400,8.398,'beach'],['Portixeddu',39.440,8.410,'beach'],['Capo Pecora',39.450,8.385,'reef'],['Scivu',39.495,8.395,'beach'],['Piscinas',39.540,8.448,'beach']
+].map(([name,lat,lon,kind],i)=>({id:'seed/'+i, name, lat, lon, kind, approx:true}));
+
+// Tutti gli spot di surf segnati su OpenStreetMap in Europa, Canarie e Marocco: scaricati una volta al mese
+let europeState = 'idle';
+async function loadEurope(){
+ const c = store.get('surf.catalogEU', null);
+ if (c && Date.now() - c.at < 30*86400000){ europeState = 'ok'; addCatPins(c.list); return; }
+ europeState = 'loading';
+ const hint = document.getElementById('mapHint');
+ hint.hidden = false; hint.textContent = 'Carico gli spot noti in Europa…';
+ const q = '[out:json][timeout:120];nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"](27,-26,71,45);out center tags;';
+ let res = null;
+ for (const url of OVERPASS){ try{ res = await getJson(`${url}?data=${encodeURIComponent(q)}`, {}, 1, 130000); break; }catch(e){} }
+ hint.hidden = true;
+ if (!res){ europeState = 'error'; loadCatalog(); return; }
+ const list = res.elements.map(el=>{
+  const t = el.tags || {}, lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
+  if (lat == null) return null;
+  return {id:`${el.type}/${el.id}`, lat:+lat.toFixed(4), lon:+lon.toFixed(4), name: t.name || t.loc_name || t['name:it'] || t['name:en'] || null,
+   kind: t.natural === 'reef' || /reef|point/i.test(t.surfing || '') ? 'reef' : t.natural === 'beach' ? 'beach' : null};
+ }).filter(Boolean);
+ store.set('surf.catalogEU', {at:Date.now(), list});
+ europeState = 'ok';
+ addCatPins(list);
+}
+
 async function loadCatalog(){
+ if (europeState === 'ok' || europeState === 'loading') return;
  const hint = document.getElementById('mapHint');
  if (!leaf || !catLayer || !leaf.hasLayer(catLayer)){ hint.hidden = true; return; }
  if (leaf.getZoom() < 8){ hint.hidden = false; hint.textContent = 'Avvicinati per vedere gli spot noti della zona'; return; }
@@ -766,15 +805,29 @@ async function loadCatalog(){
   addCatPins(list);
  }
 }
+// griglia di celle da ~2 km per trovare i doppioni senza confrontare tutti con tutti
+const catGrid = {};
+const cellKey = (la, lo) => `${Math.floor(la*50)},${Math.floor(lo*50)}`;
+function nearbyPins(o){
+ const r = Math.floor(o.lat*50), c = Math.floor(o.lon*50), out = [];
+ for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) (catGrid[`${r+i},${c+j}`] || []).forEach(m => out.push(m));
+ return out;
+}
 function addCatPins(list){
+ const fresh = [];
  list.forEach(o=>{
   if (catPins[o.id]) return;
   if (spots.some(sp => distanceKm(o, beach(sp)) < 0.4)) return;
+  const dup = nearbyPins(o).find(m => catPins[m.spot.id] && !(o.approx && m.spot.approx) && distanceKm(o, m.spot) < (o.approx || m.spot.approx ? 1.5 : 0.15));
+  if (dup){ if (!dup.spot.approx || o.approx) return; catLayer.removeLayer(dup); delete catPins[dup.spot.id]; }
   const m = L.marker([o.lat, o.lon], {title:o.name || 'Spot', keyboard:true,
    icon:L.divIcon({className:'', iconSize:[26,26], iconAnchor:[13,13], html:`<div class="cpin" aria-label="${esc(o.name || 'Spot senza nome')}, non ancora tra i tuoi">+</div>`})});
   m.on('click', ev=>{ L.DomEvent.stopPropagation(ev); catSel = o; mapSel = null; renderMap(); });
-  catPins[o.id] = m; catLayer.addLayer(m);
+  m.spot = o; catPins[o.id] = m;
+  (catGrid[cellKey(o.lat, o.lon)] ||= []).push(m);
+  fresh.push(m);
  });
+ if (catLayer.addLayers) catLayer.addLayers(fresh); else fresh.forEach(m => catLayer.addLayer(m));
 }
 function renderCatCard(){
  const el = document.getElementById('catCard');
@@ -783,7 +836,7 @@ function renderCatCard(){
  const kind = o.kind === 'reef' ? 'Reef o punta' : o.kind === 'beach' ? 'Spiaggia' : 'Spot di surf';
  el.hidden = false;
  el.innerHTML = `<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(o.name || 'Spot senza nome')}</p>
-  <p class="small muted">${kind}, da OpenStreetMap${near ? `, ${near} webcam in zona` : ''}</p></div>
+  <p class="small muted">${kind}, ${o.approx ? 'posizione indicativa: sistemala toccando la mappa' : 'da OpenStreetMap'}${near ? `, ${near} webcam in zona` : ''}</p></div>
   <button class="pillbtn primary" id="catAdd">+ Aggiungi</button>`;
  document.getElementById('catAdd').onclick = ()=>{ const x = catSel; catSel = null; addFromOsm(x); };
 }
@@ -1245,7 +1298,8 @@ function renderMap(){
   leaf = L.map('leaf', {zoomControl:false, attributionControl:true}).setView(SINIS, 11);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri'}).addTo(leaf);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(leaf);
-  const pts = spots.map(sp=>{ const b = beach(sp); return [b.lat, b.lon]; });
+  const all = spots.map(sp=>beach(sp)), home = all.filter(b => distanceKm(b, {lat:SINIS[0], lon:SINIS[1]}) < 100);
+  const pts = (home.length > 1 ? home : all).map(b=>[b.lat, b.lon]);
   if (pts.length > 1) leaf.fitBounds(pts, {paddingTopLeft:[30,70], paddingBottomRight:[30,110], maxZoom:13});
   const cluster = (cls, fn) => L.markerClusterGroup ? L.markerClusterGroup({showCoverageOnHover:false, maxClusterRadius:48, disableClusteringAtZoom:13, spiderfyOnMaxZoom:false, iconCreateFunction:fn}) : L.layerGroup();
   myLayer = cluster('my', c => {
@@ -1257,7 +1311,7 @@ function renderMap(){
   if (store.get('surf.showCat', true)) catLayer.addTo(leaf);
   leaf.on('click', ()=>{ mapSel = null; catSel = null; renderMap(); });
   leaf.on('moveend', loadCatalog);
-  setTimeout(loadCatalog, 300);
+  setTimeout(()=>{ addCatPins(SEED); loadEurope(); }, 300);
  }
  if (!mapSel) mapSel = favorite && spots.some(s=>s.id===favorite) ? favorite : spots.map(sp=>({sp, e:mapScore(sp)})).sort((a,b)=>(b.e?.score??-1)-(a.e?.score??-1))[0]?.sp.id;
  spots.forEach(sp=>{
