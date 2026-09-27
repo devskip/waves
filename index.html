@@ -128,15 +128,25 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:14px}
 .star{margin-top:8px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
 .star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
-.dnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:18px -20px 0;padding:8px 20px;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
-.dnav button{flex-shrink:0;min-height:38px;padding:0 14px;border-radius:19px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
-.dnav button[aria-current="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
-.dsec{margin-top:28px;scroll-margin-top:calc(70px + env(safe-area-inset-top,0px))}
-.shead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.shead h2{margin:0;line-height:1.05}
-.sic{flex-shrink:0;width:42px;height:42px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent)}
-.dsec + .dsec{padding-top:24px;border-top:1px solid var(--line)}
-.dsec .facts{margin-top:0}
+.dnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:14px -20px 0;padding:0 20px;background:var(--bg);border-bottom:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.dnav button{min-height:46px;border:0;background:none;color:var(--muted);font-size:15px;font-weight:500;position:relative;padding:0 2px}
+.dnav button::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--tacc);transform:scaleX(0);transition:transform .2s}
+.dnav button[aria-current="true"]{color:var(--ink);font-weight:600}
+.dnav button[aria-current="true"]::after{transform:scaleX(1)}
+.t-now{--tint:#E4EEF4;--tline:#C9DCE7;--tglow:#D2E4EF;--tacc:#1D5F8A}
+.t-wx{--tint:#F7F0E1;--tline:#E9DDC2;--tglow:#F1E3C4;--tacc:#B07A1E}
+.t-tide{--tint:#E2F1ED;--tline:#C4E0D8;--tglow:#CFE9E1;--tacc:#2E7D74}
+.t-week{--tint:#ECEAF5;--tline:#D8D4EA;--tglow:#E0DCF1;--tacc:#4B3A9E}
+.dsec{margin-top:18px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 14px 14px;border-radius:22px;border:1px solid var(--tline);border-top:4px solid var(--tacc);background:radial-gradient(120% 70% at 100% 0%, var(--tglow) 0%, transparent 60%), var(--tint)}
+.shead{margin:2px 2px 14px}
+.shead h2{margin:0;line-height:1.05;color:var(--tacc)}
+.dsec .facts{margin-top:0;border-color:var(--tline);background:var(--tline)}
+.dsec .wx,.dsec .tide,.dsec .chart,.dsec .legendcard{border-color:var(--tline)}
+.dsec .dlist{background:var(--panel);border:1px solid var(--tline);border-radius:14px;padding:0 12px}
+.dsec .dlist div.best{background:var(--tint)}
+.dsec .wxgrid div,.dsec .tide .tx div{background:var(--tint)}
+.dsec .hr{border-color:var(--tline)}
+@media (prefers-reduced-motion:reduce){ .dnav button::after{transition:none} }
 .dfoot{margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
 .legendcard{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 14px}
 .legendcard summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;cursor:pointer;font-weight:600}
@@ -769,9 +779,9 @@ function openDetail(id){
     <div class="pill">${badge(ev?.score,'xs')}${scoreLabel(ev?.score)} adesso</div><br>
     <button class="star" id="favBtn" aria-pressed="${isFav}">${ICON.star(isFav)}${isFav?'Preferito':'Metti tra i preferiti'}</button></div></div>
   <nav class="dnav" id="dnav" aria-label="Sezioni della pagina">
-   <button data-jump="sec-now" aria-current="true">Adesso</button><button data-jump="sec-wx">Meteo</button><button data-jump="sec-tide">Marea</button><button data-jump="sec-week">7 giorni</button></nav>
+   <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">7 giorni</button></nav>
 
-  <section class="dsec" id="sec-now">
+  <section class="dsec t-now" id="sec-now">
    ${secHead(SEC_ICONS.now, 'Adesso', 'Onde, swell e vento in questo momento')}
    <div class="facts">
     <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
@@ -782,17 +792,17 @@ function openDetail(id){
    ${dialLegend(sp, ev)}
   </section>
 
-  <section class="dsec" id="sec-wx">
+  <section class="dsec t-wx" id="sec-wx">
    ${secHead(SEC_ICONS.wx, 'Meteo', 'Cielo, acqua e prossime ore sullo spot')}
    <div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div>
   </section>
 
-  <section class="dsec" id="sec-tide">
+  <section class="dsec t-tide" id="sec-tide">
    ${secHead(SEC_ICONS.tide, 'Marea', 'Alte e basse di oggi')}
    <div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div>
   </section>
 
-  <section class="dsec" id="sec-week">
+  <section class="dsec t-week" id="sec-week">
    ${secHead(SEC_ICONS.week, 'Prossimi 7 giorni', 'Onda a riva alle 8, 11, 14 e 17')}
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
@@ -835,8 +845,7 @@ const SEC_ICONS = {
  tide:'<path d="M7 4v11M4 12l3 3 3-3"/><path d="M17 20V9M14 12l3-3 3 3"/>',
  week:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
 };
-const secHead = (icon, title, sub) => `<div class="shead"><span class="sic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg></span>
- <div><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div></div>`;
+const secHead = (icon, title, sub) => `<div class="shead"><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div>`;
 let secObserver = null;
 function initDetailNav(){
  const nav = document.getElementById('dnav'); if (!nav) return;
@@ -970,13 +979,13 @@ function renderExtra(sp, {fc, mr}){
   const nowH = +key.slice(11,13) + new Date().getMinutes()/60;
   const ex = tideExtremes(T, L).filter(e=>e.day === today);
   const dots = ex.map(e=>{ const hh = (e.t - new Date(today+'T00:00:00Z').getTime())/3600000;
-   return `<circle cx="${X(hh).toFixed(1)}" cy="${Y(e.v).toFixed(1)}" r="3.5" fill="${e.hi ? 'var(--accent)' : 'var(--muted)'}"/>`; }).join('');
+   return `<circle cx="${X(hh).toFixed(1)}" cy="${Y(e.v).toFixed(1)}" r="3.5" fill="${e.hi ? 'var(--tacc, var(--accent))' : 'var(--muted)'}"/>`; }).join('');
   const hiT = ex.filter(e=>e.hi).map(e=>hm(e.t)).join(', ') || '–', loT = ex.filter(e=>!e.hi).map(e=>hm(e.t)).join(', ') || '–';
   const cm = Math.round((mx - mn)*100);
   tide = `<div class="tide"><p class="small muted">Escursione di oggi: <b style="color:var(--ink)">${cm} cm</b></p>
    <svg viewBox="0 0 300 92" role="img" aria-label="Andamento della marea oggi: alte alle ${hiT}, basse alle ${loT}">
     <path d="M${pts[0]} L${pts.join(' L')} L${X(+T[idx.at(-1)].slice(11,13)).toFixed(1)},72 L${X(+T[idx[0]].slice(11,13)).toFixed(1)},72Z" fill="var(--sea)"/>
-    <path d="M${pts.join(' L')}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <path d="M${pts.join(' L')}" fill="none" stroke="var(--tacc, var(--accent))" stroke-width="2"/>
     <line x1="${X(nowH).toFixed(1)}" y1="8" x2="${X(nowH).toFixed(1)}" y2="72" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>
     ${dots}
     ${[0,6,12,18,24].map(h=>`<text x="${X(h)}" y="86" text-anchor="middle" style="font:11px Barlow,sans-serif;fill:var(--muted)">${String(h).padStart(2,'0')}</text>`).join('')}
