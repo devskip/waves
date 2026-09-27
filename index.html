@@ -128,8 +128,23 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:14px}
 .star{margin-top:8px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
 .star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
-.legendcard{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
-.legendcard .lt{font-weight:600}
+.legendcard{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.legendcard summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;cursor:pointer;font-weight:600}
+.legendcard summary::-webkit-details-marker{display:none}
+.legendcard summary svg{transition:transform .2s;color:var(--muted);flex-shrink:0}
+.legendcard[open] summary svg{transform:rotate(180deg)}
+.legendcard .body{padding-bottom:12px}
+.facts .wide{grid-column:1 / -1}
+.ptop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ppill{padding:3px 10px;border-radius:12px;font-size:13px;font-weight:600;background:var(--c);color:var(--fg)}
+.pbar{position:relative;display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:10px}
+.pbar i{display:block;height:100%}
+.pmark{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--ink);transform:translate(-50%,-50%)}
+.pwrap{position:relative;padding:5px 0}
+.pscale{position:relative;height:16px;font-size:11px;color:var(--muted);margin-top:4px}
+.pscale span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.pscale span:first-child{transform:none}
+.pscale span:last-child{transform:translateX(-100%)}
 .lrow{display:flex;gap:12px;align-items:flex-start;margin-top:10px;font-size:14px;line-height:1.35}
 .lrow svg{flex-shrink:0;margin-top:1px}
 .lrow b{font-weight:600}
@@ -152,7 +167,7 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .tide .tx div{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:14px}
 .tide .tx b{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
 .facts{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.facts div{background:var(--panel);padding:10px 14px}
+.facts > div{background:var(--panel);padding:10px 14px}
 .facts b{display:block;font:700 26px/1.2 "Barlow Condensed",sans-serif}
 .chart{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 12px 8px}
 .bars{position:relative;height:110px}
@@ -746,9 +761,10 @@ function openDetail(id){
   ${dialLegend(sp, ev)}
   <div class="facts">
    <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
-   <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m, '+Math.round(ev.T)+' s' : '–'}</b></div>
+   <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m' : '–'}</b></div>
    <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
-   <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div></div>
+   <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div>
+   ${ev ? periodCell(sp, ev.T) : ''}</div>
   <h2 style="margin-bottom:8px">Meteo e marea</h2>
   <div id="extra" data-spot="${sp.id}"><p class="small muted">Carico meteo e marea…</p></div>
   <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
@@ -781,20 +797,42 @@ function openDetail(id){
   setTab('spot');
  };
 }
+// ---------- Qualità del periodo ----------
+const PERIODS = [
+ {to:6, t:'Corto', c:'var(--s0)', fg:'#13283B', d:'Mare di vento: onde corte e disordinate, con poca spinta.'},
+ {to:8, t:'Scarso', c:'var(--s1)', fg:'#13283B', d:'Onde ancora deboli e ravvicinate.'},
+ {to:10, t:'Discreto', c:'var(--s2)', fg:'#13283B', d:'Onde abbastanza ordinate, si surfa.'},
+ {to:13, t:'Buono', c:'var(--s3)', fg:'#FFFFFF', d:'Swell ben formato: onde più potenti, più spazio tra una e l\'altra.'},
+ {to:99, t:'Ottimo', c:'var(--s4)', fg:'#FFFFFF', d:'Swell lungo: onde potenti e pulite che arrivano a serie.'}
+];
+function periodCell(sp, T){
+ const p = PERIODS.find(x => T < x.to), MAX = 16;
+ let from = 0;
+ const zones = PERIODS.map(x=>{ const w = (Math.min(x.to, MAX) - from)/MAX*100; from = Math.min(x.to, MAX); return `<i style="width:${w}%;background:${x.c}"></i>`; }).join('');
+ const pos = Math.min(T, MAX)/MAX*100;
+ const note = T < sp.minPeriod ? `Sotto il minimo di questo spot (${sp.minPeriod} s): il punteggio ne risente.` : `Sopra il minimo di questo spot (${sp.minPeriod} s).`;
+ return `<div class="wide"><div class="ptop"><span class="xs muted">Periodo dello swell</span><span class="ppill" style="--c:${p.c};--fg:${p.fg}">${p.t}</span></div>
+  <b>${Math.round(T)} s</b>
+  <div class="pwrap" role="img" aria-label="Periodo ${Math.round(T)} secondi, ${p.t.toLowerCase()}"><div class="pbar">${zones}</div><span class="pmark" style="left:${pos}%"></span></div>
+  <div class="pscale">${[0,6,8,10,13].map(v=>`<span style="left:${v/MAX*100}%">${v}</span>`).join('')}<span style="left:100%">16+ s</span></div>
+  <p class="small" style="margin-top:6px">${p.d}</p><p class="xs muted" style="margin-top:2px">${note} Più il periodo è lungo, più l'onda ha energia a parità di altezza.</p></div>`;
+}
+
 // ---------- Legenda del cerchio ----------
 function dialLegend(sp, ev){
  const a0 = ((sp.facing - sp.window) % 360 + 360) % 360, a1 = (sp.facing + sp.window) % 360;
  const swell = ev ? ` Adesso arriva da ${cardinal(ev.dir)} (${Math.round(ev.dir)}°) con periodo di ${Math.round(ev.T)} s${angDiff(ev.dir, sp.facing) <= sp.window ? ', dentro la finestra' : ', fuori dalla finestra'}.` : '';
  const wind = ev ? (ev.ws < 3 ? ' Adesso è quasi assente, per questo non si vede.' : ` Adesso soffia da ${cardinal(ev.wd)} a ${Math.round(ev.ws)} km/h (${ev.windType}).`) : '';
- return `<div class="legendcard">
-  <p class="lt">Come leggere il cerchio <span class="xs muted" style="font-weight:400;display:block;margin-top:2px">Il nord è in alto, come su una mappa.</span></p>
+ return `<details class="legendcard">
+  <summary>Come leggere il cerchio<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+  <div class="body"><p class="xs muted">Il nord è in alto, come su una mappa.</p>
   <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 5 L20 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><path d="M22 22 L14 20 L20 14Z" fill="var(--accent)"/></svg>
    <p><b>Freccia blu: lo swell.</b> Parte dal lato da cui arrivano le onde e punta verso lo spot.${swell}</p></div>
   <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M6 22 L22 6" stroke="var(--wind)" stroke-width="2.5" stroke-dasharray="4 4"/></svg>
    <p><b>Tratteggio: il vento.</b> Sta sul lato da cui soffia.${wind} Qui il vento ideale (offshore) viene da ${cardinal(sp.offshore)}.</p></div>
   <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 20 A11 11 0 0 1 20 5" fill="none" stroke="var(--s2)" stroke-width="5" stroke-linecap="round"/></svg>
    <p><b>Arco verde: la finestra dello spot.</b> Le direzioni da cui lo swell entra bene, qui da ${cardinal(a0)} a ${cardinal(a1)}. Con la freccia dentro l'arco le onde arrivano piene; più ne esce, meno lo spot le prende.</p></div>
- </div>`;
+ </div></details>`;
 }
 
 // ---------- Meteo e marea ----------
