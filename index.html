@@ -12,7 +12,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <style>
 :root{
  --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
@@ -262,6 +264,14 @@ body.locked{overflow:hidden}
 .pin.sel{box-shadow:0 0 0 3px var(--ink)}
 .mapcard{position:absolute;left:12px;right:12px;bottom:12px;z-index:500;display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--panel);border-radius:18px;border:1px solid var(--line);text-align:left;width:auto}
 .maptoggle{position:absolute;right:12px;top:12px;z-index:500}
+.cattoggle{position:absolute;left:12px;top:12px;z-index:500}
+.cattoggle[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.maphint{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:500;background:rgba(19,40,59,.85);color:#fff;font-size:13px;padding:6px 12px;border-radius:14px;white-space:nowrap;pointer-events:none}
+.cpin{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--accent);border:2px dashed var(--accent);font:700 18px/1 Barlow,sans-serif;box-shadow:0 1px 3px rgba(19,40,59,.25)}
+.cpin.sel{background:var(--accent);color:#fff;border-style:solid}
+.clu{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 16px "Barlow Condensed",sans-serif;border:3px solid #fff;box-shadow:0 1px 5px rgba(19,40,59,.35);background:var(--c);color:var(--fg)}
+.clu.cat{background:#fff;color:var(--accent);border:2px dashed var(--accent)}
+.catcard .pillbtn.primary{width:auto;min-height:44px;font-size:15px;padding:0 16px}
 /* alert */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .alist button{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:center;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;width:100%;text-align:left}
@@ -346,7 +356,10 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
   <div id="leaf"></div>
   <iframe id="windy" title="Onde animate Windy" hidden></iframe>
   <button class="pillbtn maptoggle" id="windyBtn" aria-pressed="false">Onde animate</button>
+  <button class="pillbtn cattoggle" id="catBtn" aria-pressed="true">Spot noti</button>
+  <p class="maphint" id="mapHint" hidden></p>
   <button class="mapcard" id="mapCard" hidden></button>
+  <div class="mapcard catcard" id="catCard" hidden></div>
  </div>
 </section>
 
@@ -716,6 +729,73 @@ function renderOsm(){
    <button class="pillbtn" data-osmadd="${i}" aria-label="Aggiungi ${esc(o.name || 'questo spot')} ai tuoi spot">Aggiungi</button></div>`).join('');
  box.innerHTML = `<p class="k">Altri spot nella zona, dall'elenco pubblico</p>${body}${attr}`;
 }
+// ---------- Spot noti sulla mappa (OpenStreetMap), aggiungibili con + ----------
+let myLayer = null, catLayer = null, catSel = null;
+const catPins = {}, catData = {};
+async function loadCatalog(){
+ const hint = document.getElementById('mapHint');
+ if (!leaf || !catLayer || !leaf.hasLayer(catLayer)){ hint.hidden = true; return; }
+ if (leaf.getZoom() < 8){ hint.hidden = false; hint.textContent = 'Avvicinati per vedere gli spot noti della zona'; return; }
+ hint.hidden = true;
+ const bb = leaf.getBounds(), cells = [];
+ for (let la = Math.floor(bb.getSouth()); la <= Math.floor(bb.getNorth()); la++)
+  for (let lo = Math.floor(bb.getWest()); lo <= Math.floor(bb.getEast()); lo++) cells.push([la, lo]);
+ if (cells.length > 12) return;
+ const cache = store.get('surf.catalog', {});
+ for (const [la, lo] of cells){
+  const key = `${la},${lo}`;
+  if (catData[key]) continue;
+  const c = cache[key];
+  if (c && Date.now() - c.at < 7*86400000){ catData[key] = c.list; addCatPins(c.list); continue; }
+  catData[key] = 'loading';
+  hint.hidden = false; hint.textContent = 'Cerco gli spot noti…';
+  const q = `[out:json][timeout:25];nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"](${la},${lo},${la+1},${lo+1});out center tags 300;`;
+  let res = null;
+  for (const url of OVERPASS){ try{ res = await getJson(`${url}?data=${encodeURIComponent(q)}`, {}, 1); break; }catch(e){} }
+  hint.hidden = true;
+  if (!res){ delete catData[key]; hint.hidden = false; hint.textContent = 'Elenco spot noti non raggiungibile ora'; setTimeout(()=>hint.hidden = true, 3000); continue; }
+  const list = res.elements.map(el=>{
+   const t = el.tags || {}, lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
+   if (lat == null) return null;
+   return {id:`${el.type}/${el.id}`, lat:+lat.toFixed(5), lon:+lon.toFixed(5), name: t.name || t.loc_name || t['name:it'] || t['name:en'] || null,
+    kind: t.natural === 'reef' || /reef|point/i.test(t.surfing || '') ? 'reef' : t.natural === 'beach' ? 'beach' : null};
+  }).filter(Boolean);
+  catData[key] = list; cache[key] = {at:Date.now(), list};
+  const keys = Object.keys(cache); if (keys.length > 40) delete cache[keys[0]];
+  store.set('surf.catalog', cache);
+  addCatPins(list);
+ }
+}
+function addCatPins(list){
+ list.forEach(o=>{
+  if (catPins[o.id]) return;
+  if (spots.some(sp => distanceKm(o, beach(sp)) < 0.4)) return;
+  const m = L.marker([o.lat, o.lon], {title:o.name || 'Spot', keyboard:true,
+   icon:L.divIcon({className:'', iconSize:[26,26], iconAnchor:[13,13], html:`<div class="cpin" aria-label="${esc(o.name || 'Spot senza nome')}, non ancora tra i tuoi">+</div>`})});
+  m.on('click', ev=>{ L.DomEvent.stopPropagation(ev); catSel = o; mapSel = null; renderMap(); });
+  catPins[o.id] = m; catLayer.addLayer(m);
+ });
+}
+function renderCatCard(){
+ const el = document.getElementById('catCard');
+ if (!catSel || !document.getElementById('windy').hidden){ el.hidden = true; return; }
+ const o = catSel, near = camsNear(o).length;
+ const kind = o.kind === 'reef' ? 'Reef o punta' : o.kind === 'beach' ? 'Spiaggia' : 'Spot di surf';
+ el.hidden = false;
+ el.innerHTML = `<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(o.name || 'Spot senza nome')}</p>
+  <p class="small muted">${kind}, da OpenStreetMap${near ? `, ${near} webcam in zona` : ''}</p></div>
+  <button class="pillbtn primary" id="catAdd">+ Aggiungi</button>`;
+ document.getElementById('catAdd').onclick = ()=>{ const x = catSel; catSel = null; addFromOsm(x); };
+}
+document.getElementById('catBtn').onclick = e=>{
+ const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+ e.currentTarget.setAttribute('aria-pressed', on);
+ store.set('surf.showCat', on);
+ if (!leaf || !catLayer) return;
+ if (on){ catLayer.addTo(leaf); loadCatalog(); } else { leaf.removeLayer(catLayer); catSel = null; document.getElementById('mapHint').hidden = true; renderMap(); }
+};
+document.getElementById('catBtn').setAttribute('aria-pressed', store.get('surf.showCat', true));
+
 function addFromOsm(o){
  openAdd();
  if (add.map) setPos(o.lat, o.lon, 15);
@@ -903,24 +983,26 @@ function openDetail(id){
   store.set('surf.customSpots', store.get('surf.customSpots', []).filter(s=>s.id!==id));
   spots = spots.filter(s=>s.id!==id); delete data[id];
   if (favorite === id){ favorite = null; store.set('surf.favorite', null); }
-  if (leafPins[id]){ leaf.removeLayer(leafPins[id]); delete leafPins[id]; }
+  if (leafPins[id]){ myLayer.removeLayer(leafPins[id]); delete leafPins[id]; }
   setTab('spot');
  };
 }
 // ---------- Webcam pubbliche (link esterni: questi siti non si lasciano incorporare) ----------
 const CAM = {
- capo:{name:'Putzu Idu, Capo Mannu e Mini Capo', src:'Panoramicams', url:'https://panoramicams.com/putzu-idu-capo-mannu/'},
- arco:{name:"Putzu Idu, arco di S'Architteddu", src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-putzu-idu-beach-arco-di-sarchitteddu-oristano-livecam-sardinia-italy/'},
- sg1:{name:'San Giovanni di Sinis', src:'Panoramicams', url:'https://panoramicams.com/san-giovanni-di-sinis/'},
- sg2:{name:'San Giovanni di Sinis, spiaggia', src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-san-giovanni-di-sinis-beach-oristano-sardinia-tourism-italy/'},
- sg3:{name:'San Giovanni di Sinis, con dati meteo', src:'Vedetta', url:'https://vedetta.org/en/webcam/Italy/Sardinia/oristano/San-Giovanni-Sinis/'}
+ capo:{lat:40.025, lon:8.400, name:'Putzu Idu, Capo Mannu e Mini Capo', src:'Panoramicams', url:'https://panoramicams.com/putzu-idu-capo-mannu/'},
+ arco:{lat:40.016, lon:8.406, name:"Putzu Idu, arco di S'Architteddu", src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-putzu-idu-beach-arco-di-sarchitteddu-oristano-livecam-sardinia-italy/'},
+ sg1:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis', src:'Panoramicams', url:'https://panoramicams.com/san-giovanni-di-sinis/'},
+ sg2:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis, spiaggia', src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-san-giovanni-di-sinis-beach-oristano-sardinia-tourism-italy/'},
+ sg3:{lat:39.878, lon:8.438, name:'San Giovanni di Sinis, con dati meteo', src:'Vedetta', url:'https://vedetta.org/en/webcam/Italy/Sardinia/oristano/San-Giovanni-Sinis/'}
 };
 const SPOT_CAMS = {
  'capo-mannu':['capo'], 'mini-capo':['capo'], 'godzilla':['capo'], 'la-punta':['capo'], 'lo-scivolo':['capo','arco'], 'putzu-idu':['capo','arco'],
  'sg-la-torre':['sg1','sg2','sg3'], 'sg-scalini':['sg1','sg2','sg3']
 };
+// webcam entro 4 km dalla spiaggia: così anche gli spot che aggiungi tu se le ritrovano
+const camsNear = p => Object.values(CAM).filter(c => distanceKm(p, c) <= 4);
 function camsHtml(sp){
- const list = (SPOT_CAMS[sp.id] || []).map(k=>CAM[k]);
+ const list = SPOT_CAMS[sp.id] ? SPOT_CAMS[sp.id].map(k=>CAM[k]) : camsNear(beach(sp));
  if (!list.length) return '';
  return `<div class="cams"><p class="xs muted">Webcam live nella zona: guarda onde e gente con i tuoi occhi</p><div class="list">${list.map(c=>
   `<a href="${c.url}" target="_blank" rel="noopener"><i class="live" aria-hidden="true"></i><span>${esc(c.name)}</span><span class="xs muted" style="flex:0 0 auto;font-weight:500">${c.src} ↗</span></a>`).join('')}</div></div>`;
@@ -1165,21 +1247,35 @@ function renderMap(){
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(leaf);
   const pts = spots.map(sp=>{ const b = beach(sp); return [b.lat, b.lon]; });
   if (pts.length > 1) leaf.fitBounds(pts, {paddingTopLeft:[30,70], paddingBottomRight:[30,110], maxZoom:13});
-  leaf.on('click', ()=>{ mapSel = null; renderMap(); });
+  const cluster = (cls, fn) => L.markerClusterGroup ? L.markerClusterGroup({showCoverageOnHover:false, maxClusterRadius:48, disableClusteringAtZoom:13, spiderfyOnMaxZoom:false, iconCreateFunction:fn}) : L.layerGroup();
+  myLayer = cluster('my', c => {
+   const best = Math.max(...c.getAllChildMarkers().map(m => m.options.score ?? -1));
+   const [bg,fg] = tone(best < 0 ? null : best);
+   return L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html:`<div class="clu" style="--c:${bg};--fg:${fg}" aria-label="${c.getChildCount()} spot, il migliore ${best < 0 ? 'n.d.' : best} su 5">${c.getChildCount()}</div>`});
+  }).addTo(leaf);
+  catLayer = cluster('cat', c => L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html:`<div class="clu cat" aria-label="${c.getChildCount()} spot noti">${c.getChildCount()}</div>`}));
+  if (store.get('surf.showCat', true)) catLayer.addTo(leaf);
+  leaf.on('click', ()=>{ mapSel = null; catSel = null; renderMap(); });
+  leaf.on('moveend', loadCatalog);
+  setTimeout(loadCatalog, 300);
  }
  if (!mapSel) mapSel = favorite && spots.some(s=>s.id===favorite) ? favorite : spots.map(sp=>({sp, e:mapScore(sp)})).sort((a,b)=>(b.e?.score??-1)-(a.e?.score??-1))[0]?.sp.id;
  spots.forEach(sp=>{
   const e = mapScore(sp), [bg,fg] = tone(e?.score), b = beach(sp);
   const icon = L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17],
    html:`<div class="pin${mapSel===sp.id?' sel':''}" style="--c:${bg};--fg:${fg}" aria-label="${esc(sp.name)}, ${e?.score ?? 'n.d.'} su 5">${e?.score ?? '–'}</div>`});
-  if (leafPins[sp.id]) leafPins[sp.id].setIcon(icon);
+  if (leafPins[sp.id]){ leafPins[sp.id].options.score = e?.score; leafPins[sp.id].setIcon(icon); }
   else {
-   leafPins[sp.id] = L.marker([b.lat, b.lon], {icon, keyboard:true, title:sp.name}).addTo(leaf);
-   leafPins[sp.id].on('click', ev=>{ L.DomEvent.stopPropagation(ev); mapSel = sp.id; renderMap(); });
+   leafPins[sp.id] = L.marker([b.lat, b.lon], {icon, keyboard:true, title:sp.name, score:e?.score});
+   myLayer.addLayer(leafPins[sp.id]);
+   leafPins[sp.id].on('click', ev=>{ L.DomEvent.stopPropagation(ev); mapSel = sp.id; catSel = null; renderMap(); });
   }
  });
+ if (myLayer.refreshClusters) myLayer.refreshClusters();
  const card = document.getElementById('mapCard'), sel = spots.find(s=>s.id===mapSel);
- if (sel && document.getElementById('windy').hidden){
+ renderCatCard();
+ if (catSel) card.hidden = true;
+ else if (sel && document.getElementById('windy').hidden){
   const e = mapScore(sel);
   card.hidden = false; card.dataset.open = sel.id;
   card.innerHTML = `${badge(e?.score)}<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(sel.name)}</p>
