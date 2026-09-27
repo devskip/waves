@@ -238,6 +238,16 @@ body.locked{overflow:hidden}
 .labels span{width:41px;text-align:center}
 .labels .best{color:var(--ink);font-weight:600}
 .dlist{display:flex;flex-direction:column}
+.crowd{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.crowd .ctop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.crowd .ppl{display:flex;gap:3px;color:var(--ink)}
+.crowd .ppl svg.off{opacity:.2}
+.crowd b{font:700 20px/1.2 "Barlow Condensed",sans-serif;display:block;margin-top:2px}
+.cams{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.cams .list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.cams a{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.cams a span{flex:1}
+.cams .live{width:8px;height:8px;border-radius:50%;background:#D8453B;box-shadow:0 0 0 3px rgba(216,69,59,.2)}
 .dlist div{display:grid;grid-template-columns:86px 36px minmax(0,1fr);gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .dlist div:last-child{border-bottom:0}
 .dlist div.best{background:var(--panel);border-radius:10px;padding-left:8px;padding-right:8px}
@@ -522,7 +532,7 @@ async function loadSpots(){
 
 async function fetchForecast(){
  const lat = spots.map(s=>s.lat).join(','), lon = spots.map(s=>s.lon).join(',');
- const q = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=7`;
+ const q = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=7&past_days=3`;
  let [m, w] = await Promise.all([
   getJson(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`),
   getJson(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
@@ -839,6 +849,8 @@ function openDetail(id){
     <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
     <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div>
     ${ev ? periodCell(sp, ev.T) : ''}</div>
+   ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
+   ${camsHtml(sp)}
   </section>
 
   <section class="dsec t-wx" id="sec-wx">
@@ -860,7 +872,7 @@ function openDetail(id){
    ${chartHtml(sp)}
    <h3 style="margin:18px 0 6px;font:600 19px 'Barlow Condensed',sans-serif">Giorno per giorno</h3>
    <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
-    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></div>`).join('')}</div>
+    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()}</span></span></div>`).join('')}</div>
   </section>
 
   <div class="dfoot">
@@ -895,6 +907,74 @@ function openDetail(id){
   setTab('spot');
  };
 }
+// ---------- Webcam pubbliche (link esterni: questi siti non si lasciano incorporare) ----------
+const CAM = {
+ capo:{name:'Putzu Idu, Capo Mannu e Mini Capo', src:'Panoramicams', url:'https://panoramicams.com/putzu-idu-capo-mannu/'},
+ arco:{name:"Putzu Idu, arco di S'Architteddu", src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-putzu-idu-beach-arco-di-sarchitteddu-oristano-livecam-sardinia-italy/'},
+ sg1:{name:'San Giovanni di Sinis', src:'Panoramicams', url:'https://panoramicams.com/san-giovanni-di-sinis/'},
+ sg2:{name:'San Giovanni di Sinis, spiaggia', src:'WhatsupCams', url:'https://www.whatsupcams.com/en/webcams/italy/sardinia/oristano/live-webcam-san-giovanni-di-sinis-beach-oristano-sardinia-tourism-italy/'},
+ sg3:{name:'San Giovanni di Sinis, con dati meteo', src:'Vedetta', url:'https://vedetta.org/en/webcam/Italy/Sardinia/oristano/San-Giovanni-Sinis/'}
+};
+const SPOT_CAMS = {
+ 'capo-mannu':['capo'], 'mini-capo':['capo'], 'godzilla':['capo'], 'la-punta':['capo'], 'lo-scivolo':['capo','arco'], 'putzu-idu':['capo','arco'],
+ 'sg-la-torre':['sg1','sg2','sg3'], 'sg-scalini':['sg1','sg2','sg3']
+};
+function camsHtml(sp){
+ const list = (SPOT_CAMS[sp.id] || []).map(k=>CAM[k]);
+ if (!list.length) return '';
+ return `<div class="cams"><p class="xs muted">Webcam live nella zona: guarda onde e gente con i tuoi occhi</p><div class="list">${list.map(c=>
+  `<a href="${c.url}" target="_blank" rel="noopener"><i class="live" aria-hidden="true"></i><span>${esc(c.name)}</span><span class="xs muted" style="flex:0 0 auto;font-weight:500">${c.src} ↗</span></a>`).join('')}</div></div>`;
+}
+
+// ---------- Affollamento stimato (una previsione, non una misura) ----------
+const SPOT_POP = {'mini-capo':1, 'capo-mannu':.9, 'putzu-idu':.9, 'lo-scivolo':.8, 'la-punta':.7, 'sa-mesa-longa':.7, 'sg-la-torre':.8, 'sg-scalini':.7, 'godzilla':.5, 'su-pallosu':.5};
+function easter(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return new Date(Date.UTC(y,mo-1,da)); }
+function dayKind(iso){
+ const d = new Date(iso+'T12:00:00Z'), wd = d.getUTCDay(), md = iso.slice(5);
+ const fixed = ['01-01','01-06','04-25','05-01','06-02','08-15','11-01','12-08','12-25','12-26'];
+ const pasquetta = new Date(easter(d.getUTCFullYear()).getTime() + 86400000).toISOString().slice(5,10);
+ if (fixed.includes(md) || md === pasquetta) return 'festivo';
+ if (wd === 0) return 'domenica'; if (wd === 6) return 'sabato';
+ return 'feriale';
+}
+function flatBefore(sp, day){
+ const s = data[sp.id]; if (!s) return false;
+ const from = new Date(new Date(day+'T12:00:00Z').getTime() - 3*86400000).toISOString().slice(0,10);
+ let best = null;
+ for (let i = 0; i < s.time.length; i++){
+  const t = s.time[i]; if (t < from || t >= day) continue;
+  const h = +t.slice(11,13); if (h < DAY_START || h > DAY_END) continue;
+  const e = evaluate(sp, s, i); if (e) best = Math.max(best ?? 0, e.score);
+ }
+ return best != null && best < 2.5;
+}
+function crowdCalc(sp, score, day, hour){
+ const why = [];
+ const q = score < 1.5 ? .05 : score < 2.5 ? .25 : score < 3.5 ? .55 : score < 4.5 ? .8 : 1;
+ if (score >= 3.5) why.push('onde buone');
+ const kind = dayKind(day), month = +day.slice(5,7);
+ let dayF = kind === 'feriale' ? (month === 8 ? .85 : .6) : 1;
+ if (kind !== 'feriale') why.push(kind === 'festivo' ? 'giorno festivo' : kind);
+ else if (month === 8) why.push('agosto');
+ const hourF = hour < 7 || hour > 20 ? .1 : hour < 9 ? .8 : hour < 12 ? 1 : hour < 15 ? .7 : hour < 18 ? 1 : .6;
+ const pop = SPOT_POP[sp.id] ?? .6;
+ if (pop >= .9) why.push('spot molto frequentato'); else if (pop <= .5) why.push('spot poco battuto');
+ const rare = score >= 3 && flatBefore(sp, day);
+ if (rare) why.push('prime onde dopo giorni di piatto');
+ const x = Math.min(1, q * dayF * hourF * pop * (rare ? 1.25 : 1) * 1.15);
+ const lvl = x < .15 ? 0 : x < .35 ? 1 : x < .6 ? 2 : 3;
+ if (score < 1.5) why.splice(0, why.length, 'onde quasi assenti, in acqua non va quasi nessuno');
+ else if (score < 2.5) why.unshift('onde scarse');
+ return {lvl, label:['Probabilmente vuoto','Poca gente','Un po\' di gente','Affollato'][lvl], why};
+}
+const crowdNow = (sp, ev) => crowdCalc(sp, ev.score, todayIso(), +nowKey().slice(11,13));
+const crowdDay = (sp, d) => crowdCalc(sp, d.best.score, d.day, d.bestHour);
+function crowdHtml(sp, c){
+ const person = on => `<svg class="${on?'':'off'}" width="18" height="22" viewBox="0 0 18 22" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="4"/><path d="M1 21c0-5 3.6-8 8-8s8 3 8 8z"/></svg>`;
+ return `<div class="crowd"><div class="ctop"><span class="xs muted">Affollamento stimato</span><span class="ppl" role="img" aria-label="${c.lvl+1} su 4">${[0,1,2,3].map(i=>person(i<=c.lvl)).join('')}</span></div>
+  <b>${c.label}</b><p class="xs muted" style="margin-top:2px">${c.why.length ? 'Perché: '+c.why.join(', ')+'. ' : ''}È una stima fatta da onde, giorno e ora, non un conteggio reale.</p></div>`;
+}
+
 // ---------- Sezioni della pagina spot ----------
 const MOTIF = {
  // rosa dei venti: il momento, onde e vento
