@@ -128,6 +128,29 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:14px}
 .star{margin-top:8px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
 .star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.legendcard{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.legendcard .lt{font-weight:600}
+.lrow{display:flex;gap:12px;align-items:flex-start;margin-top:10px;font-size:14px;line-height:1.35}
+.lrow svg{flex-shrink:0;margin-top:1px}
+.lrow b{font-weight:600}
+.wx{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.wxnow{display:flex;align-items:center;gap:12px}
+.wxi{font-size:40px;line-height:1}
+.wxt{font:700 34px/1 "Barlow Condensed",sans-serif}
+.wxgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.wxgrid div{background:var(--bg);border-radius:10px;padding:8px 10px}
+.wxgrid b{display:block;font:700 20px/1.2 "Barlow Condensed",sans-serif}
+.hours{display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-bottom:4px;scrollbar-width:none}
+.hr{flex:0 0 74px;border:1px solid var(--line);border-radius:14px;padding:8px 4px;text-align:center;font-size:12px;color:var(--muted)}
+.hr .i{font-size:22px;line-height:1.3}
+.hr b{display:block;font:700 19px/1.1 "Barlow Condensed",sans-serif;color:var(--ink)}
+.hr.now{background:var(--ink);border-color:var(--ink);color:#C9D6DE}
+.hr.now b{color:#fff}
+.tide{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tide svg{width:100%;height:auto;display:block;margin-top:8px}
+.tide .tx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.tide .tx div{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:14px}
+.tide .tx b{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.02em}
 .facts{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .facts div{background:var(--panel);padding:10px 14px}
 .facts b{display:block;font:700 26px/1.2 "Barlow Condensed",sans-serif}
@@ -720,11 +743,14 @@ function openDetail(id){
    <div><h1>${esc(sp.name)}</h1><p class="muted small" style="margin-top:4px">${esc(sp.area||'')}</p>
     <div class="pill">${badge(ev?.score,'xs')}${scoreLabel(ev?.score)} adesso</div><br>
     <button class="star" id="favBtn" aria-pressed="${isFav}">${ICON.star(isFav)}${isFav?'Preferito':'Metti tra i preferiti'}</button></div></div>
+  ${dialLegend(sp, ev)}
   <div class="facts">
    <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
    <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m, '+Math.round(ev.T)+' s' : '–'}</b></div>
    <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
    <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div></div>
+  <h2 style="margin-bottom:8px">Meteo e marea</h2>
+  <div id="extra" data-spot="${sp.id}"><p class="small muted">Carico meteo e marea…</p></div>
   <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
   <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17: l'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
   ${chartHtml(sp)}
@@ -735,6 +761,7 @@ function openDetail(id){
   ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button></div>
   <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}`;
  showView('detail');
+ loadExtra(sp);
  document.getElementById('back').onclick = ()=>setTab(lastTab);
  document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
  document.getElementById('followBtn').onclick = ()=>{ toggleFollow(id); openDetail(id); };
@@ -754,6 +781,116 @@ function openDetail(id){
   setTab('spot');
  };
 }
+// ---------- Legenda del cerchio ----------
+function dialLegend(sp, ev){
+ const a0 = ((sp.facing - sp.window) % 360 + 360) % 360, a1 = (sp.facing + sp.window) % 360;
+ const swell = ev ? ` Adesso arriva da ${cardinal(ev.dir)} (${Math.round(ev.dir)}°) con periodo di ${Math.round(ev.T)} s${angDiff(ev.dir, sp.facing) <= sp.window ? ', dentro la finestra' : ', fuori dalla finestra'}.` : '';
+ const wind = ev ? (ev.ws < 3 ? ' Adesso è quasi assente, per questo non si vede.' : ` Adesso soffia da ${cardinal(ev.wd)} a ${Math.round(ev.ws)} km/h (${ev.windType}).`) : '';
+ return `<div class="legendcard">
+  <p class="lt">Come leggere il cerchio <span class="xs muted" style="font-weight:400;display:block;margin-top:2px">Il nord è in alto, come su una mappa.</span></p>
+  <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 5 L20 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><path d="M22 22 L14 20 L20 14Z" fill="var(--accent)"/></svg>
+   <p><b>Freccia blu: lo swell.</b> Parte dal lato da cui arrivano le onde e punta verso lo spot.${swell}</p></div>
+  <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M6 22 L22 6" stroke="var(--wind)" stroke-width="2.5" stroke-dasharray="4 4"/></svg>
+   <p><b>Tratteggio: il vento.</b> Sta sul lato da cui soffia.${wind} Qui il vento ideale (offshore) viene da ${cardinal(sp.offshore)}.</p></div>
+  <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 20 A11 11 0 0 1 20 5" fill="none" stroke="var(--s2)" stroke-width="5" stroke-linecap="round"/></svg>
+   <p><b>Arco verde: la finestra dello spot.</b> Le direzioni da cui lo swell entra bene, qui da ${cardinal(a0)} a ${cardinal(a1)}. Con la freccia dentro l'arco le onde arrivano piene; più ne esce, meno lo spot le prende.</p></div>
+ </div>`;
+}
+
+// ---------- Meteo e marea ----------
+const extraCache = {};
+const WX = c => c === 0 ? ['☀️','🌙','Sereno'] : c <= 2 ? ['🌤️','🌙','Poco nuvoloso'] : c === 3 ? ['☁️','☁️','Coperto']
+ : c <= 48 ? ['🌫️','🌫️','Nebbia'] : c <= 57 ? ['🌦️','🌧️','Pioviggine'] : c <= 67 ? ['🌧️','🌧️','Pioggia']
+ : c <= 77 ? ['🌨️','🌨️','Neve'] : c <= 82 ? ['🌦️','🌧️','Rovesci'] : ['⛈️','⛈️','Temporale'];
+const wxIcon = (c, day) => WX(c ?? 0)[day ? 0 : 1];
+async function loadExtra(sp){
+ const c = extraCache[sp.id];
+ if (c && Date.now() - c.at < 60*60*1000){ renderExtra(sp, c); return; }
+ const b = beach(sp), tz = encodeURIComponent(TZ);
+ try{
+  const [fc, mr] = await Promise.all([
+   getJson(`https://api.open-meteo.com/v1/forecast?latitude=${b.lat}&longitude=${b.lon}&timezone=${tz}&forecast_days=2&hourly=temperature_2m,weather_code,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset,wind_gusts_10m_max`),
+   getJson(`https://marine-api.open-meteo.com/v1/marine?latitude=${sp.lat}&longitude=${sp.lon}&cell_selection=sea&timezone=${tz}&past_days=1&forecast_days=2&hourly=sea_level_height_msl,sea_surface_temperature`)
+  ]);
+  extraCache[sp.id] = {at:Date.now(), fc, mr};
+  renderExtra(sp, extraCache[sp.id]);
+ }catch(e){
+  const el = document.getElementById('extra');
+  if (el && el.dataset.spot === sp.id) el.innerHTML = `<p class="small muted">Meteo e marea non disponibili adesso (${esc(e.message)}).</p>`;
+ }
+}
+function tideExtremes(time, h){
+ const out = [];
+ for (let i = 1; i < h.length-1; i++){
+  if (h[i-1] == null || h[i] == null || h[i+1] == null) continue;
+  const hi = h[i] >= h[i-1] && h[i] > h[i+1], lo = h[i] <= h[i-1] && h[i] < h[i+1];
+  if (!hi && !lo) continue;
+  const den = h[i-1] - 2*h[i] + h[i+1], off = den ? 0.5*(h[i-1]-h[i+1])/den : 0;
+  const t = new Date(time[i] + ':00Z').getTime() + off*3600*1000;
+  out.push({hi, t, v: h[i] - 0.25*(h[i-1]-h[i+1])*off, day: time[i].slice(0,10)});
+ }
+ return out;
+}
+const hm = ms => new Date(ms).toISOString().slice(11,16);
+function renderExtra(sp, {fc, mr}){
+ const el = document.getElementById('extra');
+ if (!el || el.dataset.spot !== sp.id) return;
+ const H = fc.hourly, D = fc.daily, key = nowKey(), today = todayIso();
+ const i0 = Math.max(0, H.time.indexOf(key));
+ const mi = mr.hourly.time.indexOf(key);
+ const sst = mi >= 0 ? mr.hourly.sea_surface_temperature?.[mi] : null;
+ const di = Math.max(0, D.time.indexOf(today));
+ const ic = wxIcon(H.weather_code[i0], H.is_day[i0]), label = WX(H.weather_code[i0] ?? 0)[2];
+ // prossime ore, ogni 3 ore
+ const s = data[sp.id], slots = [i0];
+ for (let i = i0 + 3 - (+H.time[i0].slice(11,13) % 3); i < H.time.length && slots.length < 8; i += 3) slots.push(i);
+ const hours = slots.map((i,k)=>{
+  const si = s ? s.time.indexOf(H.time[i]) : -1, ev = si >= 0 ? evaluate(sp, s, si) : null;
+  return `<div class="hr${k===0?' now':''}"><span>${k===0 ? 'Ora' : H.time[i].slice(11,16)}</span><div class="i">${wxIcon(H.weather_code[i], H.is_day[i])}</div>
+   <b>${Math.round(H.temperature_2m[i])}°</b><span>${cardinal(H.wind_direction_10m[i])} ${Math.round(H.wind_speed_10m[i])}</span><br><span>${ev ? ev.face.toFixed(1)+' m' : ''}</span></div>`;
+ }).join('');
+ const sr = D.sunrise?.[di]?.slice(11,16), ss = D.sunset?.[di]?.slice(11,16);
+ const wx = `<div class="wx">
+  <div class="wxnow"><span class="wxi" aria-hidden="true">${ic}</span>
+   <div><p class="wxt">${Math.round(H.temperature_2m[i0])}°</p><p class="small muted">${label}, max ${Math.round(D.temperature_2m_max[di])}° min ${Math.round(D.temperature_2m_min[di])}°</p></div></div>
+  <div class="wxgrid">
+   <div><span class="xs muted">Acqua</span><b>${sst != null ? sst.toFixed(1)+'°' : '–'}</b></div>
+   <div><span class="xs muted">Raffiche</span><b>${Math.round(H.wind_gusts_10m[i0])} km/h</b></div>
+   <div><span class="xs muted">Pioggia oggi</span><b>${(D.precipitation_sum[di] ?? 0).toFixed(1)} mm</b></div>
+   <div><span class="xs muted">Alba e tramonto</span><b>${sr || '–'} / ${ss || '–'}</b></div></div>
+  <div class="hours" aria-label="Prossime ore: meteo, vento in km/h e onda a riva">${hours}</div>
+  <p class="xs muted" style="margin-top:6px">Ogni casella: ora, cielo, temperatura, vento (da, km/h) e onda a riva.</p></div>`;
+
+ // marea
+ const T = mr.hourly.time, L = mr.hourly.sea_level_height_msl || [];
+ const idx = T.map((t,i)=>t.startsWith(today) ? i : -1).filter(i=>i>=0 && L[i] != null);
+ let tide;
+ if (idx.length < 12){
+  tide = `<div class="tide"><p style="font-weight:600">Marea</p><p class="small muted" style="margin-top:4px">Dato di marea non disponibile per questo punto.</p></div>`;
+ } else {
+  const vals = idx.map(i=>L[i]), mn = Math.min(...vals), mx = Math.max(...vals), span = Math.max(mx - mn, 0.05);
+  const X = h => 10 + h/24*280, Y = v => 70 - (v - mn)/span*55;
+  const pts = idx.map(i=>`${X(+T[i].slice(11,13)).toFixed(1)},${Y(L[i]).toFixed(1)}`);
+  const nowH = +key.slice(11,13) + new Date().getMinutes()/60;
+  const ex = tideExtremes(T, L).filter(e=>e.day === today);
+  const dots = ex.map(e=>{ const hh = (e.t - new Date(today+'T00:00:00Z').getTime())/3600000;
+   return `<circle cx="${X(hh).toFixed(1)}" cy="${Y(e.v).toFixed(1)}" r="3.5" fill="${e.hi ? 'var(--accent)' : 'var(--muted)'}"/>`; }).join('');
+  const hiT = ex.filter(e=>e.hi).map(e=>hm(e.t)).join(', ') || '–', loT = ex.filter(e=>!e.hi).map(e=>hm(e.t)).join(', ') || '–';
+  const cm = Math.round((mx - mn)*100);
+  tide = `<div class="tide"><p style="font-weight:600">Marea oggi <span class="xs muted" style="font-weight:400">escursione ${cm} cm</span></p>
+   <svg viewBox="0 0 300 92" role="img" aria-label="Andamento della marea oggi: alte alle ${hiT}, basse alle ${loT}">
+    <path d="M${pts[0]} L${pts.join(' L')} L${X(+T[idx.at(-1)].slice(11,13)).toFixed(1)},72 L${X(+T[idx[0]].slice(11,13)).toFixed(1)},72Z" fill="var(--sea)"/>
+    <path d="M${pts.join(' L')}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <line x1="${X(nowH).toFixed(1)}" y1="8" x2="${X(nowH).toFixed(1)}" y2="72" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 3"/>
+    ${dots}
+    ${[0,6,12,18,24].map(h=>`<text x="${X(h)}" y="86" text-anchor="middle" style="font:11px Barlow,sans-serif;fill:var(--muted)">${String(h).padStart(2,'0')}</text>`).join('')}
+   </svg>
+   <div class="tx"><div><b>ALTA</b>${hiT}</div><div><b>BASSA</b>${loT}</div></div>
+   <p class="xs muted" style="margin-top:8px">${cm < 40 ? 'Nel Mediterraneo la marea sposta il mare di pochi centimetri: conta poco sulle onde, ma sui reef bassi può fare la differenza.' : 'La linea tratteggiata è adesso.'} Dato modellistico, indicativo.</p></div>`;
+ }
+ el.innerHTML = wx + tide;
+}
+
 function toggleFollow(id){
  const list = spots.filter(isFollowed).map(s=>s.id);
  followed = list.includes(id) ? list.filter(x=>x!==id) : [...list, id];
