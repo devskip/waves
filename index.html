@@ -182,6 +182,7 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .types b{display:block}
 .field{width:100%;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
 .err{color:var(--s4);margin-top:12px;font-weight:500}
+.err .pillbtn{margin-top:8px;color:var(--ink)}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:env(safe-area-inset-bottom,0px)}
 nav.tabs button{min-height:64px;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
@@ -198,6 +199,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
   <button class="locbtn" id="nearBtn" aria-pressed="false"><span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg></span>Vicino a me</button>
  </div>
  <p class="muted small" id="updated" style="margin-top:6px">Scarico le previsioni…</p>
+ <div class="err" id="status" hidden></div>
  <div id="fav"></div>
  <button class="banner" id="banner" hidden></button>
  <div class="lhead"><h2>Attivi ora</h2><button class="linkbtn" id="resetOrder" hidden>Ordina per punteggio</button></div>
@@ -206,7 +208,6 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <h2 class="muted">Non attivi</h2>
  <div class="list" id="offList" style="gap:6px"></div>
  <button class="pillbtn addspot" id="addOpen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Aggiungi uno spot</button>
- <p class="err" id="status" hidden></p>
 </section>
 
 <!-- DETTAGLIO -->
@@ -388,22 +389,30 @@ const dayShort = iso => iso === todayIso() ? 'Oggi' : weekday(iso).slice(0,3);
 const dayChip = iso => iso === todayIso() ? 'Oggi' : `${weekday(iso).slice(0,3)} ${+iso.slice(8,10)}`;
 
 // ---------- Dati ----------
+async function getJson(url, opts={}, tries=2){
+ for (let k = 1; ; k++){
+  const ctrl = new AbortController(), timer = setTimeout(()=>ctrl.abort(), 20000);
+  try{
+   const r = await fetch(url, {...opts, signal:ctrl.signal});
+   if (!r.ok) throw new Error(`${new URL(url, location.href).hostname} ha risposto ${r.status}`);
+   return await r.json();
+  }catch(e){
+   if (k >= tries) throw e.name === 'AbortError' ? new Error(`${new URL(url, location.href).hostname} non risponde`) : e;
+  }finally{ clearTimeout(timer); }
+ }
+}
 async function loadSpots(){
- const r = await fetch('spots.json', {cache:'no-cache'});
- if (!r.ok) throw new Error('spots.json non trovato');
- baseSpots = (await r.json()).spots;
+ baseSpots = (await getJson('spots.json', {cache:'no-cache'})).spots;
  spots = [...baseSpots, ...store.get('surf.customSpots', [])];
 }
 
 async function fetchForecast(){
  const lat = spots.map(s=>s.lat).join(','), lon = spots.map(s=>s.lon).join(',');
  const q = `latitude=${lat}&longitude=${lon}&timezone=${encodeURIComponent(TZ)}&forecast_days=7`;
- const [mr, wr] = await Promise.all([
-  fetch(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`),
-  fetch(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
+ let [m, w] = await Promise.all([
+  getJson(`https://marine-api.open-meteo.com/v1/marine?${q}&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period`),
+  getJson(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
  ]);
- if (!mr.ok || !wr.ok) throw new Error(`Open-Meteo ha risposto ${mr.status}/${wr.status}`);
- let m = await mr.json(), w = await wr.json();
  if (!Array.isArray(m)) m = [m];
  if (!Array.isArray(w)) w = [w];
  const out = {};
@@ -906,19 +915,43 @@ function renderAll(){
  if (lastTab==='map') renderMap();
  if (lastTab==='alert') renderAlert();
 }
+function showStatus(msg){
+ const st = document.getElementById('status');
+ st.hidden = false;
+ st.innerHTML = `<p>${esc(msg)}</p><button class="pillbtn" id="retryBtn">Riprova</button>`;
+ document.getElementById('retryBtn').onclick = ()=>refresh();
+}
+const hhmm = d => new Date(d).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+let busy = false;
 async function refresh(){
+ if (busy) return; busy = true;
  const up = document.getElementById('updated'), st = document.getElementById('status');
  up.textContent = 'Scarico le previsioni…'; st.hidden = true;
  try{
   if (!baseSpots.length) await loadSpots();
   data = await fetchForecast();
-  up.textContent = 'Sinis, aggiornato alle ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  store.set('surf.cache', {at: Date.now(), data});
+  up.textContent = 'Sinis, aggiornato alle ' + hhmm(Date.now());
   renderAll(); notify();
  }catch(e){
-  up.textContent = 'Previsioni non disponibili';
-  st.hidden = false; st.textContent = `Download non riuscito (${e.message}). Controlla la connessione e ricarica la pagina.`;
- }
+  const c = store.get('surf.cache', null);
+  if (c && c.data && spots.length && spots.every(sp=>c.data[sp.id])){
+   data = c.data;
+   up.textContent = `Previsioni salvate delle ${hhmm(c.at)}`;
+   renderAll();
+   showStatus(`Aggiornamento non riuscito: ${e.message}.`);
+  } else {
+   up.textContent = 'Previsioni non disponibili';
+   showStatus(`Download non riuscito: ${e.message}. Controlla la connessione.`);
+  }
+ }finally{ busy = false; }
 }
+window.addEventListener('error', e=>showStatus(`Errore dell'app: ${e.message}`));
+window.addEventListener('unhandledrejection', e=>showStatus(`Errore dell'app: ${e.reason?.message || e.reason}`));
+document.addEventListener('visibilitychange', ()=>{
+ const c = store.get('surf.cache', null);
+ if (!document.hidden && (!c || Date.now() - c.at > 60*60*1000)) refresh();
+});
 
 document.addEventListener('click', e=>{
  const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
