@@ -128,6 +128,16 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .pill{margin-top:10px;display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;background:var(--panel);border:1px solid var(--line);font-weight:600;font-size:14px}
 .star{margin-top:8px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
 .star[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.dnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;margin:18px -20px 0;padding:8px 20px;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.dnav button{flex-shrink:0;min-height:38px;padding:0 14px;border-radius:19px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:500}
+.dnav button[aria-current="true"]{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.dsec{margin-top:28px;scroll-margin-top:calc(70px + env(safe-area-inset-top,0px))}
+.shead{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.shead h2{margin:0;line-height:1.05}
+.sic{flex-shrink:0;width:42px;height:42px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent)}
+.dsec + .dsec{padding-top:24px;border-top:1px solid var(--line)}
+.dsec .facts{margin-top:0}
+.dfoot{margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
 .legendcard{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 14px}
 .legendcard summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;cursor:pointer;font-weight:600}
 .legendcard summary::-webkit-details-marker{display:none}
@@ -137,11 +147,11 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .facts .wide{grid-column:1 / -1}
 .ptop{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ppill{padding:3px 10px;border-radius:12px;font-size:13px;font-weight:600;background:var(--c);color:var(--fg)}
-.pbar{position:relative;display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:10px}
+.pbar{position:absolute;left:0;right:0;top:5px;display:flex;height:8px;border-radius:4px;overflow:hidden}
 .pbar i{display:block;height:100%}
-.pmark{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--ink);transform:translate(-50%,-50%)}
-.pwrap{position:relative;padding:5px 0}
-.pscale{position:relative;height:16px;font-size:11px;color:var(--muted);margin-top:4px}
+.pmark{position:absolute;top:0;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--ink);transform:translateX(-50%);box-shadow:0 1px 3px rgba(19,40,59,.3)}
+.pwrap{position:relative;height:18px;margin:12px 9px 0}
+.pscale{position:relative;height:16px;font-size:11px;color:var(--muted);margin:4px 9px 0}
 .pscale span{position:absolute;transform:translateX(-50%);white-space:nowrap}
 .pscale span:first-child{transform:none}
 .pscale span:last-child{transform:translateX(-100%)}
@@ -161,7 +171,7 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .hr b{display:block;font:700 19px/1.1 "Barlow Condensed",sans-serif;color:var(--ink)}
 .hr.now{background:var(--ink);border-color:var(--ink);color:#C9D6DE}
 .hr.now b{color:#fff}
-.tide{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tide{margin-top:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .tide svg{width:100%;height:auto;display:block;margin-top:8px}
 .tide .tx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 .tide .tx div{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:14px}
@@ -758,25 +768,46 @@ function openDetail(id){
    <div><h1>${esc(sp.name)}</h1><p class="muted small" style="margin-top:4px">${esc(sp.area||'')}</p>
     <div class="pill">${badge(ev?.score,'xs')}${scoreLabel(ev?.score)} adesso</div><br>
     <button class="star" id="favBtn" aria-pressed="${isFav}">${ICON.star(isFav)}${isFav?'Preferito':'Metti tra i preferiti'}</button></div></div>
-  ${dialLegend(sp, ev)}
-  <div class="facts">
-   <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
-   <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m' : '–'}</b></div>
-   <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
-   <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div>
-   ${ev ? periodCell(sp, ev.T) : ''}</div>
-  <h2 style="margin-bottom:8px">Meteo e marea</h2>
-  <div id="extra" data-spot="${sp.id}"><p class="small muted">Carico meteo e marea…</p></div>
-  <h2 style="margin-bottom:4px">Prossimi 7 giorni</h2>
-  <p class="xs muted" style="margin-bottom:10px">Onda a riva alle 8, 11, 14 e 17: l'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
-  ${chartHtml(sp)}
-  <h2 style="margin-bottom:4px">Giorno per giorno</h2>
-  <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
-   <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></div>`).join('')}</div>
+  <nav class="dnav" id="dnav" aria-label="Sezioni della pagina">
+   <button data-jump="sec-now" aria-current="true">Adesso</button><button data-jump="sec-wx">Meteo</button><button data-jump="sec-tide">Marea</button><button data-jump="sec-week">7 giorni</button></nav>
+
+  <section class="dsec" id="sec-now">
+   ${secHead(SEC_ICONS.now, 'Adesso', 'Onde, swell e vento in questo momento')}
+   <div class="facts">
+    <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
+    <div><span class="xs muted">Al largo</span><b>${ev ? ev.hs.toFixed(1)+' m' : '–'}</b></div>
+    <div><span class="xs muted">Swell da</span><b>${ev ? cardinal(ev.dir)+' '+Math.round(ev.dir)+'°' : '–'}</b></div>
+    <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div>
+    ${ev ? periodCell(sp, ev.T) : ''}</div>
+   ${dialLegend(sp, ev)}
+  </section>
+
+  <section class="dsec" id="sec-wx">
+   ${secHead(SEC_ICONS.wx, 'Meteo', 'Cielo, acqua e prossime ore sullo spot')}
+   <div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div>
+  </section>
+
+  <section class="dsec" id="sec-tide">
+   ${secHead(SEC_ICONS.tide, 'Marea', 'Alte e basse di oggi')}
+   <div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div>
+  </section>
+
+  <section class="dsec" id="sec-week">
+   ${secHead(SEC_ICONS.week, 'Prossimi 7 giorni', 'Onda a riva alle 8, 11, 14 e 17')}
+   <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
+   ${chartHtml(sp)}
+   <h3 style="margin:18px 0 6px;font:600 19px 'Barlow Condensed',sans-serif">Giorno per giorno</h3>
+   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
+    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h</span></div>`).join('')}</div>
+  </section>
+
+  <div class="dfoot">
   <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
   ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button></div>
-  <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}`;
+  <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}
+  </div>`;
  showView('detail');
+ initDetailNav();
  loadExtra(sp);
  document.getElementById('back').onclick = ()=>setTab(lastTab);
  document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
@@ -797,6 +828,33 @@ function openDetail(id){
   setTab('spot');
  };
 }
+// ---------- Sezioni della pagina spot ----------
+const SEC_ICONS = {
+ now:'<path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/>',
+ wx:'<circle cx="9" cy="9" r="3.5"/><path d="M9 2v1.5M2 9h1.5M4 4l1 1M14 4l-1 1"/><path d="M8 19h9a4 4 0 0 0 0-8 5.5 5.5 0 0 0-10.3 1.8A3.2 3.2 0 0 0 8 19z"/>',
+ tide:'<path d="M7 4v11M4 12l3 3 3-3"/><path d="M17 20V9M14 12l3-3 3 3"/>',
+ week:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
+};
+const secHead = (icon, title, sub) => `<div class="shead"><span class="sic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg></span>
+ <div><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div></div>`;
+let secObserver = null;
+function initDetailNav(){
+ const nav = document.getElementById('dnav'); if (!nav) return;
+ const mark = id => nav.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', b.dataset.jump === id));
+ nav.onclick = e => {
+  const b = e.target.closest('[data-jump]'); if (!b) return;
+  mark(b.dataset.jump);
+  document.getElementById(b.dataset.jump).scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
+ };
+ if (secObserver) secObserver.disconnect();
+ if (!('IntersectionObserver' in window)) return;
+ secObserver = new IntersectionObserver(entries => {
+  const vis = entries.filter(x=>x.isIntersecting).sort((a,b)=>a.boundingClientRect.top - b.boundingClientRect.top)[0];
+  if (vis) mark(vis.target.id);
+ }, {rootMargin:'-80px 0px -55% 0px'});
+ document.querySelectorAll('#v-detail .dsec').forEach(sec => secObserver.observe(sec));
+}
+
 // ---------- Qualità del periodo ----------
 const PERIODS = [
  {to:6, t:'Corto', c:'var(--s0)', fg:'#13283B', d:'Mare di vento: onde corte e disordinate, con poca spinta.'},
@@ -853,8 +911,8 @@ async function loadExtra(sp){
   extraCache[sp.id] = {at:Date.now(), fc, mr};
   renderExtra(sp, extraCache[sp.id]);
  }catch(e){
-  const el = document.getElementById('extra');
-  if (el && el.dataset.spot === sp.id) el.innerHTML = `<p class="small muted">Meteo e marea non disponibili adesso (${esc(e.message)}).</p>`;
+  ['extraWx','extraTide'].forEach(id=>{ const el = document.getElementById(id);
+   if (el && el.dataset.spot === sp.id) el.innerHTML = `<p class="small muted">Non disponibile adesso (${esc(e.message)}).</p>`; });
  }
 }
 function tideExtremes(time, h){
@@ -871,8 +929,8 @@ function tideExtremes(time, h){
 }
 const hm = ms => new Date(ms).toISOString().slice(11,16);
 function renderExtra(sp, {fc, mr}){
- const el = document.getElementById('extra');
- if (!el || el.dataset.spot !== sp.id) return;
+ const elW = document.getElementById('extraWx'), elT = document.getElementById('extraTide');
+ if (!elW || elW.dataset.spot !== sp.id) return;
  const H = fc.hourly, D = fc.daily, key = nowKey(), today = todayIso();
  const i0 = Math.max(0, H.time.indexOf(key));
  const mi = mr.hourly.time.indexOf(key);
@@ -904,7 +962,7 @@ function renderExtra(sp, {fc, mr}){
  const idx = T.map((t,i)=>t.startsWith(today) ? i : -1).filter(i=>i>=0 && L[i] != null);
  let tide;
  if (idx.length < 12){
-  tide = `<div class="tide"><p style="font-weight:600">Marea</p><p class="small muted" style="margin-top:4px">Dato di marea non disponibile per questo punto.</p></div>`;
+  tide = `<div class="tide"><p class="small muted">Dato di marea non disponibile per questo punto.</p></div>`;
  } else {
   const vals = idx.map(i=>L[i]), mn = Math.min(...vals), mx = Math.max(...vals), span = Math.max(mx - mn, 0.05);
   const X = h => 10 + h/24*280, Y = v => 70 - (v - mn)/span*55;
@@ -915,7 +973,7 @@ function renderExtra(sp, {fc, mr}){
    return `<circle cx="${X(hh).toFixed(1)}" cy="${Y(e.v).toFixed(1)}" r="3.5" fill="${e.hi ? 'var(--accent)' : 'var(--muted)'}"/>`; }).join('');
   const hiT = ex.filter(e=>e.hi).map(e=>hm(e.t)).join(', ') || '–', loT = ex.filter(e=>!e.hi).map(e=>hm(e.t)).join(', ') || '–';
   const cm = Math.round((mx - mn)*100);
-  tide = `<div class="tide"><p style="font-weight:600">Marea oggi <span class="xs muted" style="font-weight:400">escursione ${cm} cm</span></p>
+  tide = `<div class="tide"><p class="small muted">Escursione di oggi: <b style="color:var(--ink)">${cm} cm</b></p>
    <svg viewBox="0 0 300 92" role="img" aria-label="Andamento della marea oggi: alte alle ${hiT}, basse alle ${loT}">
     <path d="M${pts[0]} L${pts.join(' L')} L${X(+T[idx.at(-1)].slice(11,13)).toFixed(1)},72 L${X(+T[idx[0]].slice(11,13)).toFixed(1)},72Z" fill="var(--sea)"/>
     <path d="M${pts.join(' L')}" fill="none" stroke="var(--accent)" stroke-width="2"/>
@@ -926,7 +984,7 @@ function renderExtra(sp, {fc, mr}){
    <div class="tx"><div><b>ALTA</b>${hiT}</div><div><b>BASSA</b>${loT}</div></div>
    <p class="xs muted" style="margin-top:8px">${cm < 40 ? 'Nel Mediterraneo la marea sposta il mare di pochi centimetri: conta poco sulle onde, ma sui reef bassi può fare la differenza.' : 'La linea tratteggiata è adesso.'} Dato modellistico, indicativo.</p></div>`;
  }
- el.innerHTML = wx + tide;
+ elW.innerHTML = wx; elT.innerHTML = tide;
 }
 
 function toggleFollow(id){
