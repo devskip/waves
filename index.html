@@ -133,19 +133,33 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .dnav button::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:3px;border-radius:3px 3px 0 0;background:var(--tacc);transform:scaleX(0);transition:transform .2s}
 .dnav button[aria-current="true"]{color:var(--ink);font-weight:600}
 .dnav button[aria-current="true"]::after{transform:scaleX(1)}
-.t-now{--tint:#E4EEF4;--tline:#C9DCE7;--tglow:#D2E4EF;--tacc:#1D5F8A}
-.t-wx{--tint:#F7F0E1;--tline:#E9DDC2;--tglow:#F1E3C4;--tacc:#B07A1E}
-.t-tide{--tint:#E2F1ED;--tline:#C4E0D8;--tglow:#CFE9E1;--tacc:#2E7D74}
-.t-week{--tint:#ECEAF5;--tline:#D8D4EA;--tglow:#E0DCF1;--tacc:#4B3A9E}
-.dsec{margin-top:18px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 14px 14px;border-radius:22px;border:1px solid var(--tline);border-top:4px solid var(--tacc);background:radial-gradient(120% 70% at 100% 0%, var(--tglow) 0%, transparent 60%), var(--tint)}
-.shead{margin:2px 2px 14px}
-.shead h2{margin:0;line-height:1.05;color:var(--tacc)}
-.dsec .facts{margin-top:0;border-color:var(--tline);background:var(--tline)}
-.dsec .wx,.dsec .tide,.dsec .chart,.dsec .legendcard{border-color:var(--tline)}
-.dsec .dlist{background:var(--panel);border:1px solid var(--tline);border-radius:14px;padding:0 12px}
-.dsec .dlist div.best{background:var(--tint)}
-.dsec .wxgrid div,.dsec .tide .tx div{background:var(--tint)}
-.dsec .hr{border-color:var(--tline)}
+.t-now{--sbg:#13283B;--tacc:#9CC0D3}
+.t-wx{--sbg:#1D4F74;--tacc:#F0C66B}
+.t-tide{--sbg:#164F4B;--tacc:#7FD1BF}
+.t-week{--sbg:#2B303B;--tacc:#E6C27A}
+.dnav .t-now,.dnav .t-wx,.dnav .t-tide,.dnav .t-week{--tacc:var(--sbg)}
+/* sezioni della pagina spot: stesso trattamento della card preferito in home */
+.dsec{position:relative;overflow:hidden;margin-top:16px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 16px 18px;border-radius:22px;background:var(--sbg);color:#fff;
+ --panel:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--muted:#B9C8D0;--ink:#FFFFFF;--bg:rgba(255,255,255,.08);--sea:rgba(156,192,211,.18)}
+.dsec > *{position:relative}
+.dsec > .favwave{position:absolute;left:0;bottom:0;width:100%;height:78px;pointer-events:none}
+.shead{margin:0 0 14px}
+.shead h2{margin:0;line-height:1.05;color:#fff;font-size:26px}
+.shead p{color:var(--tacc)!important;font-weight:500}
+.dsec .facts{margin-top:0;background:transparent;border:0;border-radius:0;gap:0;overflow:visible}
+.dsec .facts > div{background:transparent;padding:12px 4px 12px 0;border-top:1px solid var(--line)}
+.dsec .facts > div:nth-child(-n+2){border-top:0;padding-top:2px}
+.dsec .facts > div:nth-child(odd):not(.wide){border-right:1px solid var(--line)}
+.dsec .facts > div:nth-child(even):not(.wide){padding-left:14px}
+.dsec .wx,.dsec .tide,.dsec .chart{background:transparent;border:0;padding:0}
+.dsec .legendcard{border-color:var(--line);margin-top:16px}
+.dsec .dlist{border-top:1px solid var(--line)}
+.dsec .dlist div{border-bottom-color:var(--line)}
+.dsec .pmark{border-color:#13283B}
+.dsec .hr.now{background:#fff;border-color:#fff;color:#4F616C}
+.dsec .hr.now b{color:#13283B}
+.dsec .bars .band{opacity:.16}
+.dsec .ppill{box-shadow:0 0 0 1px rgba(255,255,255,.15)}
 @media (prefers-reduced-motion:reduce){ .dnav button::after{transition:none} }
 .dfoot{margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
 .legendcard{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 14px}
@@ -782,6 +796,7 @@ function openDetail(id){
    <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">7 giorni</button></nav>
 
   <section class="dsec t-now" id="sec-now">
+   ${FAV_WAVE}
    ${secHead(SEC_ICONS.now, 'Adesso', 'Onde, swell e vento in questo momento')}
    <div class="facts">
     <div><span class="xs muted">Onda a riva</span><b>${ev ? ev.face.toFixed(1)+' m' : '–'}</b></div>
@@ -793,16 +808,19 @@ function openDetail(id){
   </section>
 
   <section class="dsec t-wx" id="sec-wx">
+   ${FAV_WAVE}
    ${secHead(SEC_ICONS.wx, 'Meteo', 'Cielo, acqua e prossime ore sullo spot')}
    <div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div>
   </section>
 
   <section class="dsec t-tide" id="sec-tide">
+   ${FAV_WAVE}
    ${secHead(SEC_ICONS.tide, 'Marea', 'Alte e basse di oggi')}
    <div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div>
   </section>
 
   <section class="dsec t-week" id="sec-week">
+   ${FAV_WAVE}
    ${secHead(SEC_ICONS.week, 'Prossimi 7 giorni', 'Onda a riva alle 8, 11, 14 e 17')}
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
