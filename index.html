@@ -649,7 +649,10 @@ function renderSpot(){
  document.getElementById('offList').innerHTML = off.map(r=>miniRow(r, true)).join('');
  updateOrderUi();
 
- const b = document.getElementById('banner'), next = upcomingAlerts()[0];
+ // il banner annuncia onde future: salta quelle già in corso, che sono già tra gli "Attivi ora"
+ const today = todayIso();
+ const next = upcomingAlerts().find(h => !(h.d.day === today && (nowEval(h.sp)?.score ?? 0) >= threshold));
+ const b = document.getElementById('banner');
  if (next){
   b.hidden = false;
   b.innerHTML = `<div><p class="k">Onde in arrivo</p><p class="t">${esc(next.sp.name)}, ${dayLabel(next.d.day).toLowerCase()} dalle ${next.d.firstHit}</p>
