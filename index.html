@@ -182,19 +182,23 @@ body.locked{overflow:hidden}
 .shead{margin:0 0 14px}
 .sbtn{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:10px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit;cursor:pointer;min-height:48px}
 .sbtn > div:first-child{min-width:0}
-.sbtn .tog{flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--tacc);color:#fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(19,40,59,.18)}
+.sbtn .tog{grid-column:3;grid-row:1;width:36px;height:36px;border-radius:50%;background:var(--tacc);color:#fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(19,40,59,.18)}
 .sbtn .tog .v{transition:transform .2s;transform-origin:center}
 .dsec.open .sbtn .tog .v{transform:scaleY(0)}
-.dsec:not(.open){padding-top:12px;padding-bottom:12px;border-radius:16px}
+.dsec:has(.sbtn){padding-top:12px}
+.dsec:not(.open){padding-bottom:12px;border-radius:16px}
 .sinfo{grid-column:1 / -1;margin-top:4px;font-size:13px;line-height:1.3}
 .dsec.open .sinfo{display:none}
 .dsec:not(.open) .shead{margin:0}
 .dsec:not(.open) .shead p.sub{display:none}
 .dsec:not(.open) > .motif{width:120px;height:120px;top:-20px;right:-20px;opacity:.09}
-.ssum{display:flex;align-items:center;gap:8px;text-align:right;font-size:13px;color:var(--muted);line-height:1.2}
+.ssum{grid-column:2;grid-row:1;display:flex;align-items:center;gap:8px;text-align:right;font-size:13px;color:var(--muted);line-height:1.2}
 .ssum b{display:block;font:700 20px/1.05 "Barlow Condensed",sans-serif;color:var(--ink)}
 .ssum .si{font-size:26px;line-height:1}
-.dsec.open .ssum{display:none}
+.dsec.open .ssum{visibility:hidden}
+.sbtn .sub{grid-column:1 / -1}
+.ssum .snum{font:700 34px/1 "Barlow Condensed",sans-serif;color:var(--sc)}
+.dsec.t-week.good:not(.open){background:var(--goodbg)}
 @media (prefers-reduced-motion:reduce){.sbtn .tog .v{transition:none}}
 .shead h2{margin:0;line-height:1.05;color:var(--ink);font-size:26px}
 .shead p{color:var(--tacc)!important;font-weight:600}
@@ -1031,7 +1035,7 @@ function openDetail(id){
    <div id="body-tide" hidden><div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div></div>
   </section>
 
-  <section class="dsec t-week" id="sec-week">
+  <section class="dsec t-week${best && best.best.score >= 2.5 ? ' good' : ''}" id="sec-week" style="--goodbg:color-mix(in srgb, ${tone(best?.best.score)[0]} 32%, #fff)">
    ${MOTIF.week}
    ${secToggle('week', '7 giorni', 'Onda a riva alle 8, 11, 14 e 17', weekSummary(best), weekInfo(days))}
    <div id="body-week" hidden>
@@ -1202,7 +1206,8 @@ const SEC_ICONS = {
 const secHead = (icon, title, sub) => `<div class="shead"><h2>${title}</h2><p class="xs muted" style="margin-top:2px">${sub}</p></div>`;
 // intestazione di una sezione a fisarmonica: chiusa mostra il riassunto a destra, aperta il dettaglio
 const secToggle = (key, title, sub, summary, info='') => `<button class="shead sbtn" aria-expanded="false" aria-controls="body-${key}" data-toggle="${key}">
- <div><h2>${title}</h2><p class="xs muted sub" style="margin-top:2px">${sub}</p></div>
+ <div style="grid-column:1;grid-row:1"><h2>${title}</h2></div>
+ <p class="xs muted sub" style="margin-top:2px">${sub}</p>
  <span class="ssum" id="sum-${key}">${summary}</span>
  <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
  <p class="sinfo" id="info-${key}">${info}</p></button>`;
@@ -1233,9 +1238,12 @@ function initDetailNav(){
  document.querySelectorAll('#v-detail .dsec').forEach(sec => secObserver.observe(sec));
 }
 
+// colore del testo per ogni livello, leggibile su fondo chiaro
+const scoreInk = sc => sc == null || sc < 1.5 ? '#4F616C' : sc < 2.5 ? '#8A6A10' : sc < 3.5 ? '#3F7A2E' : sc < 4.5 ? '#1F7A45' : '#4B3A9E';
 function weekSummary(best){
  if (!best || best.best.score < 2) return '<span><b>Niente</b>in vista</span>';
- return `<span><b>${dayShort(best.day)}</b>il giorno migliore</span>${badge(best.best.score,'sm')}`;
+ const sc = best.best.score;
+ return `<span><b>${scoreLabel(sc)}</b>${dayLabel(best.day).toLowerCase()}</span><span class="snum" style="--sc:${scoreInk(sc)}" aria-label="punteggio ${sc} su 5">${sc}</span>`;
 }
 function weekInfo(days){
  if (!days.length) return 'Nessun dato';
