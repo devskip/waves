@@ -191,7 +191,7 @@ body.locked{overflow:hidden}
 .dsec.open .sinfo{display:none}
 .dsec:not(.open) .shead{margin:0}
 .dsec:not(.open) .shead p.sub{display:none}
-.dsec:not(.open) > .motif{width:120px;height:120px;top:-20px;right:-20px;opacity:.09}
+.dsec:not(.open) > .motif{width:88px;height:88px;top:50%;right:14px;transform:translateY(-50%);opacity:.09}
 .ssum{grid-column:2;grid-row:1;display:flex;align-items:center;gap:8px;text-align:right;font-size:13px;color:var(--muted);line-height:1.2}
 .ssum b{display:block;font:700 20px/1.05 "Barlow Condensed",sans-serif;color:var(--ink)}
 .ssum .si{font-size:26px;line-height:1}
@@ -1008,7 +1008,7 @@ function openDetail(id){
     ${dialLegend(sp, ev)}
    </div></div>
   <nav class="dnav" id="dnav" aria-label="Sezioni della pagina">
-   <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">7 giorni</button><button class="t-season" data-jump="sec-season">Stagioni</button></nav>
+   <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">Settimana</button><button class="t-season" data-jump="sec-season">Stagioni</button></nav>
 
   <section class="dsec t-now" id="sec-now">
    ${MOTIF.now}
@@ -1037,7 +1037,7 @@ function openDetail(id){
 
   <section class="dsec t-week${best && best.best.score >= 2.5 ? ' good' : ''}" id="sec-week" style="--goodbg:color-mix(in srgb, ${tone(best?.best.score)[0]} 32%, #fff)">
    ${MOTIF.week}
-   ${secToggle('week', '7 giorni', 'Onda a riva alle 8, 11, 14 e 17', weekSummary(best), weekInfo(days))}
+   ${secToggle('week', 'Settimana', 'Previsione dei prossimi 7 giorni: onda a riva alle 8, 11, 14 e 17', weekSummary(best), weekInfo(days))}
    <div id="body-week" hidden>
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
@@ -1243,12 +1243,12 @@ const scoreInk = sc => sc == null || sc < 1.5 ? '#4F616C' : sc < 2.5 ? '#8A6A10'
 function weekSummary(best){
  if (!best || best.best.score < 2) return '<span><b>Niente</b>in vista</span>';
  const sc = best.best.score;
- return `<span><b>${scoreLabel(sc)}</b>${dayLabel(best.day).toLowerCase()}</span><span class="snum" style="--sc:${scoreInk(sc)}" aria-label="punteggio ${sc} su 5">${sc}</span>`;
+ return `<span><b>${scoreLabel(sc)} ${sc}</b>${dayLabel(best.day).toLowerCase()}</span>`;
 }
 function weekInfo(days){
  if (!days.length) return 'Nessun dato';
  const mx = days.reduce((a,d)=> d.maxFace > a.maxFace ? d : a, days[0]);
- return `Onda a riva fino a ${mx.maxFace.toFixed(1)} m, ${dayLabel(mx.day).toLowerCase()}`;
+ return `Prossimi 7 giorni, onda fino a ${mx.maxFace.toFixed(1)} m ${dayLabel(mx.day).toLowerCase()}`;
 }
 function seasonInfo(sp){
  const st = store.get(statKey(sp), null);
