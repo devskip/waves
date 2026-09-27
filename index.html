@@ -684,7 +684,7 @@ function renderSpot(){
 }
 // ---------- Spot pubblici da OpenStreetMap ----------
 let osm = {key:null, state:'idle', list:[]};
-const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
 async function loadOsm(){
  if (!userPos) return;
  const km = store.get('surf.nearKm', 5);
@@ -754,6 +754,14 @@ async function loadEurope(){
  europeState = 'loading';
  const hint = document.getElementById('mapHint');
  hint.hidden = false; hint.textContent = 'Carico gli spot noti in Europa…';
+ // prima il catalogo preparato da GitHub Actions (stesso sito, veloce e affidabile)
+ try{
+  const cat = await getJson('catalog.json', {cache:'no-cache'}, 1, 30000);
+  if (Array.isArray(cat.spots) && cat.spots.length){
+   store.set('surf.catalogEU', {at:Date.now(), list:cat.spots});
+   europeState = 'ok'; hint.hidden = true; addCatPins(cat.spots); return;
+  }
+ }catch(e){}
  const q = '[out:json][timeout:120];nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"](27,-26,71,45);out center tags;';
  let res = null;
  for (const url of OVERPASS){ try{ res = await getJson(`${url}?data=${encodeURIComponent(q)}`, {}, 1, 130000); break; }catch(e){} }
@@ -789,10 +797,10 @@ async function loadCatalog(){
   catData[key] = 'loading';
   hint.hidden = false; hint.textContent = 'Cerco gli spot noti…';
   const q = `[out:json][timeout:25];nwr["sport"~"(^|;)surfing(;|$)"][!"shop"][!"amenity"][!"building"](${la},${lo},${la+1},${lo+1});out center tags 300;`;
-  let res = null;
-  for (const url of OVERPASS){ try{ res = await getJson(`${url}?data=${encodeURIComponent(q)}`, {}, 1); break; }catch(e){} }
+  let res = null, err = null;
+  for (const url of OVERPASS){ try{ res = await getJson(`${url}?data=${encodeURIComponent(q)}`, {}, 1); break; }catch(e){ err = e; } }
   hint.hidden = true;
-  if (!res){ delete catData[key]; hint.hidden = false; hint.textContent = 'Elenco spot noti non raggiungibile ora'; setTimeout(()=>hint.hidden = true, 3000); continue; }
+  if (!res){ delete catData[key]; hint.hidden = false; hint.textContent = `Spot noti non raggiungibili ora (${err?.message || 'errore'})`; setTimeout(()=>hint.hidden = true, 4000); break; }
   const list = res.elements.map(el=>{
    const t = el.tags || {}, lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
    if (lat == null) return null;
