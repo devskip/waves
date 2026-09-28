@@ -59,6 +59,15 @@ a{color:var(--accent)}
 /* preferito */
 .fav{position:relative;overflow:hidden;margin-top:18px;background:var(--ink);color:#fff;border:0;border-radius:16px;padding:16px 16px 14px;width:100%;text-align:left;display:block}
 .fav .favwave{position:absolute;left:0;bottom:0;width:100%;height:78px;pointer-events:none}
+.favwave .w1{animation:wv1 var(--d1,14s) linear infinite}
+.favwave .w2{animation:wv2 var(--d2,9s) linear infinite}
+@keyframes wv1{to{transform:translateX(-200px)}}
+@keyframes wv2{to{transform:translateX(-160px)}}
+@keyframes ring{0%,100%{transform:rotate(0)}15%{transform:rotate(18deg)}30%{transform:rotate(-16deg)}45%{transform:rotate(12deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
+#followBtn.ring svg{animation:ring .9s ease-in-out;transform-origin:50% 8%}
+#sec-wx{transition:background .4s}
+.dsec > #wxMotif{position:static}
+@media (prefers-reduced-motion:reduce){.favwave .w1,.favwave .w2,#followBtn.ring svg{animation:none}}
 .fav .top{position:relative;display:flex;align-items:flex-start;gap:12px}
 .fav .grow{flex:1;min-width:0}
 .fav .k{font-size:13px;color:#E6B24A;display:flex;align-items:center;gap:5px;font-weight:600}
@@ -186,7 +195,7 @@ body.locked{overflow:hidden}
 .dsec{position:relative;overflow:hidden;margin-top:16px;scroll-margin-top:calc(58px + env(safe-area-inset-top,0px));padding:16px 16px 18px;border-radius:16px;background:var(--sbg);color:var(--ink);
  --panel:rgba(255,255,255,.6);--line:rgba(19,40,59,.13);--bg:rgba(255,255,255,.6);--sea:rgba(19,40,59,.07)}
 .dsec > *{position:relative}
-.dsec > .motif{position:absolute;right:-34px;top:-30px;width:170px;height:170px;color:var(--tacc);opacity:.13;pointer-events:none}
+.dsec .motif{position:absolute;right:-34px;top:-30px;width:170px;height:170px;color:var(--tacc);opacity:.13;pointer-events:none}
 .shead{margin:0 0 14px}
 .sbtn{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;column-gap:10px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit;cursor:pointer;min-height:48px}
 .sbtn > div:first-child{min-width:0}
@@ -199,7 +208,7 @@ body.locked{overflow:hidden}
 .dsec.open .sinfo{display:none}
 .dsec:not(.open) .shead{margin:0}
 .dsec:not(.open) .shead p.sub{display:none}
-.dsec:not(.open) > .motif{width:88px;height:88px;top:50%;right:14px;transform:translateY(-50%);opacity:.09}
+.dsec:not(.open) .motif{width:88px;height:88px;top:50%;right:14px;transform:translateY(-50%);opacity:.09}
 .ssum{grid-column:2;grid-row:1;display:flex;align-items:center;gap:8px;text-align:right;font-size:13px;color:var(--muted);line-height:1.2}
 .ssum b{display:block;font:700 20px/1.05 "Barlow Condensed",sans-serif;color:var(--ink)}
 .ssum .si{font-size:26px;line-height:1}
@@ -536,6 +545,20 @@ const THR = {
  3.5:{t:'Giornate buone', d:'Onda ben formata dentro il range, non solo al minimo, con vento debole o offshore.', f:'Meno avvisi, più affidabili.'},
  4:{t:'Solo giornate belle', d:'Onda comoda nel range, periodo sopra il minimo dello spot e vento debole o offshore.', f:'Pochi avvisi, quasi sempre da non perdere.'}
 };
+function favWave(face){
+ const W = 400, H = 78;
+ const flat = face == null || face < 0.3;
+ const layer = (base, amp, period, cls, fill) => {
+  if (flat) return `<rect x="0" y="${base}" width="${W}" height="${H-base}" fill="${fill}"/>`;
+  let d = `M0 ${base} Q${period/4} ${base-2*amp} ${period/2} ${base}`;
+  for (let x = period; x <= W*2; x += period/2) d += ` T${x} ${base}`;
+  return `<path class="${cls}" d="${d} L${W*2} ${H} L0 ${H}Z" fill="${fill}"/>`;
+ };
+ const a = flat ? 0 : 3 + 7*Math.min(face, 2.5)/2.5;
+ const speed = flat ? '' : ` style="--d1:${(16 - Math.min(face,2.5)*2.4).toFixed(1)}s;--d2:${(11 - Math.min(face,2.5)*1.6).toFixed(1)}s"`;
+ return `<svg class="favwave" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"${speed}>
+  ${layer(40, a, 200, 'w1', 'rgba(156,192,211,.10)')}${layer(56, a*.7, 160, 'w2', 'rgba(156,192,211,.09)')}</svg>`;
+}
 const FAV_WAVE = '<svg class="favwave" viewBox="0 0 400 78" preserveAspectRatio="none" aria-hidden="true"><path d="M0 38 C50 18 100 58 150 38 S250 18 300 38 S370 54 400 32 V78 H0Z" fill="rgba(156,192,211,.10)"/><path d="M0 54 C60 40 110 68 170 54 S280 38 330 54 S385 62 400 50 V78 H0Z" fill="rgba(156,192,211,.09)"/></svg>';
 const GRIP = '<svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="4" r="1.7"/><circle cx="10" cy="4" r="1.7"/><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="4" cy="16" r="1.7"/><circle cx="10" cy="16" r="1.7"/></svg>';
 const scoreLabel = sc => sc == null ? 'Nessun dato' : sc < 1.5 ? 'Non surfabile' : sc < 2.5 ? 'Scarso' : sc < 3.5 ? 'Discreto' : sc < 4.5 ? 'Buono' : 'Ottimo';
@@ -657,7 +680,7 @@ function renderSpot(){
  const fav = spots.find(s=>s.id===favorite), favEl = document.getElementById('fav');
  if (fav && data[fav.id]){
   const ev = nowEval(fav), days = forecastDays(fav).slice(0,5);
-  favEl.innerHTML = `<button class="fav" data-open="${fav.id}">${FAV_WAVE}
+  favEl.innerHTML = `<button class="fav" data-open="${fav.id}">${favWave(ev?.face)}
    <div class="top"><div class="grow">
     <p class="k">${ICON.star(true)}Il tuo spot</p>
     <p class="name">${esc(fav.name)}</p>
@@ -1093,7 +1116,7 @@ function openDetail(id){
   </section>
 
   <section class="dsec t-wx" id="sec-wx">
-   ${MOTIF.wx}
+   <span id="wxMotif">${MOTIF.wx}</span>
    ${secToggle('wx', 'Meteo', 'Cielo, acqua e prossime ore sullo spot', '<span>…</span>', 'Carico…')}
    <div id="body-wx" hidden><div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div></div>
   </section>
@@ -1141,6 +1164,7 @@ function openDetail(id){
  document.getElementById('followBtn').onclick = ()=>{
   toggleFollow(id); openDetail(id);
   const on = isFollowed(sp), h = document.querySelector('#v-detail .hero');
+  if (on) document.getElementById('followBtn')?.classList.add('ring');
   if (h){ const t = document.createElement('p'); t.className = 'htoast'; t.setAttribute('role','status');
    t.textContent = on ? `Alert attivi: ti avvisiamo quando ${sp.name} arriva a ${threshold}/5.` : 'Alert disattivati per questo spot.';
    h.appendChild(t); setTimeout(()=>t.remove(), 3500); }
@@ -1447,6 +1471,30 @@ function dialLegend(sp, ev){
 
 // ---------- Meteo e marea ----------
 const extraCache = {};
+const SKY = {
+ clear:{bg:'#F6EBD3', acc:'#95660F'}, part:{bg:'#F2ECDD', acc:'#86692C'}, cloud:{bg:'#E4E8EC', acc:'#56646F'},
+ fog:{bg:'#E7E9E9', acc:'#5E6A70'}, rain:{bg:'#DDE6EF', acc:'#3E5F80'}, snow:{bg:'#EBF1F6', acc:'#5A7390'},
+ storm:{bg:'#E2DFEB', acc:'#4B456E'}, night:{bg:'#E2E5F1', acc:'#3F4C7A'}
+};
+const skyKind = (c, day) => c == null ? 'clear' : c === 0 ? (day ? 'clear' : 'night') : c <= 2 ? (day ? 'part' : 'night') : c === 3 ? 'cloud'
+ : c <= 48 ? 'fog' : c <= 67 ? 'rain' : c <= 77 ? 'snow' : c <= 82 ? 'rain' : 'storm';
+const CLOUD = '<path d="M58 150h96a30 30 0 0 0 0-60 44 44 0 0 0-84-10 34 34 0 0 0-12 70z" fill="currentColor"/>';
+const SKY_MOTIF = {
+ clear: null,
+ part: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="120" cy="70" r="36" fill="currentColor" opacity=".7"/><g stroke="currentColor" stroke-width="7" stroke-linecap="round" opacity=".7">${Array.from({length:8},(_, i)=>{const a=i*45*Math.PI/180; return `<line x1="${(120+50*Math.sin(a)).toFixed(1)}" y1="${(70-50*Math.cos(a)).toFixed(1)}" x2="${(120+66*Math.sin(a)).toFixed(1)}" y2="${(70-66*Math.cos(a)).toFixed(1)}"/>`;}).join('')}</g>${CLOUD}</svg>`,
+ cloud: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g transform="translate(-20 -30) scale(.8)" opacity=".6">${CLOUD}</g>${CLOUD}</svg>`,
+ fog: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g stroke="currentColor" stroke-width="12" stroke-linecap="round"><path d="M30 70h140M50 100h120M24 130h130M60 160h100"/></g></svg>`,
+ rain: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g transform="translate(0 -30)">${CLOUD}</g><g stroke="currentColor" stroke-width="8" stroke-linecap="round"><path d="M70 150l-10 24M104 150l-10 24M138 150l-10 24"/></g></svg>`,
+ snow: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g transform="translate(0 -30)">${CLOUD}</g><g fill="currentColor"><circle cx="66" cy="160" r="7"/><circle cx="100" cy="172" r="7"/><circle cx="134" cy="160" r="7"/></g></svg>`,
+ storm: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g transform="translate(0 -30)">${CLOUD}</g><path d="M108 124l-26 40h22l-10 30 34-46h-22l12-24z" fill="currentColor"/></svg>`,
+ night: `<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><path d="M124 40a60 60 0 1 0 40 104A48 48 0 0 1 124 40z" fill="currentColor"/><g fill="currentColor"><circle cx="50" cy="50" r="5"/><circle cx="76" cy="26" r="3.5"/><circle cx="40" cy="96" r="3.5"/></g></svg>`
+};
+function paintSky(code, day){
+ const sec = document.getElementById('sec-wx'), mot = document.getElementById('wxMotif'); if (!sec) return;
+ const k = skyKind(code, day), c = SKY[k];
+ sec.style.setProperty('--sbg', c.bg); sec.style.setProperty('--tacc', c.acc);
+ if (mot) mot.innerHTML = SKY_MOTIF[k] || MOTIF.wx;
+}
 const WX = c => c === 0 ? ['☀️','🌙','Sereno'] : c <= 2 ? ['🌤️','🌙','Poco nuvoloso'] : c === 3 ? ['☁️','☁️','Coperto']
  : c <= 48 ? ['🌫️','🌫️','Nebbia'] : c <= 57 ? ['🌦️','🌧️','Pioviggine'] : c <= 67 ? ['🌧️','🌧️','Pioggia']
  : c <= 77 ? ['🌨️','🌨️','Neve'] : c <= 82 ? ['🌦️','🌧️','Rovesci'] : ['⛈️','⛈️','Temporale'];
@@ -1538,6 +1586,7 @@ function renderExtra(sp, {fc, mr}){
    <p class="xs muted" style="margin-top:8px">${cm < 40 ? 'Nel Mediterraneo la marea sposta il mare di pochi centimetri: conta poco sulle onde, ma sui reef bassi può fare la differenza.' : 'La linea tratteggiata è adesso.'} Dato modellistico, indicativo.</p></div>`;
  }
  elW.innerHTML = wx; elT.innerHTML = tide;
+ paintSky(H.weather_code[i0], H.is_day[i0]);
  const sw = document.getElementById('sum-wx');
  if (sw) sw.innerHTML = `<span><b>${Math.round(H.temperature_2m[i0])}°</b>${label}</span><span class="si" aria-hidden="true">${ic}</span>`;
  const iw = document.getElementById('info-wx');
