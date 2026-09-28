@@ -8,7 +8,8 @@ anche se cambiano nomi o codici. Nel log di GitHub trovi cosa ha trovato e dove.
 import json, math, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
 
-SERVERS = ["https://erddap.emodnet-physics.eu/erddap", "https://data-erddap.emodnet-physics.eu/erddap"]
+# data-erddap ha le serie temporali delle piattaforme (dataset "ERD_EP_TS_<parametro>_NRT"): lo provo per primo
+SERVERS = ["https://data-erddap.emodnet-physics.eu/erddap", "https://erddap.emodnet-physics.eu/erddap"]
 HOME = (40.0, 8.35)                            # Sinis, davanti a Capo Mannu
 BOX = dict(s=37.5, n=42.5, w=6.0, e=11.0)      # mari intorno alla Sardegna
 MAX_KM = 300
@@ -48,6 +49,28 @@ def datasets(server):
     """Dataset tabellari che contengono l'altezza d'onda (VHM0) nei mari intorno alla Sardegna.
     Prima la ricerca avanzata per nome di variabile e zona, poi come riserva la ricerca per testo."""
     out = []
+    # 1) elenco completo dei dataset del server, filtrato sul nome: funziona anche dove la ricerca è spenta
+    try:
+        q = urllib.parse.quote('datasetID=~".*(VHM0|VAVH).*"', safe="=")
+        for r in table(get(f"{server}/tabledap/allDatasets.json?datasetID&{q}")):
+            did = r.get("datasetID")
+            if did and did not in out:
+                out.append(did)
+        log(f"  elenco dataset con VHM0/VAVH nel nome: {out}")
+    except Exception as ex:
+        log(f"  elenco dataset non disponibile: {ex}")
+    # 2) i nomi che usa EMODnet per le serie in tempo quasi reale
+    for g in ("ERD_EP_TS_VHM0_NRT", "ERD_EP_TS_VAVH_NRT", "EP_ERD_INT_VHM0_AL_TS_NRT"):
+        if g not in out:
+            try:
+                get(f"{server}/info/{g}/index.json", timeout=30)
+                out.append(g)
+                log(f"  trovato per nome: {g}")
+            except Exception:
+                pass
+    if out:
+        # prima le serie di misure, dopo gli elenchi di stazioni (METADATA)
+        return sorted(out, key=lambda d: ("METADATA" in d, "VHM0" not in d))
     adv = (f"{server}/search/advanced.json?page=1&itemsPerPage=300&protocol=tabledap&variableName=VHM0"
            f"&minLat={BOX['s']}&maxLat={BOX['n']}&minLon={BOX['w']}&maxLon={BOX['e']}")
     try:
@@ -79,7 +102,7 @@ def variables(server, did):
 
 
 def query(server, did, names):
-    hs = pick(names, "VHM0")
+    hs = pick(names, "VHM0", "VAVH")
     if not hs:
         log(f"  {did}: niente VHM0")
         return None
