@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <style>
 :root{
  --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
@@ -377,6 +378,9 @@ body.locked{overflow:hidden}
 .types button{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 14px;min-height:56px}
 .types button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .types b{display:block}
+.acct{padding:12px 14px}
+.acct .field{margin-top:8px}
+.acct .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .field{width:100%;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
 .err{color:var(--s4);margin-top:12px;font-weight:500}
 .err .pillbtn{margin-top:8px;color:var(--ink)}
@@ -449,6 +453,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  </div>
  <h2>Spot seguiti</h2>
  <div class="card" id="followList"></div>
+ <h2>Account</h2>
+ <div class="card" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div>
  <h2>I tuoi dati</h2>
  <div class="card"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Sessioni, spot personali e impostazioni stanno su questo telefono. Copiane un backup ogni tanto.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
 </section>
@@ -536,7 +542,7 @@ const Data = (() => {
  const api = {
   ready: false,
   get(k, d){ return mem.has(k) ? mem.get(k) : d; },
-  set(k, v){ mem.set(k, v); persist(k, v); },
+  set(k, v){ mem.set(k, v); persist(k, v); window.__cloudTouch?.(k); },
   async init(){
    if (!('indexedDB' in window)) return;
    try{
@@ -582,7 +588,7 @@ const Data = (() => {
   spots: {
    all: () => api.get('surf.customSpots', []),
    save(sp){ const l = api.spots.all(), i = l.findIndex(x => x.id === sp.id); api.set('surf.customSpots', i < 0 ? [...l, sp] : l.map(x => x.id === sp.id ? sp : x)); },
-   remove(id){ api.set('surf.customSpots', api.spots.all().filter(x => x.id !== id)); }
+   remove(id){ api.set('surf.customSpots', api.spots.all().filter(x => x.id !== id)); window.__cloudRemoveSpot?.(id); }
   },
   // copia completa dei dati, per backup e per il futuro trasferimento sul database remoto
   exportAll(){ const o = {}; for (const [k, v] of mem) if (!HEAVY(k)) o[k] = v; return {app:'sinis-waves', exported:new Date().toISOString(), data:o}; }
@@ -1559,6 +1565,172 @@ function bindCal(sp){
  });
 }
 
+// ================= Cloud: account e sincronizzazione con Supabase =================
+// L'app resta "prima locale": tutto si salva sul telefono e, se hai fatto l'accesso, viene copiato
+// sul database così lo ritrovi su ogni dispositivo. Nell'app c'è solo la chiave pubblica: le regole
+// del database fanno sì che ognuno legga e scriva soltanto i propri dati.
+const SUPA_URL = 'https://djicqanyclbrfzhxlsxm.supabase.co';
+const SUPA_KEY = 'sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf';
+const Cloud = (() => {
+ let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null;
+ const api = {ready:false, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
+ const SYNC_KEYS = ['surf.sessions','surf.customSpots','surf.favorite','surf.followed','surf.order','surf.gain'];
+ const isUuid = v => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || '');
+ // --- conversioni tra formato del telefono e formato del database ---
+ const toLocalDateTime = iso => { const d = new Date(iso), z = n => String(n).padStart(2,'0'); return [`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`, `${z(d.getHours())}:${z(d.getMinutes())}`]; };
+ const sessionOut = x => ({id: x.id, spot_id: x.spot_id, at: new Date(`${x.data}T${x.ora || '12:00'}`).toISOString(),
+  wave_real_m: +x.onda_reale_m, quality: +x.qualita_reale_1_5,
+  wind_real: ['assente','offshore','laterale','onshore'].includes(x.vento_reale) ? x.vento_reale : null,
+  crowd: x.affollamento_1_4 ? +x.affollamento_1_4 : null, note: x.note || null,
+  app_score: x.punteggio_app === '' || x.punteggio_app == null ? null : +x.punteggio_app,
+  app_wave_m: x.onda_app_m === '' || x.onda_app_m == null ? null : +x.onda_app_m, app_wind: x.vento_app || null,
+  gain: +(x.gain || 1), buoy_fix: +(x.fix || 1)});
+ const sessionIn = r => { const [d, o] = toLocalDateTime(r.at); return {id: r.id, data: d, ora: o, spot_id: r.spot_id,
+  punteggio_app: r.app_score ?? '', onda_app_m: r.app_wave_m ?? '', gain: +r.gain || 1, fix: +r.buoy_fix || 1,
+  onda_reale_m: +r.wave_real_m, qualita_reale_1_5: r.quality, vento_reale: r.wind_real || '', vento_app: r.app_wind || '',
+  affollamento_1_4: r.crowd ?? '', note: r.note || '', created: r.created_at}; };
+ const spotOut = x => ({id: x.id, name: x.name, area: x.area || null, lat: x.lat, lon: x.lon, beach_lat: x.beachLat ?? null, beach_lon: x.beachLon ?? null,
+  facing: x.facing, window: x.window, offshore: x.offshore, min: x.min, max: x.max, min_period: x.minPeriod,
+  cams: x.cams || [], visibility: 'private', owner: user.id});
+ const spotIn = r => ({id: r.id, name: r.name, area: r.area || 'Spot personale', lat: r.lat, lon: r.lon, beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined,
+  facing: +r.facing, window: +r.window, offshore: +r.offshore, min: +r.min, max: +r.max, minPeriod: +r.min_period, alert: true, cams: r.cams || []});
+ const userSpotRows = () => {
+  const fav = store.get('surf.favorite', null), fol = store.get('surf.followed', null), ord = store.get('surf.order', null) || [], g = store.get('surf.gain', {});
+  return spots.map(sp => ({user_id: user.id, spot_id: sp.id, favorite: fav === sp.id,
+   alert: fol ? fol.includes(sp.id) : !!sp.alert, sort_order: ord.includes(sp.id) ? ord.indexOf(sp.id) : null, gain: g[sp.id] ?? null}));
+ };
+ const status = () => { if (typeof renderAccount === 'function') renderAccount(); };
+
+ api.init = async () => {
+  if (!window.supabase?.createClient){ status(); return; }
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
+  try{ const {data} = await sb.auth.getSession(); user = data?.session?.user || null; }catch(e){ user = null; }
+  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; status(); if (user && user.id !== was) api.sync(); });
+  api.ready = true;
+  window.__cloudTouch = k => { if (user && SYNC_KEYS.includes(k)){ clearTimeout(timer); timer = setTimeout(() => api.push(), 2500); } };
+  window.__cloudRemoveSpot = id => { if (user && sb) sb.from('spots').delete().eq('id', id).eq('owner', user.id).then(()=>{}); };
+  status();
+  if (user) api.sync();
+ };
+ // accesso con codice via email: funziona anche dentro l'app salvata sulla Home (il link aprirebbe Safari)
+ api.sendCode = async email => {
+  const {error} = await sb.auth.signInWithOtp({email, options:{emailRedirectTo: location.origin + location.pathname, shouldCreateUser: true}});
+  if (error) throw error; pendingEmail = email;
+ };
+ api.verifyCode = async code => {
+  const {error} = await sb.auth.verifyOtp({email: pendingEmail, token: code.trim(), type: 'email'});
+  if (error) throw error; pendingEmail = null;
+ };
+ // senza un servizio email personalizzato Supabase manda solo il link: lo si può incollare nell'app
+ api.verifyLink = async link => {
+  let u; try{ u = new URL(link.trim()); }catch(e){ throw new Error('non è un link'); }
+  const hash = new URLSearchParams(u.hash.slice(1));
+  if (hash.get('access_token')){ const {error} = await sb.auth.setSession({access_token: hash.get('access_token'), refresh_token: hash.get('refresh_token')}); if (error) throw error; pendingEmail = null; return; }
+  const token = u.searchParams.get('token_hash') || u.searchParams.get('token');
+  if (!token) throw new Error('nel link manca il codice');
+  const type = u.searchParams.get('type') || 'magiclink';
+  const {error} = await sb.auth.verifyOtp({token_hash: token, type});
+  if (error) throw error; pendingEmail = null;
+ };
+ api.cancelCode = () => { pendingEmail = null; status(); };
+ api.signOut = async () => { await sb.auth.signOut(); user = null; status(); };
+
+ // invia al database quello che c'è sul telefono
+ api.push = async () => {
+  if (!user || busy) return;
+  busy = true; lastErr = null;
+  try{
+   const mine = Data.spots.all();
+   if (mine.length){ const {error} = await sb.from('spots').upsert(mine.map(spotOut)); if (error) throw error; }
+   // solo spot che il database conosce (ufficiali e miei): altrimenti il collegamento fallirebbe
+   const known = await sb.from('spots').select('id'); if (known.error) throw known.error;
+   const ok = new Set(known.data.map(r => r.id));
+   const ses = Data.sessions.all().filter(x => isUuid(x.id) && ok.has(x.spot_id) && x.onda_reale_m !== '' && x.qualita_reale_1_5);
+   if (ses.length){ const {error} = await sb.from('sessions').upsert(ses.map(sessionOut)); if (error) throw error; }
+   const us = userSpotRows().filter(r => ok.has(r.spot_id));
+   if (us.length){ const {error} = await sb.from('user_spots').upsert(us); if (error) throw error; }
+   lastSync = new Date();
+  }catch(e){ lastErr = e.message || String(e); console.warn('Sincronizzazione', e); }
+  busy = false; status();
+ };
+ // porta sul telefono quello che c'è nel database, poi rimanda indietro l'unione
+ api.sync = async () => {
+  if (!user || busy) return;
+  busy = true; lastErr = null; status();
+  let changedSpots = false;
+  try{
+   const [rs, rp, ru] = await Promise.all([
+    sb.from('sessions').select('*').eq('user_id', user.id),
+    sb.from('spots').select('*').eq('owner', user.id),
+    sb.from('user_spots').select('*').eq('user_id', user.id)
+   ]);
+   if (rs.error) throw rs.error; if (rp.error) throw rp.error; if (ru.error) throw ru.error;
+   // sessioni: unione per identificativo
+   const local = Data.sessions.all(), ids = new Set(local.map(x => x.id));
+   const add = rs.data.filter(r => !ids.has(r.id)).map(sessionIn);
+   if (add.length) Data.set('surf.sessions', [...local, ...add]);
+   // spot personali: unione
+   const lsp = Data.spots.all(), sids = new Set(lsp.map(x => x.id));
+   const addSp = rp.data.filter(r => !sids.has(r.id)).map(spotIn);
+   if (addSp.length){ Data.set('surf.customSpots', [...lsp, ...addSp]); changedSpots = true; }
+   // scelte personali: se nel database ci sono già, valgono quelle
+   if (ru.data.length){
+    const fav = ru.data.find(r => r.favorite)?.spot_id ?? null;
+    const fol = ru.data.filter(r => r.alert).map(r => r.spot_id);
+    const ord = ru.data.filter(r => r.sort_order != null).sort((a,b) => a.sort_order - b.sort_order).map(r => r.spot_id);
+    const g = {}; ru.data.forEach(r => { if (r.gain != null) g[r.spot_id] = +r.gain; });
+    Data.set('surf.favorite', fav); Data.set('surf.followed', fol); Data.set('surf.order', ord.length ? ord : null); Data.set('surf.gain', g);
+    favorite = fav; followed = fol;
+   }
+  }catch(e){ lastErr = e.message || String(e); console.warn('Sincronizzazione', e); }
+  busy = false;
+  if (!lastErr) await api.push();
+  if (changedSpots){ baseSpots = []; refresh(); } else { applyGains(); renderAll(); }
+  status();
+ };
+ return api;
+})();
+
+function renderAccount(){
+ const box = document.getElementById('acctBox'); if (!box) return;
+ const hm2 = d => d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+ if (!Cloud.ready){ box.innerHTML = `<div class="acct"><p class="small muted">Account non disponibile: controlla la connessione e riapri l'app.</p></div>`; return; }
+ if (Cloud.user){
+  box.innerHTML = `<div class="acct"><p style="font-weight:600">${esc(Cloud.user.email || 'Account')}</p>
+   <p class="xs muted" style="margin-top:2px">${Cloud.lastErr ? 'Sincronizzazione non riuscita: ' + esc(Cloud.lastErr) : Cloud.lastSync ? `Sessioni, spot personali e preferenze sincronizzati alle ${hm2(Cloud.lastSync)}.` : 'Sincronizzo…'}</p>
+   <div class="row2"><button class="pillbtn" id="acSync">Sincronizza ora</button><button class="pillbtn" id="acOut">Esci</button></div></div>`;
+  document.getElementById('acSync').onclick = () => Cloud.sync();
+  document.getElementById('acOut').onclick = () => Cloud.signOut();
+  return;
+ }
+ if (Cloud.pendingEmail){
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  box.innerHTML = `<div class="acct"><p class="small">Ti abbiamo mandato un'email a <b>${esc(Cloud.pendingEmail)}</b>.</p>
+   ${standalone ? `<p class="xs muted" style="margin-top:6px">Nell'email <b>non toccare</b> "Sign in": tienilo premuto, scegli <b>Copia link</b> e incollalo qui sotto.</p>` : `<p class="xs muted" style="margin-top:6px">Tocca "Sign in" nell'email: si riapre l'app già collegata. Oppure copia il link e incollalo qui.</p>`}
+   <input class="field" id="acCode" autocomplete="one-time-code" placeholder="Incolla il link (o il codice, se c'è)">
+   <p class="err" id="acErr" hidden></p>
+   <div class="row2"><button class="pillbtn primary" id="acVerify" style="width:auto">Entra</button><button class="pillbtn" id="acBack">Indietro</button></div></div>`;
+  document.getElementById('acBack').onclick = () => Cloud.cancelCode();
+  document.getElementById('acVerify').onclick = async () => {
+   const e = document.getElementById('acErr');
+   const v = document.getElementById('acCode').value.trim();
+   try{ if (/^https?:\/\//.test(v)) await Cloud.verifyLink(v); else await Cloud.verifyCode(v); }
+   catch(err){ e.hidden = false; e.textContent = 'Link o codice non valido o già usato: richiedine un altro e incollalo senza aprirlo.'; }
+  };
+  return;
+ }
+ box.innerHTML = `<div class="acct"><p style="font-weight:600">Entra per non perdere i tuoi dati</p>
+  <p class="xs muted" style="margin-top:2px">Con l'accesso sessioni, spot personali e preferiti si salvano anche online e li ritrovi su ogni dispositivo. Senza password: ti mandiamo un codice via email.</p>
+  <input class="field" id="acEmail" type="email" inputmode="email" autocomplete="email" placeholder="La tua email">
+  <p class="err" id="acErr" hidden></p>
+  <div class="row2"><button class="pillbtn primary" id="acSend" style="width:auto">Mandami il codice</button></div></div>`;
+ document.getElementById('acSend').onclick = async () => {
+  const v = document.getElementById('acEmail').value.trim(), e = document.getElementById('acErr');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ e.hidden = false; e.textContent = 'Scrivi un indirizzo email valido.'; return; }
+  try{ await Cloud.sendCode(v); renderAccount(); }catch(err){ e.hidden = false; e.textContent = /rate|limit|seconds/i.test(err.message) ? 'Troppe richieste ravvicinate: riprova tra qualche minuto.' : 'Invio non riuscito: ' + err.message; }
+ };
+}
+
 // ---------- Boe reali ----------
 // buoy.json lo aggiorna ogni ora l'automazione GitHub "Boe" (build_buoy.py)
 let buoyData = null;
@@ -2335,6 +2507,7 @@ Data.init().then(() => {
  threshold = store.get('surf.threshold', 3); followed = store.get('surf.followed', null); favorite = store.get('surf.favorite', null);
  document.getElementById('catBtn')?.setAttribute('aria-pressed', store.get('surf.showCat', true));
  refresh();
+ Cloud.init();
 });
 </script>
 </body>
