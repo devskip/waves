@@ -449,6 +449,8 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  </div>
  <h2>Spot seguiti</h2>
  <div class="card" id="followList"></div>
+ <h2>I tuoi dati</h2>
+ <div class="card"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Sessioni, spot personali e impostazioni stanno su questo telefono. Copiane un backup ogni tanto.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
 </section>
 
 <!-- NUOVO SPOT -->
@@ -504,10 +506,91 @@ const ICON = {
 };
 
 // ---------- Stato ----------
-const store = {
- get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
- set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
-};
+// ================= Dati: unico punto di lettura e scrittura =================
+// Tutto passa da qui. Oggi salva sul telefono (IndexedDB, con localStorage come riserva);
+// domani lo stesso punto potrà sincronizzare con il database remoto senza toccare il resto dell'app.
+//  - Data.prefs: impostazioni e piccoli dati (preferito, ordine, soglia, correzioni…)
+//  - Data.sessions: sessioni registrate
+//  - Data.spots: spot personali
+//  - le cache pesanti (catalogo spot, statistiche, previsioni) stanno solo in IndexedDB
+const Data = (() => {
+ const DBNAME = 'sinis-waves', VERSION = 1;
+ const HEAVY = k => /^surf\.(catalog|catalogEU|osm|cache)$/.test(k) || k.startsWith('surf.stats.');
+ const mem = new Map();
+ let db = null;
+ // subito, in modo sincrono, quello che c'è già in localStorage: l'app parte con i dati di sempre
+ try{ for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k.startsWith('surf.')) mem.set(k, JSON.parse(localStorage.getItem(k))); } }catch(e){}
+ const idb = (store, mode, fn) => new Promise((ok, ko) => {
+  if (!db) return ok(null);
+  const tx = db.transaction(store, mode), st = tx.objectStore(store); let out;
+  const r = fn(st); if (r) r.onsuccess = () => { out = r.result; };
+  tx.oncomplete = () => ok(out); tx.onerror = tx.onabort = () => ko(tx.error);
+ });
+ const persist = (k, v) => {
+  const table = k === 'surf.sessions' ? 'sessions' : k === 'surf.customSpots' ? 'spots' : 'kv';
+  if (table === 'kv') idb('kv', 'readwrite', st => v === undefined || v === null ? st.delete(k) : st.put(v, k)).catch(()=>{});
+  else idb(table, 'readwrite', st => { st.clear(); (v || []).forEach(x => st.put(x)); }).catch(()=>{});
+  // copia di riserva in localStorage per i dati piccoli
+  if (!HEAVY(k)) try{ v === undefined || v === null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); }catch(e){}
+ };
+ const api = {
+  ready: false,
+  get(k, d){ return mem.has(k) ? mem.get(k) : d; },
+  set(k, v){ mem.set(k, v); persist(k, v); },
+  async init(){
+   if (!('indexedDB' in window)) return;
+   try{
+    db = await new Promise((ok, ko) => {
+     const r = indexedDB.open(DBNAME, VERSION);
+     r.onupgradeneeded = () => {
+      const d = r.result;
+      if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
+      if (!d.objectStoreNames.contains('sessions')){ const s = d.createObjectStore('sessions', {keyPath:'id'}); s.createIndex('spot_id', 'spot_id'); s.createIndex('data', 'data'); }
+      if (!d.objectStoreNames.contains('spots')) d.createObjectStore('spots', {keyPath:'id'});
+     };
+     r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+    });
+    const migrated = await idb('kv', 'readonly', st => st.get('surf._migrated'));
+    if (!migrated){
+     // primo avvio con IndexedDB: copio tutto quello che c'era in localStorage
+     for (const [k, v] of mem){ if (k === 'surf.sessions') mem.set(k, v.map(x => x.id ? x : {...x, id: newId()})); persist(k, mem.get(k)); }
+     await idb('kv', 'readwrite', st => st.put(new Date().toISOString(), 'surf._migrated'));
+     for (const k of [...mem.keys()]) if (HEAVY(k)) try{ localStorage.removeItem(k); }catch(e){}   // libero spazio: le cache ora stanno solo nel database
+    } else {
+     // IndexedDB è la fonte principale: ricarico da lì
+     const keys = await idb('kv', 'readonly', st => st.getAllKeys()) || [], vals = await idb('kv', 'readonly', st => st.getAll()) || [];
+     const local = new Map(mem);   // quello che c'era in localStorage
+     keys.forEach((k, i) => { if (k !== 'surf._migrated') mem.set(k, vals[i]); });
+     // dati presenti solo nella copia di riserva (per esempio scritti prima dell'aggiornamento): li porto nel database
+     for (const [k, v] of local) if (!keys.includes(k) && k !== 'surf.sessions' && k !== 'surf.customSpots') persist(k, v);
+     const key = x => x.id || `${x.spot_id}|${x.data}|${x.ora}`;
+     const merge = (a, b) => { const m = new Map(); [...a, ...b].forEach(x => { const r = x.id ? x : {...x, id: newId()}; if (!m.has(key(x))) m.set(key(x), r); }); return [...m.values()]; };
+     const ses = merge((await idb('sessions', 'readonly', st => st.getAll())) || [], local.get('surf.sessions') || []);
+     const sps = merge((await idb('spots', 'readonly', st => st.getAll())) || [], local.get('surf.customSpots') || []);
+     mem.set('surf.sessions', ses); mem.set('surf.customSpots', sps);
+     persist('surf.sessions', ses); persist('surf.customSpots', sps);
+    }
+    if (navigator.storage?.persist) navigator.storage.persist().catch(()=>{});  // chiede a Safari di non cancellare i dati
+   }catch(e){ console.warn('IndexedDB non disponibile, uso localStorage', e); db = null; }
+   api.ready = true;
+  },
+  sessions: {
+   all: () => api.get('surf.sessions', []),
+   bySpot: id => api.get('surf.sessions', []).filter(x => x.spot_id === id),
+   add(row){ const r = {id: newId(), created: new Date().toISOString(), ...row}; api.set('surf.sessions', [...api.sessions.all(), r]); return r; }
+  },
+  spots: {
+   all: () => api.get('surf.customSpots', []),
+   save(sp){ const l = api.spots.all(), i = l.findIndex(x => x.id === sp.id); api.set('surf.customSpots', i < 0 ? [...l, sp] : l.map(x => x.id === sp.id ? sp : x)); },
+   remove(id){ api.set('surf.customSpots', api.spots.all().filter(x => x.id !== id)); }
+  },
+  // copia completa dei dati, per backup e per il futuro trasferimento sul database remoto
+  exportAll(){ const o = {}; for (const [k, v] of mem) if (!HEAVY(k)) o[k] = v; return {app:'sinis-waves', exported:new Date().toISOString(), data:o}; }
+ };
+ function newId(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); }
+ return api;
+})();
+const store = {get: (k, d) => Data.get(k, d), set: (k, v) => Data.set(k, v)};
 let baseSpots = [], spots = [], data = {}, userPos = null, lastTab = 'spot';
 let threshold = store.get('surf.threshold', 3);
 let followed = store.get('surf.followed', null);
@@ -622,7 +705,7 @@ async function getJson(url, opts={}, tries=2, ms=20000){
 }
 async function loadSpots(){
  baseSpots = (await getJson('spots.json', {cache:'no-cache'})).spots;
- spots = [...baseSpots, ...store.get('surf.customSpots', [])];
+ spots = [...baseSpots, ...Data.spots.all()];
  applyGains();
 }
 // correzioni dalla taratura salvate su questo telefono: valgono sopra a quelle di spots.json
@@ -1222,10 +1305,10 @@ function openDetail(id){
   const url = prompt('Incolla il link della webcam'); if (!url || !/^https?:\/\//.test(url.trim())) return;
   const name = prompt('Come la chiamo?', sp.name) || sp.name;
   let src = 'Webcam'; try{ src = new URL(url.trim()).hostname.replace(/^www\./,''); }catch(e){}
-  const list = store.get('surf.customSpots', []), i = list.findIndex(x=>x.id===id);
+  const list = Data.spots.all(), i = list.findIndex(x=>x.id===id);
   if (i < 0) return;
   list[i].cams = [...(list[i].cams || []), {name, url:url.trim(), src}];
-  store.set('surf.customSpots', list);
+  Data.spots.save(list[i]);
   spots = spots.map(x => x.id === id ? list[i] : x);
   openDetail(id);
  };
@@ -1238,7 +1321,7 @@ function openDetail(id){
  };
  const del = document.getElementById('delSpot');
  if (del) del.onclick = ()=>{
-  store.set('surf.customSpots', store.get('surf.customSpots', []).filter(s=>s.id!==id));
+  Data.spots.remove(id);
   spots = spots.filter(s=>s.id!==id); delete data[id];
   if (favorite === id){ favorite = null; store.set('surf.favorite', null); }
   if (leafPins[id]){ myLayer.removeLayer(leafPins[id]); delete leafPins[id]; }
@@ -1318,7 +1401,7 @@ function crowdCalc(sp, score, day, hour){
 // scarto medio tra quanta gente hai trovato e quanta ne stimava l'app, nelle tue sessioni su questo spot
 function crowdFix(sp){
  if (!sp) return null;
- const rows = store.get('surf.sessions', []).filter(x => x.spot_id === sp.id && x.affollamento_1_4 && x.punteggio_app !== '');
+ const rows = Data.sessions.bySpot(sp.id).filter(x => x.affollamento_1_4 && x.punteggio_app !== '');
  if (rows.length < 3) return null;
  const d = rows.map(x => { const base = crowdCalcRaw(sp, x.punteggio_app, x.data, +x.ora.slice(0,2)); return (x.affollamento_1_4 - 1) - base; });
  return {n: rows.length, shift: d.reduce((a,b)=>a+b,0)/d.length};
@@ -1366,7 +1449,7 @@ const secToggle = (key, title, sub, summary, info='') => `<button class="shead s
  <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
  <p class="sinfo" id="info-${key}">${info}</p></button>`;
 // ---------- Sessioni reali e taratura ----------
-const sessions = () => store.get('surf.sessions', []);
+const sessions = () => Data.sessions.all();
 const spotSessions = sp => sessions().filter(x => x.spot_id === sp.id);
 function appAt(sp, iso){
  const s = data[sp.id]; if (!s) return null;
@@ -1402,11 +1485,14 @@ function openLog(sp){
   const err = wrap.querySelector('#lgErr');
   if (!when || isNaN(wave) || !q){ err.hidden = false; err.textContent = 'Servono almeno quando, onda reale e voto.'; return; }
   const ev = appAt(sp, when);
+  // quanto la boa aveva corretto la previsione in quell'ora: serve a tarare lo spot sul modello puro
+  const S = data[sp.id], ii = S ? S.time.indexOf(when.slice(0,13) + ':00') : -1;
+  const fix = S?.hsRaw && ii >= 0 && S.hsRaw[ii] ? +(S.hs[ii] / S.hsRaw[ii]).toFixed(3) : 1;
   const row = {data: when.slice(0,10), ora: when.slice(11,16), spot_id: sp.id,
-   punteggio_app: ev ? ev.score : '', onda_app_m: ev ? +ev.face.toFixed(2) : '', gain: sp.gain ?? 1,
+   punteggio_app: ev ? ev.score : '', onda_app_m: ev ? +ev.face.toFixed(2) : '', gain: sp.gain ?? 1, fix,
    onda_reale_m: wave, qualita_reale_1_5: q, vento_reale: wrap.querySelector('#lgWind').value,
    vento_app: ev ? ev.windType : '', affollamento_1_4: cr ?? '', note: wrap.querySelector('#lgNote').value.trim()};
-  store.set('surf.sessions', [...sessions(), row]);
+  Data.sessions.add(row);
   close(); openDetail(sp.id); openSection('cal', true);
   document.getElementById('sec-cal')?.scrollIntoView({behavior:'smooth', block:'start'});
  };
@@ -1415,7 +1501,7 @@ function openLog(sp){
 const median = a => { const b = [...a].sort((x,y)=>x-y), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m-1]+b[m])/2) : null; };
 function calStats(sp){
  const ss = spotSessions(sp), withApp = ss.filter(x => x.onda_app_m !== '' && x.onda_app_m > 0.15);
- const ratios = withApp.map(x => x.onda_reale_m / (x.onda_app_m / (x.gain || 1)));
+ const ratios = withApp.map(x => x.onda_reale_m / (x.onda_app_m / (x.gain || 1) / (x.fix || 1)));
  const gain = ratios.length ? median(ratios) : null;
  const diffs = ss.filter(x => x.punteggio_app !== '').map(x => x.qualita_reale_1_5 - x.punteggio_app);
  const bias = diffs.length ? diffs.reduce((a,b)=>a+b,0)/diffs.length : null;
@@ -1485,8 +1571,9 @@ const buoyModelCache = {};
 async function renderBuoy(sp){
  const box = document.getElementById('buoyBox'); if (!box) return;
  if (!buoyData) await loadBuoys();
- const list = (buoyData?.buoys || []).map(b => ({...b, d: distanceKm(beach(sp), b)})).filter(b => b.d <= 200).sort((a,b)=>a.d-b.d);
- const fresh = list.filter(b => Date.now() - new Date(b.last.time).getTime() <= 36*3600000);
+ const ref = refBuoy(beach(sp));
+ const list = (buoyData?.buoys || []).map(b => ({...b, d: distanceKm(beach(sp), b)})).filter(b => b.d <= 250).sort((a,b) => (a.id === ref?.id ? -1 : b.id === ref?.id ? 1 : a.d - b.d));
+ const fresh = list.filter(b => Date.now() - new Date(b.last.time).getTime() <= 48*3600000);
  const bu = fresh[0];
  if (!bu){ box.innerHTML = ''; return; }
  // se la più vicina è in ritardo e un'altra ha misure più nuove, la segnalo sotto
@@ -1521,8 +1608,57 @@ async function renderBuoy(sp){
     <path d="${line('mod')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
     <path d="${line('obs')}" fill="none" stroke="var(--tacc)" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
    <div class="lg"><span><i style="--c:var(--tacc)"></i>Boa</span><span><i style="--c:var(--muted)"></i>Modello</span><span>ultime ${pts.length} ore</span></div>
-   <p class="xs muted" style="margin-top:4px">Onda al largo, prima che arrivi alla costa. Dati ISPRA tramite EMODnet.</p>`;
+   <p class="xs muted" style="margin-top:4px">Onda al largo, prima che arrivi alla costa. Dati Météo-France e altri enti tramite Copernicus Marine.</p>${buoyFixNote(sp)}<p style="display:none"></p>`;
+ const t = document.getElementById('fixToggle');
+  if (t) t.onclick = async ()=>{ store.set('surf.buoyfix', !store.get('surf.buoyfix', true)); Object.values(data).forEach(s=>{ if (s.hsRaw){ s.hs = s.hsRaw; s.sh = s.shRaw; delete s.hsRaw; delete s.shRaw; } }); await applyBuoyFix(); openDetail(sp.id); renderAll(); };
  }catch(e){ const cmp = document.getElementById('buoyCmp'); if (cmp) cmp.textContent = ''; }
+}
+
+// ---------- Correzione delle previsioni con la boa ----------
+// Confronto misura e modello nel punto della boa nelle ultime 24 ore: se il modello sbaglia, correggo
+// l'onda prevista degli spot vicini. Correzione piena fino all'ultima misura, poi sfuma a zero in 48 ore.
+let buoyFix = null;
+const FIX_FADE_H = 48;
+// boa di riferimento per uno spot: tra quelle entro 250 km con misure recenti, preferisco quelle sul lato ovest
+// (da dove arrivano le mareggiate del Sinis), poi la più vicina
+function refBuoy(p){
+ const now = Date.now();
+ const list = (buoyData?.buoys || []).map(b => ({...b, d: distanceKm(p, b), brg: bearing(p, b)}))
+  .filter(b => b.d <= 250 && now - new Date(b.last.time).getTime() <= 48*3600000);
+ const west = b => b.brg >= 200 && b.brg <= 340;
+ return list.sort((a,b) => (west(b) - west(a)) || (a.d - b.d))[0] || null;
+}
+async function applyBuoyFix(){
+ buoyFix = null;
+ if (!store.get('surf.buoyfix', true) || !buoyData?.buoys?.length) return;
+ const bu = refBuoy({lat:SINIS[0], lon:SINIS[1]}); if (!bu) return;
+ try{
+  const r = await getJson(`https://marine-api.open-meteo.com/v1/marine?latitude=${bu.lat}&longitude=${bu.lon}&cell_selection=sea&timezone=GMT&past_days=3&forecast_days=1&hourly=wave_height`, {}, 1, 15000);
+  const mi = new Map(r.hourly.time.map((t,i)=>[t.slice(0,13), r.hourly.wave_height[i]]));
+  const lastT = new Date(bu.last.time).getTime();
+  const pairs = bu.series.filter(x => lastT - new Date(x.t).getTime() <= 24*3600000)
+   .map(x => ({o:x.hs, m:mi.get(x.t.slice(0,13))})).filter(x => x.m != null && x.m > .2 && x.o != null);
+  if (pairs.length < 6) return;
+  const ratio = clamp(median(pairs.map(x => x.o / x.m)), .6, 1.6);
+  buoyFix = {ratio, id:bu.id, name:bu.name || 'Boa ' + bu.id, lastT, n:pairs.length, lat:bu.lat, lon:bu.lon};
+  if (Math.abs(ratio - 1) < .05){ buoyFix.applied = false; return; }
+  buoyFix.applied = true;
+  Object.entries(data).forEach(([id, s]) => {
+   const sp = spots.find(x => x.id === id); if (!sp || distanceKm(beach(sp), bu) > 250) return;
+   s.hsRaw = s.hsRaw || s.hs.slice(); s.shRaw = s.shRaw || (s.sh ? s.sh.slice() : null);
+   const f = s.time.map(t => { const lead = (new Date(t).getTime() - lastT)/3600000; const w = lead <= 0 ? 1 : Math.max(0, 1 - lead/FIX_FADE_H); return 1 + (ratio - 1) * w; });
+   s.hs = s.hsRaw.map((v,i) => v == null ? v : v * f[i]);
+   if (s.shRaw) s.sh = s.shRaw.map((v,i) => v == null ? v : v * f[i]);
+  });
+ }catch(e){ buoyFix = null; }
+}
+function buoyFixNote(sp){
+ if (!buoyFix) return '';
+ const pct = Math.round((buoyFix.ratio - 1) * 100), on = buoyFix.applied && data[sp.id]?.hsRaw;
+ return `<p class="small" style="margin-top:8px"><b>${on ? 'Previsioni corrette' : 'Nessuna correzione'}</b>: ${on
+  ? `nelle ultime ${buoyFix.n} ore di misure il modello ha ${pct > 0 ? 'sottostimato' : 'sovrastimato'} l'onda del ${Math.abs(pct)}%, quindi l'onda prevista qui è ${pct > 0 ? 'alzata' : 'abbassata'} di conseguenza, con la correzione che sfuma nell'arco di 2 giorni.`
+  : 'il modello è in linea con le misure della boa.'}
+  <button class="linkbtn" id="fixToggle" style="min-height:auto;font-size:13px">${store.get('surf.buoyfix', true) ? 'Disattiva' : 'Attiva'}</button></p>`;
 }
 
 // ---------- Accordo tra i modelli d'onda ----------
@@ -2102,7 +2238,7 @@ document.getElementById('addSave').onclick = ()=>{
  const t = TYPES.find(x=>x.id===add.type), [lat, lon] = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
  const sp = {id:'c-'+Date.now(), name, area:'Spot personale', lat, lon, beachLat:add.pos[0], beachLon:add.pos[1],
   facing:add.facing, window:t.window, offshore:(add.facing+180)%360, min:t.min, max:t.max, minPeriod:t.minPeriod, alert:true};
- store.set('surf.customSpots', [...store.get('surf.customSpots', []), sp]);
+ Data.spots.save(sp);
  spots.push(sp); setTab('spot'); refresh().then(()=>openDetail(sp.id));
 };
 
@@ -2137,9 +2273,10 @@ async function refresh(){
  try{
   if (!baseSpots.length) await loadSpots();
   data = await fetchForecast();
-  loadBuoys();
   store.set('surf.cache', {at: Date.now(), data});
-  up.textContent = 'Sinis, aggiornato alle ' + hhmm(Date.now());
+  await loadBuoys();
+  await applyBuoyFix();
+  up.textContent = 'Sinis, aggiornato alle ' + hhmm(Date.now()) + (buoyFix?.applied ? `, corretto con la ${buoyFix.name.replace(/^Boa /,'boa ')}` : '');
   renderAll(); notify();
  }catch(e){
   const c = store.get('surf.cache', null);
@@ -2173,6 +2310,12 @@ document.addEventListener('click', e=>{
  const dy = e.target.closest('[data-day]'); if (dy){ mapDay = dy.dataset.day; renderMap(); return; }
  const f = e.target.closest('[data-follow]'); if (f){ toggleFollow(f.dataset.follow); renderAlert(); }
 });
+document.getElementById('bkBtn').onclick = async ()=>{
+ const txt = JSON.stringify(Data.exportAll()), st = document.getElementById('bkState');
+ try{ if (navigator.share && /iPhone|iPad|Android/.test(navigator.userAgent)) await navigator.share({title:'Backup Sinis Waves', text:txt}); else await navigator.clipboard.writeText(txt);
+  st.textContent = `Backup pronto (${Data.sessions.all().length} sessioni, ${Data.spots.all().length} spot personali). Salvalo nelle Note o mandalo a te stesso.`; }
+ catch(e){ st.textContent = 'Copia non riuscita: riprova.'; }
+};
 document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
 document.getElementById('nearBtn').onclick = e=>{
  const btn = e.currentTarget, st = document.getElementById('status');
@@ -2187,7 +2330,12 @@ document.addEventListener('gesturestart', e => { if (!e.target.closest || !e.tar
 document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.target.closest('.leaflet-container')) e.preventDefault(); }, {passive:false});
 
 setInterval(refresh, 3*60*60*1000);
-refresh();
+Data.init().then(() => {
+ // rileggo le impostazioni dal database (possono essere più aggiornate della copia di riserva)
+ threshold = store.get('surf.threshold', 3); followed = store.get('surf.followed', null); favorite = store.get('surf.favorite', null);
+ document.getElementById('catBtn')?.setAttribute('aria-pressed', store.get('surf.showCat', true));
+ refresh();
+});
 </script>
 </body>
 </html>
