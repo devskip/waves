@@ -184,6 +184,12 @@ body.locked{overflow:hidden}
 .t-week{--sbg:#E5E8EB;--tacc:#4A5A66}
 .t-season{--sbg:#E4EFE2;--tacc:#3B6E45}
 .t-cal{--sbg:#EEE8F3;--tacc:#6A4C8C}
+.buoy{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.buoy .bt{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.buoy b.big{font:700 26px/1.1 "Barlow Condensed",sans-serif}
+.buoy svg{width:100%;height:auto;display:block;margin-top:8px}
+.buoy .lg{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:4px}
+.buoy .lg i{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--c);vertical-align:middle;margin-right:5px}
 .agree{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
 .agree i{width:8px;height:8px;border-radius:50%;background:var(--c)}
 .logbtn{margin-top:14px;width:100%;justify-content:center;min-height:46px;background:var(--panel);border:1px dashed var(--tacc);color:var(--ink);font-weight:600}
@@ -1129,6 +1135,7 @@ function openDetail(id){
     <div><span class="xs muted">Vento</span><b>${ev ? Math.round(ev.ws)+' km/h '+ev.windType : '–'}</b></div>
     ${ev ? periodCell(sp, ev.T) : ''}</div>
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
+   <div id="buoyBox" data-spot="${sp.id}"></div>
    ${camsHtml(sp)}
    <button class="pillbtn logbtn" id="logOpen">✍️ Com'era davvero? Registra una sessione</button>
   </section>
@@ -1180,6 +1187,7 @@ function openDetail(id){
  bindSeason(sp);
  bindCal(sp);
  loadAgreement(sp);
+ renderBuoy(sp);
  document.getElementById('back').onclick = ()=>setTab(lastTab);
  const sheet = document.getElementById('dialSheet'), opener = document.getElementById('dialBtn');
  const closeSheet = ()=>{ sheet.hidden = true; document.body.classList.remove('locked'); document.removeEventListener('keydown', onKey); opener.focus(); };
@@ -1439,6 +1447,54 @@ function bindCal(sp){
   document.getElementById('calMsg').textContent = 'Righe copiate. Su GitHub incollale in fondo a sessioni.csv, dopo quelle già presenti, e fai Commit.';
   if (url) window.open(url, '_blank', 'noopener');
  });
+}
+
+// ---------- Boe reali ----------
+// buoy.json lo aggiorna ogni ora l'automazione GitHub "Boe" (build_buoy.py)
+let buoyData = null;
+async function loadBuoys(){
+ try{ buoyData = await getJson('buoy.json', {cache:'no-cache'}, 1, 15000); }catch(e){ buoyData = null; }
+}
+const bearing = (a, b) => { const r = Math.PI/180, y = Math.sin((b.lon-a.lon)*r)*Math.cos(b.lat*r), x = Math.cos(a.lat*r)*Math.sin(b.lat*r) - Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r); return (Math.atan2(y,x)/r + 360) % 360; };
+const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime())/60000); return m < 60 ? `${m} min fa` : `${Math.round(m/60)} h fa`; };
+const buoyModelCache = {};
+async function renderBuoy(sp){
+ const box = document.getElementById('buoyBox'); if (!box) return;
+ if (!buoyData) await loadBuoys();
+ const list = (buoyData?.buoys || []).map(b => ({...b, d: distanceKm(beach(sp), b)})).filter(b => b.d <= 200).sort((a,b)=>a.d-b.d);
+ const bu = list[0];
+ if (!bu || Date.now() - new Date(bu.last.time).getTime() > 12*3600000){ box.innerHTML = ''; return; }
+ const name = bu.name ? bu.name : (bu.km != null && Math.abs(bu.lat - 40.55) < 0.6 && bu.lon < 8.6 ? 'Boa di Alghero' : 'Boa ondametrica ' + bu.id);
+ const L = bu.last;
+ box.innerHTML = `<div class="buoy"><div class="bt"><span class="xs muted">Misurato in mare: ${esc(name)}, a ${Math.round(bu.d)} km verso ${cardinal(bearing(beach(sp), bu))}</span><span class="xs muted" style="white-space:nowrap">${ago(L.time)}</span></div>
+  <b class="big">${(+L.hs).toFixed(1)} m${L.tp ? `, ${Math.round(L.tp)} s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}</b>
+  <div id="buoyCmp" class="xs muted">Confronto con il modello…</div></div>`;
+ // confronto con il modello nello stesso punto e nelle stesse ore
+ try{
+  const key = `${bu.lat},${bu.lon}`;
+  let m = buoyModelCache[key];
+  if (!m || Date.now() - m.at > 3600000){
+   const r = await getJson(`https://marine-api.open-meteo.com/v1/marine?latitude=${bu.lat}&longitude=${bu.lon}&cell_selection=sea&timezone=GMT&past_days=2&forecast_days=1&hourly=wave_height`);
+   m = buoyModelCache[key] = {at:Date.now(), h:r.hourly};
+  }
+  const mi = new Map(m.h.time.map((t,i)=>[t.slice(0,13), m.h.wave_height[i]]));
+  const pts = bu.series.map(x => ({t:x.t, obs:x.hs, mod: mi.get(x.t.slice(0,13))})).filter(x => x.mod != null);
+  const cmp = document.getElementById('buoyCmp'); if (!cmp) return;
+  const nowMod = mi.get(L.time.slice(0,13));
+  if (!pts.length || nowMod == null){ cmp.textContent = ''; return; }
+  const diff = Math.round((L.hs / Math.max(nowMod, .05) - 1) * 100);
+  const mean = pts.reduce((a,x)=>a + x.obs/Math.max(x.mod,.05), 0)/pts.length, md = Math.round((mean-1)*100);
+  const W = 300, Hh = 70, mx = Math.max(.5, ...pts.map(x=>Math.max(x.obs, x.mod)))*1.1;
+  const X = i => (i/(pts.length-1 || 1))*W, Y = v => Hh - v/mx*Hh;
+  const line = k => pts.map((x,i)=>`${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(x[k]).toFixed(1)}`).join(' ');
+  cmp.outerHTML = `<p class="small" style="margin-top:4px">Il modello qui dava ${nowMod.toFixed(1)} m: ${Math.abs(diff) < 10 ? 'ci ha preso' : diff > 0 ? `il mare è più grosso del ${diff}%` : `il mare è più piccolo del ${-diff}%`}.
+    ${pts.length >= 12 ? `Nelle ultime ${pts.length} ore in media ${Math.abs(md) < 10 ? 'modello e boa coincidono' : md > 0 ? `la boa misura il ${md}% in più` : `la boa misura il ${-md}% in meno`}.` : ''}</p>
+   <svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Onda misurata dalla boa e prevista dal modello nelle ultime ore">
+    <path d="${line('mod')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+    <path d="${line('obs')}" fill="none" stroke="var(--tacc)" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
+   <div class="lg"><span><i style="--c:var(--tacc)"></i>Boa</span><span><i style="--c:var(--muted)"></i>Modello</span><span>ultime ${pts.length} ore</span></div>
+   <p class="xs muted" style="margin-top:4px">Onda al largo, prima che arrivi alla costa. Dati ISPRA tramite EMODnet.</p>`;
+ }catch(e){ const cmp = document.getElementById('buoyCmp'); if (cmp) cmp.textContent = ''; }
 }
 
 // ---------- Accordo tra i modelli d'onda ----------
@@ -2052,6 +2108,7 @@ async function refresh(){
  try{
   if (!baseSpots.length) await loadSpots();
   data = await fetchForecast();
+  loadBuoys();
   store.set('surf.cache', {at: Date.now(), data});
   up.textContent = 'Sinis, aggiornato alle ' + hhmm(Date.now());
   renderAll(); notify();
