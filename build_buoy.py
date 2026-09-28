@@ -164,8 +164,11 @@ def main():
             def col(*codes):
                 code = next((c for c in codes if c in v), None)
                 if not code: return None
-                arr = np.ma.filled(np.ma.masked_invalid(v[code][:].astype(float)), np.nan)
-                return arr[:, 0] if arr.ndim > 1 else arr
+                arr = np.ma.filled(np.ma.masked_invalid(np.ma.asarray(v[code][:]).astype(float)), np.nan)
+                if arr.ndim > 1:  # più profondità: prendo il primo valore valido di ogni istante
+                    with np.errstate(all="ignore"):
+                        arr = np.array([next((x for x in row if not np.isnan(x)), np.nan) for row in arr.reshape(arr.shape[0], -1)])
+                return arr
             H, tp, dr = col(hs), col("VTPK", "VTM10", "VTM02"), col("VMDR", "VPED")
             b = by.setdefault(pid, dict(name=name, lat=lat, lon=lon, pts={}))
             for i, ti in enumerate(t):
@@ -176,7 +179,9 @@ def main():
                     hs=round(float(val), 2),
                     tp=None if tp is None or np.isnan(tp[i]) else round(float(tp[i]), 1),
                     dir=None if dr is None or np.isnan(dr[i]) else int(round(float(dr[i]))))
-        log(f"  {fn}: letto")
+            pts = [p["hs"] for p in b["pts"].values()]
+            log(f"  {fn}: {hs}, forma {v[hs].shape}, valori validi {int(np.sum(~np.isnan(H)))}/{len(H)}"
+                + (f", da {min(pts)} a {max(pts)} m" if pts else f", esempio grezzo {np.ma.asarray(v[hs][:]).ravel()[:5].tolist()}"))
 
     buoys = []
     for pid, b in by.items():
