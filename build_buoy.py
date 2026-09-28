@@ -130,6 +130,28 @@ def query(server, did, names):
                  dir=r.get(pick(names, "VMDR") or "") or r.get(pick(names, "VPED") or "")) for r in rows if r[hs] is not None]
 
 
+def explore_metadata(server, did):
+    """Gli elenchi *_METADATA descrivono le piattaforme: li leggo nella zona della Sardegna,
+    scrivo nel log cosa contengono e seguo gli eventuali collegamenti ai dataset delle misure."""
+    names = variables(server, did)
+    log(f"  {did}: variabili {names}")
+    la, lo = pick(names, "latitude", "LATITUDE", "lat"), pick(names, "longitude", "LONGITUDE", "lon")
+    q = ",".join(names[:25])
+    if la and lo:
+        q += "&" + "&".join(urllib.parse.quote(c, safe="=") for c in
+                            (f"{la}>={BOX['s']}", f"{la}<={BOX['n']}", f"{lo}>={BOX['w']}", f"{lo}<={BOX['e']}"))
+    rows = table(get(f"{server}/tabledap/{did}.json?{q}", timeout=150))
+    log(f"  {did}: {len(rows)} piattaforme in zona")
+    for r in rows[:6]:
+        log(f"    {json.dumps(r, ensure_ascii=False)[:400]}")
+    links = set()
+    for r in rows:
+        for v in r.values():
+            if isinstance(v, str) and "/tabledap/" in v:
+                links.add(v.split("/tabledap/")[1].split(".")[0].split("?")[0])
+    return rows, sorted(links)
+
+
 def main():
     rows, used = [], None
     for server in SERVERS:
@@ -140,7 +162,19 @@ def main():
             log(f"  non raggiungibile: {ex}")
             continue
         log(f"  dataset candidati: {len(ids)}")
-        for did in ids[:80]:
+        # scarto i dataset scientifici che non c'entrano (campagne, pubblicazioni…)
+        ids = [d for d in ids if any(k in d.upper() for k in ("EP_", "NRT", "_TS_", "WAV", "VHM0", "VTDH", "VAVH", "INSITU"))]
+        log(f"  dataset pertinenti: {ids[:20]}")
+        extra = []
+        for did in [d for d in ids if d.endswith("_METADATA")]:
+            try:
+                _, links = explore_metadata(server, did)
+                if links:
+                    log(f"  collegamenti ai dati: {links[:10]}")
+                extra += [l for l in links if l not in ids and l not in extra]
+            except Exception as ex:
+                log(f"  {did}: {ex}")
+        for did in [d for d in ids if not d.endswith("_METADATA")] + extra[:30]:
             try:
                 got = query(server, did, variables(server, did))
             except Exception as ex:
