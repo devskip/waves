@@ -1,0 +1,32 @@
+name: Boe
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buoy
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python build_buoy.py
+      - name: Salva buoy.json nel repository
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add buoy.json
+          git diff --cached --quiet || git commit -m "Aggiorna misure boe"
+          git pull --rebase
+          git push
