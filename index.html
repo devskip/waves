@@ -1486,12 +1486,16 @@ async function renderBuoy(sp){
  const box = document.getElementById('buoyBox'); if (!box) return;
  if (!buoyData) await loadBuoys();
  const list = (buoyData?.buoys || []).map(b => ({...b, d: distanceKm(beach(sp), b)})).filter(b => b.d <= 200).sort((a,b)=>a.d-b.d);
- const bu = list[0];
- if (!bu || Date.now() - new Date(bu.last.time).getTime() > 36*3600000){ box.innerHTML = ''; return; }
+ const fresh = list.filter(b => Date.now() - new Date(b.last.time).getTime() <= 36*3600000);
+ const bu = fresh[0];
+ if (!bu){ box.innerHTML = ''; return; }
+ // se la più vicina è in ritardo e un'altra ha misure più nuove, la segnalo sotto
+ const newer = fresh.find(b => b !== bu && new Date(b.last.time) - new Date(bu.last.time) > 3*3600000);
  const name = bu.name ? bu.name : (bu.km != null && Math.abs(bu.lat - 40.55) < 0.6 && bu.lon < 8.6 ? 'Boa di Alghero' : 'Boa ondametrica ' + bu.id);
  const L = bu.last;
  box.innerHTML = `<div class="buoy"><div class="bt"><span class="xs muted">Misurato in mare: ${esc(name)}, a ${Math.round(bu.d)} km verso ${cardinal(bearing(beach(sp), bu))}</span><span class="xs muted" style="white-space:nowrap">${ago(L.time)}</span></div>
   <b class="big">${(+L.hs).toFixed(1)} m${L.tp ? `, ${Math.round(L.tp)} s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}</b>
+  ${newer ? `<p class="xs muted" style="margin-top:2px">Più recente: ${esc(newer.name || 'boa ' + newer.id)}, a ${Math.round(newer.d)} km: ${(+newer.last.hs).toFixed(1)} m, ${ago(newer.last.time)}</p>` : ''}
   <div id="buoyCmp" class="xs muted">Confronto con il modello…</div></div>`;
  // confronto con il modello nello stesso punto e nelle stesse ore
  try{
