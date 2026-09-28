@@ -1480,14 +1480,14 @@ async function loadBuoys(){
  try{ buoyData = await getJson('buoy.json', {cache:'no-cache'}, 1, 15000); }catch(e){ buoyData = null; }
 }
 const bearing = (a, b) => { const r = Math.PI/180, y = Math.sin((b.lon-a.lon)*r)*Math.cos(b.lat*r), x = Math.cos(a.lat*r)*Math.sin(b.lat*r) - Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r); return (Math.atan2(y,x)/r + 360) % 360; };
-const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime())/60000); return m < 60 ? `${m} min fa` : `${Math.round(m/60)} h fa`; };
+const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime())/60000); if (m < 60) return `${m} min fa`; if (m < 12*60) return `${Math.round(m/60)} h fa`; const d = new Date(iso); return `${d.toDateString() === new Date().toDateString() ? 'oggi' : 'ieri'} alle ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`; };
 const buoyModelCache = {};
 async function renderBuoy(sp){
  const box = document.getElementById('buoyBox'); if (!box) return;
  if (!buoyData) await loadBuoys();
  const list = (buoyData?.buoys || []).map(b => ({...b, d: distanceKm(beach(sp), b)})).filter(b => b.d <= 200).sort((a,b)=>a.d-b.d);
  const bu = list[0];
- if (!bu || Date.now() - new Date(bu.last.time).getTime() > 12*3600000){ box.innerHTML = ''; return; }
+ if (!bu || Date.now() - new Date(bu.last.time).getTime() > 36*3600000){ box.innerHTML = ''; return; }
  const name = bu.name ? bu.name : (bu.km != null && Math.abs(bu.lat - 40.55) < 0.6 && bu.lon < 8.6 ? 'Boa di Alghero' : 'Boa ondametrica ' + bu.id);
  const L = bu.last;
  box.innerHTML = `<div class="buoy"><div class="bt"><span class="xs muted">Misurato in mare: ${esc(name)}, a ${Math.round(bu.d)} km verso ${cardinal(bearing(beach(sp), bu))}</span><span class="xs muted" style="white-space:nowrap">${ago(L.time)}</span></div>
