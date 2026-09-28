@@ -14,6 +14,8 @@ HOME = (40.0, 8.35)                            # Sinis, davanti a Capo Mannu
 BOX = dict(s=37.5, n=42.5, w=6.0, e=11.0)      # mari intorno alla Sardegna
 MAX_KM = 300
 HOURS = 48
+# sigle dell'altezza d'onda significativa: VHM0 (spettrale), VAVH (H1/3), VTDH (dal dominio del tempo)
+HS_CODES = ("VHM0", "VAVH", "VTDH")
 
 
 def log(m):
@@ -60,14 +62,14 @@ def datasets(server):
     except Exception as ex:
         log(f"  elenco dataset non disponibile: {ex}")
     # 2) i nomi che usa EMODnet per le serie in tempo quasi reale
-    for g in ("ERD_EP_TS_VHM0_NRT", "ERD_EP_TS_VAVH_NRT", "EP_ERD_INT_VHM0_AL_TS_NRT"):
+    for g in [f"ERD_EP_TS_{p}_NRT" for p in HS_CODES] + ["EP_ERD_INT_VHM0_AL_TS_NRT"]:
         if g not in out:
             try:
                 get(f"{server}/info/{g}/index.json", timeout=30)
                 out.append(g)
                 log(f"  trovato per nome: {g}")
-            except Exception:
-                pass
+            except Exception as ex:
+                log(f"  {g}: non c'è ({ex})")
     if out:
         # prima le serie di misure, dopo gli elenchi di stazioni (METADATA)
         return sorted(out, key=lambda d: ("METADATA" in d, "VHM0" not in d))
@@ -93,7 +95,9 @@ def datasets(server):
             did, tab = r.get("Dataset ID"), r.get("tabledap")
             if did and tab and did not in out:
                 out.append(did)
-    return out
+            if did and did.endswith("_METADATA") and did[:-9] not in out:
+                out.insert(0, did[:-9])
+    return sorted(out, key=lambda d: ("METADATA" in d, not any(c in d for c in HS_CODES)))
 
 
 def variables(server, did):
@@ -102,9 +106,9 @@ def variables(server, did):
 
 
 def query(server, did, names):
-    hs = pick(names, "VHM0", "VAVH")
+    hs = pick(names, *HS_CODES)
     if not hs:
-        log(f"  {did}: niente VHM0")
+        log(f"  {did}: niente altezza d'onda")
         return None
     t, la, lo = pick(names, "time"), pick(names, "latitude"), pick(names, "longitude")
     pid = pick(names, "platform_code", "PLATFORMCODE", "platform_id", "station_id", "wmo_platform_code", "EP_PLATFORM_ID", "EP_PLATFORM_CODE", "WMO", "station")
