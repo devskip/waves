@@ -12,13 +12,14 @@ import csv, glob, io, json, math, os, sys
 from datetime import datetime, timedelta, timezone
 
 # prima il prodotto del Mediterraneo, poi quello globale (alcune boe, come "Sardaigne", potrebbero stare solo lì)
-DATASETS = ["cmems_obs-ins_med_phybgcwav_mynrt_na_irr", "cmems_obs-ins_glo_phybgcwav_mynrt_na_irr"]
+DATASETS = ["cmems_obs-ins_med_phybgcwav_mynrt_na_irr"]
 DATASET = DATASETS[0]
 HOME = (40.0, 8.35)                                   # Sinis, davanti a Capo Mannu
 BOX = dict(s=37.5, n=42.8, w=5.5, e=11.0)
 MAX_KM = 300
 HOURS = 48
-HS_CODES = ("VHM0", "VAVH", "VTDH")
+# tutte le sigle Copernicus per l'altezza d'onda significativa
+HS_CODES = ("VHM0", "VAVH", "VTDH", "VGHS", "VCAR", "VHZA")
 NAMES = {"6101035": "Boa Sardegna (Météo-France)", "6101031": "Boa Ajaccio", "6101032": "Boa Vecchio",
          "6100023": "Boa Bonifacio", "6100295": "Boa Alistro", "6101033": "Boa Calvi"}
 
@@ -111,6 +112,14 @@ def main():
         log(f"{ds}: {len(rows)} file nell'indice")
         zone = sorted({os.path.basename(r["file_name"]).rsplit("_", 1)[0] for r in rows if _inbox(r) and "_TS_" in r["file_name"]})
         log(f"  piattaforme fisse nella zona: {zone[:25]}")
+        last = {}
+        for r in rows:
+            if _inbox(r) and "_TS_MO_" in r["file_name"]:
+                k = os.path.basename(r["file_name"]).rsplit("_", 1)[0]
+                if k not in last or r["time_coverage_end"] > last[k]["time_coverage_end"]:
+                    last[k] = r
+        for k, r in sorted(last.items()):
+            log(f"    {k}: fino a {r['time_coverage_end']}, a {round(km(HOME, (float(r['lat']), float(r['lon']))))} km, parametri: {r.get('parameters','').strip()}")
         for r in rows:
             try:
                 lat, lon = float(r["lat"]), float(r["lon"])
