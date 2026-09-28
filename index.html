@@ -137,6 +137,9 @@ body.sorting{-webkit-user-select:none;user-select:none}
 .hero h1{color:var(--hfg);font-size:44px;line-height:.95;margin-top:4px;overflow-wrap:anywhere}
 .hstar{flex-shrink:0;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.8);display:grid;place-items:center;color:var(--ink)}
 .hstar[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#E6B24A}
+.hacts{display:flex;gap:8px;flex-shrink:0}
+#followBtn[aria-pressed="true"]{color:#fff}
+.htoast{margin-top:10px;font-size:13px;font-weight:600;color:var(--hfg)}
 .hbody{display:flex;align-items:center;gap:14px;margin-top:14px}
 .hdial{position:relative;flex-shrink:0;border:0;padding:4px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(19,40,59,.22), 0 0 0 4px rgba(255,255,255,.35);display:block;line-height:0}
 .hero .dial .ring{fill:#fff;stroke:rgba(19,40,59,.18)}
@@ -347,8 +350,8 @@ body.locked{overflow:hidden}
 .field{width:100%;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
 .err{color:var(--s4);margin-top:12px;font-weight:500}
 .err .pillbtn{margin-top:8px;color:var(--ink)}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding-bottom:max(6px, calc(env(safe-area-inset-bottom,0px) - 16px))}
-nav.tabs button{min-height:52px;padding-top:4px;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:max(6px, calc(env(safe-area-inset-bottom,0px) - 16px)) 0}
+nav.tabs button{min-height:52px;padding:0;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 @media (prefers-reduced-motion:reduce){ .switch::after{transition:none} }
 </style>
@@ -452,7 +455,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 </main>
 
 <nav class="tabs" aria-label="Sezioni">
- <button data-tab="spot" aria-current="page"><svg width="24" height="24" viewBox="2 3 598 552" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M7 488 L7 551 L596 550 L595 505 L352 505 L272 492 L241 490 L231 488Z M6 420 L6 457 L8 459 L238 459 L271 463 L288 467 L353 477 L596 476 L595 438 L350 438 L309 432 L258 422 L221 418 L7 418Z M6 351 L7 389 L223 389 L257 393 L294 401 L345 409 L596 408 L595 373 L347 373 L304 366 L273 358 L222 350Z M7 7 L7 323 L100 323 L120 319 L130 315 L150 304 L160 296 L180 255 L185 249 L192 245 L271 229 L293 223 L322 219 L334 214 L352 184 L363 161 L370 153 L374 151 L508 150 L518 156 L523 167 L559 305 L565 315 L572 321 L588 329 L596 330 L596 7Z"/></svg>Spot</button>
+ <button data-tab="spot" aria-current="page"><svg width="30" height="24" viewBox="0 180 602 377" aria-hidden="true"><defs><mask id="tabHead"><rect x="12.0" y="7.0" width="579.0" height="323.0" fill="#fff"/><path d="M7 7 L7 323 L100 323 L120 319 L130 315 L150 304 L160 296 L180 255 L185 249 L192 245 L271 229 L293 223 L322 219 L334 214 L352 184 L363 161 L370 153 L374 151 L508 150 L518 156 L523 167 L559 305 L565 315 L572 321 L588 329 L596 330 L596 7Z" fill="#000" stroke="#000" stroke-width="4"/></mask></defs><rect x="12.0" y="7.0" width="579.0" height="323.0" fill="currentColor" mask="url(#tabHead)"/><path fill="currentColor" d="M7 488 L7 551 L596 550 L595 505 L352 505 L272 492 L241 490 L231 488Z M6 420 L6 457 L8 459 L238 459 L271 463 L288 467 L353 477 L596 476 L595 438 L350 438 L309 432 L258 422 L221 418 L7 418Z M6 351 L7 389 L223 389 L257 393 L294 401 L345 409 L596 408 L595 373 L347 373 L304 366 L273 358 L222 350Z"/></svg>Spot</button>
  <button data-tab="map"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Mappa</button>
  <button data-tab="alert"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Alert</button>
 </nav>
@@ -1060,7 +1063,8 @@ function openDetail(id){
  el.innerHTML = `<button class="backlink" id="back">${ICON.back}${backTo}</button>
   <div class="hero" style="--c:${tone(ev?.score)[0]};--hfg:${tone(ev?.score)[1]};--hmut:${tone(ev?.score)[1]==='#FFFFFF' ? 'rgba(255,255,255,.82)' : 'rgba(19,40,59,.72)'}">
    <div class="htop"><div style="min-width:0"><p class="harea">${esc(sp.area||'Spot')}</p><h1>${esc(sp.name)}</h1></div>
-    <button class="hstar" id="favBtn" aria-pressed="${isFav}" aria-label="${isFav?'Togli dai preferiti':'Metti tra i preferiti'}">${ICON.star(isFav).replace('width="16" height="16"','width="20" height="20"')}</button></div>
+    <div class="hacts"><button class="hstar" id="followBtn" aria-pressed="${fol}" aria-label="${fol?'Alert attivi: tocca per disattivarli':'Avvisami quando questo spot entra in condizione'}"><svg width="20" height="20" viewBox="0 0 24 24" fill="${fol?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" fill="none"/></svg></button>
+    <button class="hstar" id="favBtn" aria-pressed="${isFav}" aria-label="${isFav?'Togli dai preferiti':'Metti tra i preferiti'}">${ICON.star(isFav).replace('width="16" height="16"','width="20" height="20"')}</button></div></div>
    <div class="hbody">
     <button class="hdial" id="dialBtn" aria-label="Come leggere il cerchio">${dial(sp, ev, 108)}<span class="info" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 11v6M12 7v.5"/></svg></span></button>
     <div class="hscore"><div class="row1">${badge(ev?.score,'lg')}<p class="hlab">${scoreLabel(ev?.score)}<br><span style="font-size:16px;font-weight:500;color:var(--hmut)">adesso</span></p></div>
@@ -1118,8 +1122,7 @@ function openDetail(id){
    <div id="body-season" hidden><div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div></div>
   </section>
 
-  <div class="dfoot">
-  <button class="pillbtn ${fol?'':'primary'}" id="followBtn" style="margin-top:20px;width:100%;justify-content:center;min-height:48px">${ICON.bell}${fol?'Alert attivi per questo spot':'Avvisami per questo spot'}</button>
+  <div class="dfoot"${custom ? '' : ' hidden'}>
   ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn primary" id="saveGit" style="width:auto">Salva nell'elenco (GitHub)</button><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button>
   <a class="pillbtn" href="https://www.openstreetmap.org/edit#map=18/${beach(sp).lat}/${beach(sp).lon}" target="_blank" rel="noopener" style="text-decoration:none">Segnalalo su OpenStreetMap ↗</a></div>
   <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}
@@ -1135,7 +1138,13 @@ function openDetail(id){
  opener.onclick = ()=>{ sheet.hidden = false; document.body.classList.add('locked'); document.addEventListener('keydown', onKey); sheet.querySelector('.sheet-x').focus(); };
  sheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closeSheet(); });
  document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
- document.getElementById('followBtn').onclick = ()=>{ toggleFollow(id); openDetail(id); };
+ document.getElementById('followBtn').onclick = ()=>{
+  toggleFollow(id); openDetail(id);
+  const on = isFollowed(sp), h = document.querySelector('#v-detail .hero');
+  if (h){ const t = document.createElement('p'); t.className = 'htoast'; t.setAttribute('role','status');
+   t.textContent = on ? `Alert attivi: ti avvisiamo quando ${sp.name} arriva a ${threshold}/5.` : 'Alert disattivati per questo spot.';
+   h.appendChild(t); setTimeout(()=>t.remove(), 3500); }
+ };
  const repo = (()=>{ const h = location.hostname, p = location.pathname.split('/').filter(Boolean);
   return h.endsWith('.github.io') ? `https://github.com/${h.split('.')[0]}/${p[0] || h}/edit/main/spots.json` : null; })();
  const sg = document.getElementById('saveGit');
