@@ -300,10 +300,11 @@ body.locked{overflow:hidden}
 .cattoggle{position:absolute;left:12px;top:12px;z-index:500}
 .cattoggle[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .maphint{position:absolute;left:50%;top:64px;transform:translateX(-50%);z-index:500;background:rgba(19,40,59,.85);color:#fff;font-size:13px;padding:6px 12px;border-radius:14px;white-space:nowrap;pointer-events:none}
-.cpin{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--accent);border:2px dashed var(--accent);font:700 18px/1 Barlow,sans-serif;box-shadow:0 1px 3px rgba(19,40,59,.25)}
+.cpin{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--c,#fff);color:var(--fg,var(--accent));border:2px dashed var(--accent);font:700 14px/1 "Barlow Condensed",sans-serif;box-shadow:0 1px 3px rgba(19,40,59,.25)}
+.cpin.plus{font:700 18px/1 Barlow,sans-serif}
 .cpin.sel{background:var(--accent);color:#fff;border-style:solid}
 .clu{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 16px "Barlow Condensed",sans-serif;border:3px solid #fff;box-shadow:0 1px 5px rgba(19,40,59,.35);background:var(--c);color:var(--fg)}
-.clu.cat{background:#fff;color:var(--accent);border:2px dashed var(--accent)}
+.clu.cat{background:var(--c);color:var(--fg);border:2px dashed var(--accent)}
 .catcard .pillbtn.primary{width:auto;min-height:44px;font-size:15px;padding:0 16px}
 /* alert */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
@@ -862,7 +863,7 @@ function addCatPins(list){
   const dup = nearbyPins(o).find(m => catPins[m.spot.id] && !(o.approx && m.spot.approx) && distanceKm(o, m.spot) < (o.approx || m.spot.approx ? 1.5 : 0.15));
   if (dup){ if (!dup.spot.approx || o.approx) return; catLayer.removeLayer(dup); delete catPins[dup.spot.id]; }
   const m = L.marker([o.lat, o.lon], {title:o.name || 'Spot', keyboard:true,
-   icon:L.divIcon({className:'', iconSize:[26,26], iconAnchor:[13,13], html:`<div class="cpin" aria-label="${esc(o.name || 'Spot senza nome')}, non ancora tra i tuoi">+</div>`})});
+   icon:catIcon(o, null)});
   m.on('click', ev=>{ L.DomEvent.stopPropagation(ev); catSel = o; mapSel = null; renderMap(); });
   m.spot = o; catPins[o.id] = m;
   (catGrid[cellKey(o.lat, o.lon)] ||= []).push(m);
@@ -870,6 +871,64 @@ function addCatPins(list){
  });
  if (catLayer.addLayers) catLayer.addLayers(fresh); else fresh.forEach(m => catLayer.addLayer(m));
 }
+// ---------- Potenziale degli spot noti ----------
+// Degli spot noti non conosciamo l'orientamento: stimiamo un "potenziale" da onda al largo, periodo e forza del vento,
+// come se lo spot prendesse lo swell in pieno. Serve a capire dove guardare, non sostituisce il punteggio vero.
+const catFc = {};
+function catIcon(o, e){
+ const sc = e?.score, [bg,fg] = sc == null ? ['#fff','var(--accent)'] : tone(sc);
+ return L.divIcon({className:'', iconSize:[28,28], iconAnchor:[14,14],
+  html:`<div class="cpin${sc == null ? ' plus' : ''}${catSel === o ? ' sel' : ''}" style="--c:${bg};--fg:${fg}" aria-label="${esc(o.name || 'Spot senza nome')}${sc == null ? '' : ', potenziale ' + sc + ' su 5'}">${sc == null ? '+' : sc}</div>`});
+}
+function genericEval(s, i){
+ const hs = s.hs[i], T = s.per[i]; if (hs == null || T == null) return null;
+ const face = hs * clamp(0.75+(T-6)*0.06, 0.6, 1.3), min = .6, max = 3;
+ let h = face < min ? .3*face/min : face <= max ? .6 + .4*Math.min(1,(face-min)/((max-min)*.6)) : Math.max(0, 1-(face-max)/max);
+ const pf = T >= 7 ? 1 : clamp((T-3)/4, .2, 1), ws = s.ws[i] ?? 0;
+ const wf = clamp(1 - (ws-12)/30, .35, 1);
+ return {score: Math.min(5, Math.round(5*h*pf*wf*2)/2), face, hs, T, ws, dir:s.dir[i], wd:s.wd[i] ?? 0};
+}
+function catEval(o){
+ const s = catFc[o.id]?.s; if (!s) return null;
+ if (mapDay === 'now'){ const i = Math.max(0, s.time.indexOf(nowKey())); return genericEval(s, i); }
+ let best = null;
+ s.time.forEach((t,i)=>{ if (!t.startsWith(mapDay)) return; const h = +t.slice(11,13); if (h < DAY_START || h > DAY_END) return;
+  const e = genericEval(s, i); if (e && (!best || e.score > best.score)) best = e; });
+ return best;
+}
+function refreshCatIcons(){
+ if (!catLayer) return;
+ Object.values(catPins).forEach(m => { if (!catFc[m.spot.id] && catSel !== m.spot) return; const e = catEval(m.spot); m.options.score = e?.score; m.setIcon(catIcon(m.spot, e)); });
+ if (catLayer.refreshClusters) catLayer.refreshClusters();
+}
+let catBusy = false;
+async function loadCatScores(){
+ if (catBusy || !leaf || !catLayer || !leaf.hasLayer(catLayer) || leaf.getZoom() < 6) return;
+ const bb = leaf.getBounds(), c = leaf.getCenter();
+ const want = Object.values(catPins).map(m=>m.spot)
+  .filter(o => bb.contains([o.lat, o.lon]) && !(catFc[o.id] && Date.now() - catFc[o.id].at < 3600000))
+  .sort((a,b)=> distanceKm(a,{lat:c.lat,lon:c.lng}) - distanceKm(b,{lat:c.lat,lon:c.lng})).slice(0, 50);
+ if (!want.length) return;
+ catBusy = true;
+ try{
+  const q = `latitude=${want.map(o=>o.lat).join(',')}&longitude=${want.map(o=>o.lon).join(',')}&timezone=${encodeURIComponent(TZ)}&forecast_days=7`;
+  let [m, w] = await Promise.all([
+   getJson(`https://marine-api.open-meteo.com/v1/marine?${q}&cell_selection=sea&hourly=wave_height,wave_direction,wave_period`),
+   getJson(`https://api.open-meteo.com/v1/forecast?${q}&hourly=wind_speed_10m,wind_direction_10m`)
+  ]);
+  if (!Array.isArray(m)) m = [m]; if (!Array.isArray(w)) w = [w];
+  want.forEach((o,k)=>{
+   const mh = m[k]?.hourly, wh = w[k]?.hourly; if (!mh || !wh) return;
+   const wi = new Map(wh.time.map((t,i)=>[t,i])), pick = (a,t)=>{ const i = wi.get(t); return i == null ? null : a[i]; };
+   catFc[o.id] = {at:Date.now(), s:{time:mh.time, hs:mh.wave_height, dir:mh.wave_direction, per:mh.wave_period,
+    ws:mh.time.map(t=>pick(wh.wind_speed_10m,t)), wd:mh.time.map(t=>pick(wh.wind_direction_10m,t))}};
+  });
+  refreshCatIcons(); renderCatCard();
+ }catch(e){}
+ catBusy = false;
+ if (want.length === 50) setTimeout(loadCatScores, 400);
+}
+
 function renderCatCard(){
  const el = document.getElementById('catCard');
  if (!catSel || !document.getElementById('windy').hidden){ el.hidden = true; return; }
@@ -877,7 +936,8 @@ function renderCatCard(){
  const kind = o.kind === 'reef' ? 'Reef o punta' : o.kind === 'beach' ? 'Spiaggia' : 'Spot di surf';
  el.hidden = false;
  el.innerHTML = `<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(o.name || 'Spot senza nome')}</p>
-  <p class="small muted">${kind}, ${o.approx ? 'posizione indicativa: sistemala toccando la mappa' : 'da OpenStreetMap'}${near ? `, ${near} webcam in zona` : ''}</p></div>
+  <p class="small muted">${(()=>{ const e = catEval(o); return e ? `Potenziale ${e.score}/5: ${e.face.toFixed(1)} m, ${Math.round(e.T)} s, vento ${Math.round(e.ws)} km/h. ` : ''; })()}${kind}${o.approx ? ', posizione indicativa' : ''}${near ? `, ${near} webcam in zona` : ''}</p>
+  <p class="xs muted" style="margin-top:2px">Aggiungilo per il punteggio vero, calcolato sul suo orientamento.</p></div>
   <button class="pillbtn primary" id="catAdd">+ Aggiungi</button>`;
  document.getElementById('catAdd').onclick = ()=>{ const x = catSel; catSel = null; addFromOsm(x); };
 }
@@ -1513,13 +1573,16 @@ function renderMap(){
    const [bg,fg] = tone(best < 0 ? null : best);
    return L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html:`<div class="clu" style="--c:${bg};--fg:${fg}" aria-label="${c.getChildCount()} spot, il migliore ${best < 0 ? 'n.d.' : best} su 5">${c.getChildCount()}</div>`});
   }).addTo(leaf);
-  catLayer = cluster('cat', c => L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html:`<div class="clu cat" aria-label="${c.getChildCount()} spot noti">${c.getChildCount()}</div>`}));
+  catLayer = cluster('cat', c => {
+   const best = Math.max(...c.getAllChildMarkers().map(m => m.options.score ?? -1));
+   const [bg,fg] = best < 0 ? ['#fff','var(--accent)'] : tone(best);
+   return L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html:`<div class="clu cat" style="--c:${bg};--fg:${fg}" aria-label="${c.getChildCount()} spot noti${best < 0 ? '' : ', potenziale migliore ' + best + ' su 5'}">${c.getChildCount()}</div>`});
+  });
   if (store.get('surf.showCat', true)) catLayer.addTo(leaf);
   leaf.on('click', ()=>{ mapSel = null; catSel = null; renderMap(); });
-  leaf.on('moveend', loadCatalog);
+  leaf.on('moveend', ()=>{ loadCatalog(); loadCatScores(); });
   setTimeout(()=>{ addCatPins(SEED); loadEurope(); }, 300);
  }
- if (!mapSel) mapSel = favorite && spots.some(s=>s.id===favorite) ? favorite : spots.map(sp=>({sp, e:mapScore(sp)})).sort((a,b)=>(b.e?.score??-1)-(a.e?.score??-1))[0]?.sp.id;
  spots.forEach(sp=>{
   const e = mapScore(sp), [bg,fg] = tone(e?.score), b = beach(sp);
   const icon = L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17],
@@ -1533,6 +1596,7 @@ function renderMap(){
  });
  if (myLayer.refreshClusters) myLayer.refreshClusters();
  const card = document.getElementById('mapCard'), sel = spots.find(s=>s.id===mapSel);
+ refreshCatIcons();
  renderCatCard();
  if (catSel) card.hidden = true;
  else if (sel && document.getElementById('windy').hidden){
@@ -1546,8 +1610,14 @@ function renderMap(){
 document.getElementById('windyBtn').onclick = e=>{
  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true', f = document.getElementById('windy');
  e.currentTarget.setAttribute('aria-pressed', on);
- e.currentTarget.textContent = on ? 'Punteggi spot' : 'Onde animate';
- if (on && !f.src) f.src = WINDY_URL;
+ e.currentTarget.textContent = on ? 'Spot' : 'Onde animate';
+ if (on){
+  let url = WINDY_URL;
+  if (leaf){ const c = leaf.getCenter(), z = Math.max(3, Math.min(11, leaf.getZoom()));
+   url = url.replace(/lat=[^&]*/, `lat=${c.lat.toFixed(3)}`).replace(/lon=[^&]*/, `lon=${c.lng.toFixed(3)}`)
+    .replace(/detailLat=[^&]*/, `detailLat=${c.lat.toFixed(3)}`).replace(/detailLon=[^&]*/, `detailLon=${c.lng.toFixed(3)}`).replace(/zoom=[^&]*/, `zoom=${z}`); }
+  if (f.src !== url) f.src = url;
+ }
  f.hidden = !on; document.getElementById('leaf').hidden = on;
  renderMap();
 };
