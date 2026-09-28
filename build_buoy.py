@@ -39,8 +39,44 @@ def write(buoys, via):
 
 
 def read_index(path):
-    lines = [l for l in open(path, encoding="utf-8", errors="replace") if not l.startswith("#")]
-    return list(csv.DictReader(io.StringIO("".join(lines))))
+    """L'intestazione sta in una riga di commento (# ...). Se non la trovo, riconosco il formato
+    dal numero di colonne: 10 (ultima posizione della boa) o 12 (riquadro min/max)."""
+    header, data = None, []
+    for l in open(path, encoding="utf-8", errors="replace"):
+        if l.startswith("#"):
+            if "file_name" in l:
+                header = [h.strip() for h in l.lstrip("#").split(",")]
+            continue
+        if l.strip():
+            data.append(l)
+    rows = list(csv.reader(io.StringIO("".join(data))))
+    out = []
+    for r in rows:
+        r = [x.strip() for x in r]
+        if header and len(header) == len(r):
+            d = dict(zip(header, r))
+        elif len(r) >= 12:
+            d = dict(zip(["catalog_id", "file_name", "geospatial_lat_min", "geospatial_lat_max", "geospatial_lon_min",
+                          "geospatial_lon_max", "time_coverage_start", "time_coverage_end", "provider", "date_update",
+                          "data_mode", "parameters"], r))
+        elif len(r) >= 10:
+            d = dict(zip(["catalog_id", "file_name", "last_latitude_observation", "last_longitude_observation",
+                          "time_coverage_start", "time_coverage_end", "provider", "date_update", "data_mode", "parameters"], r))
+        else:
+            continue
+        # posizione unica, comunque sia scritta
+        la = d.get("last_latitude_observation") or d.get("geospatial_lat_max")
+        lo = d.get("last_longitude_observation") or d.get("geospatial_lon_max")
+        d["lat"], d["lon"] = la, lo
+        out.append(d)
+    return out
+
+
+def _inbox(r):
+    try:
+        return BOX["s"] <= float(r["lat"]) <= BOX["n"] and BOX["w"] <= float(r["lon"]) <= BOX["e"]
+    except (TypeError, ValueError):
+        return False
 
 
 def parse_time(s):
@@ -64,15 +100,14 @@ def main():
     if not idx:
         log("Indice 'latest' non trovato"); write([], None); return
     rows = read_index(idx[0])
-    log(f"File nell'indice: {len(rows)}; colonne: {list(rows[0].keys()) if rows else []}")
+    log(f"File nell'indice: {len(rows)}; esempio: {rows[0] if rows else None}")
     since = datetime.now(timezone.utc) - timedelta(hours=HOURS + 24)
     files = []
     for r in rows:
         try:
-            la0, la1 = float(r["geospatial_lat_min"]), float(r["geospatial_lat_max"])
-            lo0, lo1 = float(r["geospatial_lon_min"]), float(r["geospatial_lon_max"])
+            la0 = la1 = float(r["lat"]); lo0 = lo1 = float(r["lon"])
             end = parse_time(r["time_coverage_end"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             continue
         params = r.get("parameters", "")
         if not any(c in params.split() or c in params for c in HS_CODES):
@@ -82,6 +117,8 @@ def main():
         if km(HOME, ((la0 + la1) / 2, (lo0 + lo1) / 2)) > MAX_KM:
             continue
         files.append(os.path.basename(r["file_name"]))
+    near = sorted({os.path.basename(r["file_name"]) for r in rows if r.get("lat") and _inbox(r)})[:15]
+    log(f"File nella zona (qualsiasi parametro/data): {near}")
     log(f"File utili: {files}")
     if not files:
         write([], DATASET); log("Nessuna boa con dati recenti trovata: buoy.json vuoto"); return
