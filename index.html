@@ -15,8 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js" crossorigin="anonymous"></script>
 <style>
 :root{
  --bg:#EEF3F1; --panel:#FFFFFF; --ink:#13283B; --muted:#4F616C; --line:#CFD9DB;
@@ -926,7 +926,7 @@ function catEval(o){
 function refreshCatIcons(){
  if (!catLayer) return;
  Object.values(catPins).forEach(m => { if (!catFc[m.spot.id] && catSel !== m.spot) return; const e = catEval(m.spot); m.options.score = e?.score; m.setIcon(catIcon(m.spot, e)); });
- if (catLayer.refreshClusters) catLayer.refreshClusters();
+ if (catLayer.refreshClusters && leaf && leaf.hasLayer(catLayer)) try{ catLayer.refreshClusters(); }catch(e){ console.warn(e); }
 }
 let catBusy = false;
 async function loadCatScores(){
@@ -1653,7 +1653,7 @@ function renderMap(){
    leafPins[sp.id].on('click', ev=>{ L.DomEvent.stopPropagation(ev); mapSel = sp.id; catSel = null; renderMap(); });
   }
  });
- if (myLayer.refreshClusters) myLayer.refreshClusters();
+ if (myLayer.refreshClusters && leaf.hasLayer(myLayer)) try{ myLayer.refreshClusters(); }catch(e){ console.warn(e); }
  const card = document.getElementById('mapCard'), sel = spots.find(s=>s.id===mapSel);
  refreshCatIcons();
  renderCatCard();
@@ -1911,8 +1911,10 @@ async function refresh(){
   }
  }finally{ busy = false; }
 }
-window.addEventListener('error', e=>showStatus(`Errore dell'app: ${e.message}`));
-window.addEventListener('unhandledrejection', e=>showStatus(`Errore dell'app: ${e.reason?.message || e.reason}`));
+// errori imprevisti: li registro nella console senza allarmare. Il riquadro rosso resta per i problemi
+// che contano davvero (previsioni non scaricate), gestiti in refresh().
+window.addEventListener('error', e=>{ console.warn('Errore intercettato:', e.message, e.filename, e.lineno); });
+window.addEventListener('unhandledrejection', e=>{ console.warn('Promessa non gestita:', e.reason); });
 document.addEventListener('visibilitychange', ()=>{
  const c = store.get('surf.cache', null);
  if (!document.hidden && (!c || Date.now() - c.at > 60*60*1000)) refresh();
