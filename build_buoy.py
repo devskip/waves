@@ -169,7 +169,7 @@ def main():
                     with np.errstate(all="ignore"):
                         arr = np.array([next((x for x in row if not np.isnan(x)), np.nan) for row in arr.reshape(arr.shape[0], -1)])
                 return arr
-            H, tp, dr = col(hs), col("VTPK", "VTM10", "VTM02"), col("VMDR", "VPED")
+            H, tp, dr = col(hs), col("VTPK", "VTM10", "VTM02", "VGTA", "VAVT"), col("VMDR", "VPED", "VDIR")
             b = by.setdefault(pid, dict(name=name, lat=lat, lon=lon, pts={}))
             for i, ti in enumerate(t):
                 val = H[i]
