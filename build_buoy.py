@@ -45,8 +45,21 @@ def pick(names, *cands):
 
 
 def datasets(server):
-    """Dataset tabellari che contengono l'altezza d'onda (VHM0)."""
+    """Dataset tabellari che contengono l'altezza d'onda (VHM0) nei mari intorno alla Sardegna.
+    Prima la ricerca avanzata per nome di variabile e zona, poi come riserva la ricerca per testo."""
     out = []
+    adv = (f"{server}/search/advanced.json?page=1&itemsPerPage=300&protocol=tabledap&variableName=VHM0"
+           f"&minLat={BOX['s']}&maxLat={BOX['n']}&minLon={BOX['w']}&maxLon={BOX['e']}")
+    try:
+        for r in table(get(adv)):
+            did = r.get("Dataset ID")
+            if did and did not in out:
+                out.append(did)
+        log(f"  ricerca avanzata (VHM0 in zona): {len(out)} dataset")
+    except Exception as ex:
+        log(f"  ricerca avanzata non riuscita: {ex}")
+    if out:
+        return out
     for q in ("VHM0", "wave height"):
         try:
             rows = table(get(f"{server}/search/index.json?page=1&itemsPerPage=200&searchFor={urllib.parse.quote(q)}"))
@@ -68,20 +81,24 @@ def variables(server, did):
 def query(server, did, names):
     hs = pick(names, "VHM0")
     if not hs:
+        log(f"  {did}: niente VHM0")
         return None
     t, la, lo = pick(names, "time"), pick(names, "latitude"), pick(names, "longitude")
-    pid = pick(names, "platform_code", "PLATFORMCODE", "platform_id", "station_id", "wmo_platform_code", "EP_PLATFORM_ID")
+    pid = pick(names, "platform_code", "PLATFORMCODE", "platform_id", "station_id", "wmo_platform_code", "EP_PLATFORM_ID", "EP_PLATFORM_CODE", "WMO", "station")
+    if not pid:  # qualsiasi variabile che somigli a un codice di piattaforma
+        pid = next((n for n in names if any(k in n.lower() for k in ("platform", "station", "wmo"))), None)
     name = pick(names, "platform_name", "station_name", "PLATFORMNAME")
     extra = [v for v in (pick(names, "VTPK"), pick(names, "VTM02"), pick(names, "VTM10"), pick(names, "VMDR"), pick(names, "VPED")) if v]
-    if not (t and la and lo and pid):
+    if not (t and la and lo):
+        log(f"  {did}: mancano tempo o coordinate ({', '.join(names[:12])}…)")
         return None
-    cols = [pid, t, la, lo, hs] + extra + ([name] if name else [])
+    cols = ([pid] if pid else []) + [t, la, lo, hs] + extra + ([name] if name else [])
     since = (datetime.now(timezone.utc) - timedelta(hours=HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     cons = [f"{t}>={since}", f"{la}>={BOX['s']}", f"{la}<={BOX['n']}", f"{lo}>={BOX['w']}", f"{lo}<={BOX['e']}"]
     url = f"{server}/tabledap/{did}.json?" + ",".join(cols) + "&" + "&".join(urllib.parse.quote(c, safe="=") for c in cons)
     log(f"  interrogo {did}")
     rows = table(get(url, timeout=150))
-    return [dict(id=str(r[pid]), name=(r.get(name) if name else None), time=r[t], lat=r[la], lon=r[lo], hs=r[hs],
+    return [dict(id=str(r[pid]) if pid else f"{r[la]:.2f},{r[lo]:.2f}", name=(r.get(name) if name else None), time=r[t], lat=r[la], lon=r[lo], hs=r[hs],
                  tp=r.get(pick(names, "VTPK") or "") or r.get(pick(names, "VTM10") or "") or r.get(pick(names, "VTM02") or ""),
                  dir=r.get(pick(names, "VMDR") or "") or r.get(pick(names, "VPED") or "")) for r in rows if r[hs] is not None]
 
@@ -96,7 +113,7 @@ def main():
             log(f"  non raggiungibile: {ex}")
             continue
         log(f"  dataset candidati: {len(ids)}")
-        for did in ids[:40]:
+        for did in ids[:80]:
             try:
                 got = query(server, did, variables(server, did))
             except Exception as ex:
