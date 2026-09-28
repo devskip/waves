@@ -11,7 +11,9 @@ al largo della costa ovest)."""
 import csv, glob, io, json, math, os, sys
 from datetime import datetime, timedelta, timezone
 
-DATASET = "cmems_obs-ins_med_phybgcwav_mynrt_na_irr"
+# prima il prodotto del Mediterraneo, poi quello globale (alcune boe, come "Sardaigne", potrebbero stare solo lì)
+DATASETS = ["cmems_obs-ins_med_phybgcwav_mynrt_na_irr", "cmems_obs-ins_glo_phybgcwav_mynrt_na_irr"]
+DATASET = DATASETS[0]
 HOME = (40.0, 8.35)                                   # Sinis, davanti a Capo Mannu
 BOX = dict(s=37.5, n=42.8, w=5.5, e=11.0)
 MAX_KM = 300
@@ -93,41 +95,45 @@ def main():
     global np
     import numpy as np
 
-    # 1) indice dei file: quali piattaforme hanno misure d'onda recenti nella zona
-    cm.get(dataset_id=DATASET, index_parts=True, output_directory="idx", overwrite=True, disable_progress_bar=True)
-    idx = [p for p in glob.glob("idx/**/*.txt", recursive=True) if "latest" in os.path.basename(p).lower()]
-    log(f"Indici scaricati: {[os.path.basename(p) for p in glob.glob('idx/**/*.txt', recursive=True)]}")
-    if not idx:
-        log("Indice 'latest' non trovato"); write([], None); return
-    rows = read_index(idx[0])
-    log(f"File nell'indice: {len(rows)}; esempio: {rows[0] if rows else None}")
+    # 1) indici dei file: quali piattaforme hanno misure d'onda recenti nella zona
     since = datetime.now(timezone.utc) - timedelta(hours=HOURS + 24)
-    files = []
-    for r in rows:
+    files, seen = [], set()
+    for ds in DATASETS:
+        out = f"idx/{ds}"
         try:
-            la0 = la1 = float(r["lat"]); lo0 = lo1 = float(r["lon"])
-            end = parse_time(r["time_coverage_end"])
-        except (KeyError, ValueError, TypeError):
-            continue
-        params = r.get("parameters", "")
-        if not any(c in params.split() or c in params for c in HS_CODES):
-            continue
-        if la1 < BOX["s"] or la0 > BOX["n"] or lo1 < BOX["w"] or lo0 > BOX["e"] or end < since:
-            continue
-        if km(HOME, ((la0 + la1) / 2, (lo0 + lo1) / 2)) > MAX_KM:
-            continue
-        files.append(os.path.basename(r["file_name"]))
-    near = sorted({os.path.basename(r["file_name"]) for r in rows if r.get("lat") and _inbox(r)})[:15]
-    log(f"File nella zona (qualsiasi parametro/data): {near}")
-    log(f"File utili: {files}")
+            cm.get(dataset_id=ds, index_parts=True, output_directory=out, overwrite=True, disable_progress_bar=True)
+        except Exception as ex:
+            log(f"{ds}: indice non disponibile ({ex})"); continue
+        idx = [p for p in glob.glob(f"{out}/**/*.txt", recursive=True) if "latest" in os.path.basename(p).lower()]
+        if not idx:
+            log(f"{ds}: indice 'latest' non trovato"); continue
+        rows = read_index(idx[0])
+        log(f"{ds}: {len(rows)} file nell'indice")
+        zone = sorted({os.path.basename(r["file_name"]).rsplit("_", 1)[0] for r in rows if _inbox(r) and "_TS_" in r["file_name"]})
+        log(f"  piattaforme fisse nella zona: {zone[:25]}")
+        for r in rows:
+            try:
+                lat, lon = float(r["lat"]), float(r["lon"])
+                end = parse_time(r["time_coverage_end"])
+            except (KeyError, ValueError, TypeError):
+                continue
+            params = r.get("parameters", "")
+            if not any(c in params for c in HS_CODES):
+                continue
+            if not _inbox(r) or end < since or km(HOME, (lat, lon)) > MAX_KM:
+                continue
+            fn = os.path.basename(r["file_name"])
+            if fn not in seen:
+                seen.add(fn); files.append((ds, fn))
+    log(f"File utili: {[f for _, f in files]}")
     if not files:
-        write([], DATASET); log("Nessuna boa con dati recenti trovata: buoy.json vuoto"); return
+        write([], None); log("Nessuna boa con dati recenti trovata: buoy.json vuoto"); return
 
     # 2) scarico i file e leggo altezza, periodo e direzione
     by = {}
-    for fn in files[:12]:
+    for ds, fn in files[:24]:
         try:
-            cm.get(dataset_id=DATASET, dataset_part="latest", filter=f"*{fn}", output_directory="dl",
+            cm.get(dataset_id=ds, dataset_part="latest", filter=f"*{fn}", output_directory="dl",
                    no_directories=True, overwrite=True, disable_progress_bar=True)
         except Exception as ex:
             log(f"  {fn}: download non riuscito ({ex})"); continue
@@ -174,7 +180,7 @@ def main():
                           km=round(km(HOME, (b["lat"], b["lon"]))),
                           last=dict(time=last["t"], hs=last["hs"], tp=last["tp"], dir=last["dir"]), series=series))
     buoys.sort(key=lambda b: b["km"])
-    write(buoys[:4], DATASET)
+    write(buoys[:4], ", ".join(DATASETS))
     for b in buoys[:4]:
         log(f"Boa {b['id']} {b['name'] or ''} a {b['km']} km: {b['last']['hs']} m alle {b['last']['time']}")
     if not buoys:
