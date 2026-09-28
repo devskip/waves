@@ -1,36 +1,28 @@
 """Scarica le misure delle boe ondametriche vicine al Sinis e le salva in buoy.json.
 Lo lancia GitHub Actions ogni ora (.github/workflows/buoy.yml); l'app legge poi buoy.json dal sito.
 
-Fonte: EMODnet Physics (servizio europeo, gratuito, senza registrazione), che raccoglie in tempo quasi reale
-le boe di tutta Europa, compresa la Rete Ondametrica Nazionale dell'ISPRA (boa di Alghero).
-Il dataset e la boa non sono scritti a mano: lo script li cerca da solo, così continua a funzionare
-anche se cambiano nomi o codici. Nel log di GitHub trovi cosa ha trovato e dove."""
-import json, math, sys, time, urllib.parse, urllib.request
+Fonte: Copernicus Marine, prodotto In Situ del Mediterraneo in tempo quasi reale
+(cmems_obs-ins_med_phybgcwav_mynrt_na_irr). Serve un account gratuito: nome utente e password
+vanno nei segreti del repository COPERNICUSMARINE_SERVICE_USERNAME e COPERNICUSMARINE_SERVICE_PASSWORD.
+
+Le boe non sono scritte a mano: lo script legge l'indice dei file "latest" e tiene le piattaforme
+con misure d'onda recenti nei mari intorno alla Sardegna (per esempio la boa Météo-France "Sardaigne",
+al largo della costa ovest)."""
+import csv, glob, io, json, math, os, sys
 from datetime import datetime, timedelta, timezone
 
-# data-erddap ha le serie temporali delle piattaforme (dataset "ERD_EP_TS_<parametro>_NRT"): lo provo per primo
-SERVERS = ["https://data-erddap.emodnet-physics.eu/erddap", "https://erddap.emodnet-physics.eu/erddap"]
-HOME = (40.0, 8.35)                            # Sinis, davanti a Capo Mannu
-BOX = dict(s=37.5, n=42.5, w=6.0, e=11.0)      # mari intorno alla Sardegna
+DATASET = "cmems_obs-ins_med_phybgcwav_mynrt_na_irr"
+HOME = (40.0, 8.35)                                   # Sinis, davanti a Capo Mannu
+BOX = dict(s=37.5, n=42.8, w=5.5, e=11.0)
 MAX_KM = 300
 HOURS = 48
-# sigle dell'altezza d'onda significativa: VHM0 (spettrale), VAVH (H1/3), VTDH (dal dominio del tempo)
 HS_CODES = ("VHM0", "VAVH", "VTDH")
+NAMES = {"6101035": "Boa Sardegna (Météo-France)", "6101031": "Boa Ajaccio", "6101032": "Boa Vecchio",
+         "6100023": "Boa Bonifacio", "6100295": "Boa Alistro", "6101033": "Boa Calvi"}
 
 
 def log(m):
     print(m, flush=True)
-
-
-def get(url, timeout=90):
-    req = urllib.request.Request(url, headers={"User-Agent": "sinis-waves-buoy/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.load(r)
-
-
-def table(j):
-    t = j["table"]
-    return [dict(zip(t["columnNames"], row)) for row in t["rows"]]
 
 
 def km(a, b):
@@ -39,185 +31,117 @@ def km(a, b):
     return 2 * 6371 * math.asin(math.sqrt(x))
 
 
-def pick(names, *cands):
-    low = {n.lower(): n for n in names}
-    for c in cands:
-        if c.lower() in low:
-            return low[c.lower()]
-    return None
+def write(buoys, via):
+    out = dict(updated=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+               source="Copernicus Marine In Situ" if buoys else None, via=via, buoys=buoys)
+    with open("buoy.json", "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 
 
-def datasets(server):
-    """Dataset tabellari che contengono l'altezza d'onda (VHM0) nei mari intorno alla Sardegna.
-    Prima la ricerca avanzata per nome di variabile e zona, poi come riserva la ricerca per testo."""
-    out = []
-    # 1) elenco completo dei dataset del server, filtrato sul nome: funziona anche dove la ricerca è spenta
-    try:
-        q = urllib.parse.quote('datasetID=~".*(VHM0|VAVH).*"', safe="=")
-        for r in table(get(f"{server}/tabledap/allDatasets.json?datasetID&{q}")):
-            did = r.get("datasetID")
-            if did and did not in out:
-                out.append(did)
-        log(f"  elenco dataset con VHM0/VAVH nel nome: {out}")
-    except Exception as ex:
-        log(f"  elenco dataset non disponibile: {ex}")
-    # 2) i nomi che usa EMODnet per le serie in tempo quasi reale
-    for g in [f"ERD_EP_TS_{p}_NRT" for p in HS_CODES] + ["EP_ERD_INT_VHM0_AL_TS_NRT"]:
-        if g not in out:
-            try:
-                get(f"{server}/info/{g}/index.json", timeout=30)
-                out.append(g)
-                log(f"  trovato per nome: {g}")
-            except Exception as ex:
-                log(f"  {g}: non c'è ({ex})")
-    if out:
-        # prima le serie di misure, dopo gli elenchi di stazioni (METADATA)
-        return sorted(out, key=lambda d: ("METADATA" in d, "VHM0" not in d))
-    adv = (f"{server}/search/advanced.json?page=1&itemsPerPage=300&protocol=tabledap&variableName=VHM0"
-           f"&minLat={BOX['s']}&maxLat={BOX['n']}&minLon={BOX['w']}&maxLon={BOX['e']}")
-    try:
-        for r in table(get(adv)):
-            did = r.get("Dataset ID")
-            if did and did not in out:
-                out.append(did)
-        log(f"  ricerca avanzata (VHM0 in zona): {len(out)} dataset")
-    except Exception as ex:
-        log(f"  ricerca avanzata non riuscita: {ex}")
-    if out:
-        return out
-    for q in ("VHM0", "wave height"):
-        try:
-            rows = table(get(f"{server}/search/index.json?page=1&itemsPerPage=200&searchFor={urllib.parse.quote(q)}"))
-        except Exception as ex:
-            log(f"  ricerca '{q}' non riuscita: {ex}")
-            continue
-        for r in rows:
-            did, tab = r.get("Dataset ID"), r.get("tabledap")
-            if did and tab and did not in out:
-                out.append(did)
-            if did and did.endswith("_METADATA") and did[:-9] not in out:
-                out.insert(0, did[:-9])
-    return sorted(out, key=lambda d: ("METADATA" in d, not any(c in d for c in HS_CODES)))
+def read_index(path):
+    lines = [l for l in open(path, encoding="utf-8", errors="replace") if not l.startswith("#")]
+    return list(csv.DictReader(io.StringIO("".join(lines))))
 
 
-def variables(server, did):
-    rows = table(get(f"{server}/info/{did}/index.json"))
-    return [r["Variable Name"] for r in rows if r.get("Row Type") == "variable"]
-
-
-def query(server, did, names):
-    hs = pick(names, *HS_CODES)
-    if not hs:
-        log(f"  {did}: niente altezza d'onda")
-        return None
-    t, la, lo = pick(names, "time"), pick(names, "latitude"), pick(names, "longitude")
-    pid = pick(names, "platform_code", "PLATFORMCODE", "platform_id", "station_id", "wmo_platform_code", "EP_PLATFORM_ID", "EP_PLATFORM_CODE", "WMO", "station")
-    if not pid:  # qualsiasi variabile che somigli a un codice di piattaforma
-        pid = next((n for n in names if any(k in n.lower() for k in ("platform", "station", "wmo"))), None)
-    name = pick(names, "platform_name", "station_name", "PLATFORMNAME")
-    extra = [v for v in (pick(names, "VTPK"), pick(names, "VTM02"), pick(names, "VTM10"), pick(names, "VMDR"), pick(names, "VPED")) if v]
-    if not (t and la and lo):
-        log(f"  {did}: mancano tempo o coordinate ({', '.join(names[:12])}…)")
-        return None
-    cols = ([pid] if pid else []) + [t, la, lo, hs] + extra + ([name] if name else [])
-    since = (datetime.now(timezone.utc) - timedelta(hours=HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    cons = [f"{t}>={since}", f"{la}>={BOX['s']}", f"{la}<={BOX['n']}", f"{lo}>={BOX['w']}", f"{lo}<={BOX['e']}"]
-    url = f"{server}/tabledap/{did}.json?" + ",".join(cols) + "&" + "&".join(urllib.parse.quote(c, safe="=") for c in cons)
-    log(f"  interrogo {did}")
-    rows = table(get(url, timeout=150))
-    return [dict(id=str(r[pid]) if pid else f"{r[la]:.2f},{r[lo]:.2f}", name=(r.get(name) if name else None), time=r[t], lat=r[la], lon=r[lo], hs=r[hs],
-                 tp=r.get(pick(names, "VTPK") or "") or r.get(pick(names, "VTM10") or "") or r.get(pick(names, "VTM02") or ""),
-                 dir=r.get(pick(names, "VMDR") or "") or r.get(pick(names, "VPED") or "")) for r in rows if r[hs] is not None]
-
-
-def explore_metadata(server, did):
-    """Gli elenchi *_METADATA descrivono le piattaforme: li leggo nella zona della Sardegna,
-    scrivo nel log cosa contengono e seguo gli eventuali collegamenti ai dataset delle misure."""
-    names = variables(server, did)
-    log(f"  {did}: variabili {names}")
-    la, lo = pick(names, "latitude", "LATITUDE", "lat"), pick(names, "longitude", "LONGITUDE", "lon")
-    q = ",".join(names[:25])
-    if la and lo:
-        q += "&" + "&".join(urllib.parse.quote(c, safe="=") for c in
-                            (f"{la}>={BOX['s']}", f"{la}<={BOX['n']}", f"{lo}>={BOX['w']}", f"{lo}<={BOX['e']}"))
-    rows = table(get(f"{server}/tabledap/{did}.json?{q}", timeout=150))
-    log(f"  {did}: {len(rows)} piattaforme in zona")
-    for r in rows[:6]:
-        log(f"    {json.dumps(r, ensure_ascii=False)[:400]}")
-    links = set()
-    for r in rows:
-        for v in r.values():
-            if isinstance(v, str) and "/tabledap/" in v:
-                links.add(v.split("/tabledap/")[1].split(".")[0].split("?")[0])
-    return rows, sorted(links)
+def parse_time(s):
+    return datetime.strptime(s[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
 
 
 def main():
-    rows, used = [], None
-    for server in SERVERS:
-        log(f"Server {server}")
-        try:
-            ids = datasets(server)
-        except Exception as ex:
-            log(f"  non raggiungibile: {ex}")
-            continue
-        log(f"  dataset candidati: {len(ids)}")
-        # scarto i dataset scientifici che non c'entrano (campagne, pubblicazioni…)
-        ids = [d for d in ids if any(k in d.upper() for k in ("EP_", "NRT", "_TS_", "WAV", "VHM0", "VTDH", "VAVH", "INSITU"))]
-        log(f"  dataset pertinenti: {ids[:20]}")
-        extra = []
-        for did in [d for d in ids if d.endswith("_METADATA")]:
-            try:
-                _, links = explore_metadata(server, did)
-                if links:
-                    log(f"  collegamenti ai dati: {links[:10]}")
-                extra += [l for l in links if l not in ids and l not in extra]
-            except Exception as ex:
-                log(f"  {did}: {ex}")
-        for did in [d for d in ids if not d.endswith("_METADATA")] + extra[:30]:
-            try:
-                got = query(server, did, variables(server, did))
-            except Exception as ex:
-                log(f"  {did}: {ex}")
-                continue
-            if got:
-                log(f"  {did}: {len(got)} misure")
-                rows += got
-                used = used or f"{server} ({did})"
-            time.sleep(1)
-        if rows:
-            break
+    if not (os.environ.get("COPERNICUSMARINE_SERVICE_USERNAME") and os.environ.get("COPERNICUSMARINE_SERVICE_PASSWORD")):
+        log("Mancano i segreti COPERNICUSMARINE_SERVICE_USERNAME / COPERNICUSMARINE_SERVICE_PASSWORD")
+        write([], None)
+        return
+    import copernicusmarine as cm
+    import netCDF4
+    global np
+    import numpy as np
 
-    by = {}
+    # 1) indice dei file: quali piattaforme hanno misure d'onda recenti nella zona
+    cm.get(dataset_id=DATASET, index_parts=True, output_directory="idx", overwrite=True, disable_progress_bar=True)
+    idx = [p for p in glob.glob("idx/**/*.txt", recursive=True) if "latest" in os.path.basename(p).lower()]
+    log(f"Indici scaricati: {[os.path.basename(p) for p in glob.glob('idx/**/*.txt', recursive=True)]}")
+    if not idx:
+        log("Indice 'latest' non trovato"); write([], None); return
+    rows = read_index(idx[0])
+    log(f"File nell'indice: {len(rows)}; colonne: {list(rows[0].keys()) if rows else []}")
+    since = datetime.now(timezone.utc) - timedelta(hours=HOURS + 24)
+    files = []
     for r in rows:
-        by.setdefault(r["id"], []).append(r)
-    buoys = []
-    for pid, rs in by.items():
-        rs.sort(key=lambda r: r["time"])
-        last = rs[-1]
-        d = km(HOME, (last["lat"], last["lon"]))
-        if d > MAX_KM:
+        try:
+            la0, la1 = float(r["geospatial_lat_min"]), float(r["geospatial_lat_max"])
+            lo0, lo1 = float(r["geospatial_lon_min"]), float(r["geospatial_lon_max"])
+            end = parse_time(r["time_coverage_end"])
+        except (KeyError, ValueError):
             continue
-        series, seen = [], set()
-        for r in rs:                                 # una misura per ora
-            k = r["time"][:13]
-            if k in seen:
-                series[-1] = r
-                continue
-            seen.add(k); series.append(r)
-        buoys.append(dict(id=pid, name=last["name"], lat=round(last["lat"], 4), lon=round(last["lon"], 4), km=round(d),
-                          last=dict(time=last["time"], hs=last["hs"], tp=last["tp"], dir=last["dir"]),
-                          series=[dict(t=r["time"], hs=r["hs"], tp=r["tp"], dir=r["dir"]) for r in series[-HOURS:]]))
+        params = r.get("parameters", "")
+        if not any(c in params.split() or c in params for c in HS_CODES):
+            continue
+        if la1 < BOX["s"] or la0 > BOX["n"] or lo1 < BOX["w"] or lo0 > BOX["e"] or end < since:
+            continue
+        if km(HOME, ((la0 + la1) / 2, (lo0 + lo1) / 2)) > MAX_KM:
+            continue
+        files.append(os.path.basename(r["file_name"]))
+    log(f"File utili: {files}")
+    if not files:
+        write([], DATASET); log("Nessuna boa con dati recenti trovata: buoy.json vuoto"); return
+
+    # 2) scarico i file e leggo altezza, periodo e direzione
+    by = {}
+    for fn in files[:12]:
+        try:
+            cm.get(dataset_id=DATASET, dataset_part="latest", filter=f"*{fn}", output_directory="dl",
+                   no_directories=True, overwrite=True, disable_progress_bar=True)
+        except Exception as ex:
+            log(f"  {fn}: download non riuscito ({ex})"); continue
+        path = os.path.join("dl", fn)
+        if not os.path.exists(path):
+            cands = glob.glob(f"dl/**/{fn}", recursive=True)
+            if not cands:
+                log(f"  {fn}: file non trovato dopo il download"); continue
+            path = cands[0]
+        with netCDF4.Dataset(path) as nc:
+            v = nc.variables
+            hs = next((c for c in HS_CODES if c in v), None)
+            if not hs:
+                log(f"  {fn}: niente altezza d'onda"); continue
+            t = netCDF4.num2date(v["TIME"][:], v["TIME"].units, only_use_cftime_datetimes=False)
+            lat, lon = float(v["LATITUDE"][:].ravel()[-1]), float(v["LONGITUDE"][:].ravel()[-1])
+            pid = str(getattr(nc, "platform_code", "") or fn.split("_")[-2])
+            name = NAMES.get(pid) or getattr(nc, "platform_name", "") or None
+            def col(*codes):
+                code = next((c for c in codes if c in v), None)
+                if not code: return None
+                arr = np.ma.filled(np.ma.masked_invalid(v[code][:].astype(float)), np.nan)
+                return arr[:, 0] if arr.ndim > 1 else arr
+            H, tp, dr = col(hs), col("VTPK", "VTM10", "VTM02"), col("VMDR", "VPED")
+            b = by.setdefault(pid, dict(name=name, lat=lat, lon=lon, pts={}))
+            for i, ti in enumerate(t):
+                val = H[i]
+                if np.isnan(val) or not (0 <= val < 25):
+                    continue
+                b["pts"][ti.strftime("%Y-%m-%dT%H:00:00Z")] = dict(
+                    hs=round(float(val), 2),
+                    tp=None if tp is None or np.isnan(tp[i]) else round(float(tp[i]), 1),
+                    dir=None if dr is None or np.isnan(dr[i]) else int(round(float(dr[i]))))
+        log(f"  {fn}: letto")
+
+    buoys = []
+    for pid, b in by.items():
+        keys = sorted(b["pts"])[-HOURS:]
+        if not keys:
+            continue
+        series = [dict(t=k, **b["pts"][k]) for k in keys]
+        last = series[-1]
+        buoys.append(dict(id=pid, name=b["name"], lat=round(b["lat"], 4), lon=round(b["lon"], 4),
+                          km=round(km(HOME, (b["lat"], b["lon"]))),
+                          last=dict(time=last["t"], hs=last["hs"], tp=last["tp"], dir=last["dir"]), series=series))
     buoys.sort(key=lambda b: b["km"])
-    out = dict(updated=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-               source="EMODnet Physics / ISPRA RON" if buoys else None, via=used, buoys=buoys[:4])
-    with open("buoy.json", "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
-    if buoys:
-        for b in buoys[:4]:
-            log(f"Boa {b['id']} {b['name'] or ''} a {b['km']} km: {b['last']['hs']} m alle {b['last']['time']}")
-    else:
-        log("Nessuna boa con dati recenti trovata: buoy.json vuoto")
+    write(buoys[:4], DATASET)
+    for b in buoys[:4]:
+        log(f"Boa {b['id']} {b['name'] or ''} a {b['km']} km: {b['last']['hs']} m alle {b['last']['time']}")
+    if not buoys:
+        log("Nessuna misura valida nei file scaricati")
 
 
 if __name__ == "__main__":
