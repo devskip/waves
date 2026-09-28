@@ -8,10 +8,10 @@ Legge gli spot da spots.json (solo quelli con "alert": true) e salva in
 alert_state.json cosa ha già inviato. Su GitHub gira con .github/workflows/alert.yml.
 
 Uso in locale:
-  export TELEGRAM_TOKEN="123:ABC"      # token del bot da @BotFather
-  export TELEGRAM_CHAT_ID="123456789"  # la tua chat o un gruppo
-  export SURF_THRESHOLD=3              # opzionale, default 3
-  python3 alert_telegram.py            # aggiungi --prova per stampare senza inviare
+    export TELEGRAM_TOKEN="123:ABC"        # token del bot da @BotFather
+    export TELEGRAM_CHAT_ID="123456789"    # la tua chat o un gruppo
+    export SURF_THRESHOLD=3                # opzionale, default 3
+    python3 alert_telegram.py              # aggiungi --prova per stampare senza inviare
 """
 import json
 import os
@@ -41,7 +41,8 @@ def ang_diff(a, b):
 
 
 def cardinal(d):
-    return ["N", "NE", "E", "SE", "S", "SO", "O", "NO"][round((d % 360) / 45) % 8]
+    return ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+            "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"][round((d % 360) / 22.5) % 16]
 
 
 def get_json(url, params):
@@ -61,7 +62,8 @@ def evaluate(spot, s, i):
     d = ang_diff(direction, spot["facing"])
     w = spot["window"]
     dir_f = 1 if d <= w else 0 if d >= w + 35 else 1 - (d - w) / 35
-    face = hs * dir_f * clamp(0.75 + (T - 6) * 0.06, 0.6, 1.3)
+    # "gain" è la correzione d'onda che nasce dalla taratura con le sessioni reali (1 = nessuna correzione)
+    face = hs * dir_f * clamp(0.75 + (T - 6) * 0.06, 0.6, 1.3) * spot.get("gain", 1)
     if face < spot["min"]:
         h_score = 0.3 * face / spot["min"]
     elif face <= spot["max"]:
@@ -69,7 +71,6 @@ def evaluate(spot, s, i):
     else:
         h_score = max(0, 1 - (face - spot["max"]) / spot["max"])
     period_f = 1 if T >= spot["minPeriod"] else clamp((T - 3) / (spot["minPeriod"] - 3), 0.2, 1)
-
     ws = s["ws"][i] or 0
     wd = s["wd"][i] or 0
     dw = ang_diff(wd, spot["offshore"])
@@ -143,10 +144,9 @@ def main():
     if not dry_run and not (token and chat_id):
         sys.exit("Mancano TELEGRAM_TOKEN o TELEGRAM_CHAT_ID")
     threshold = float(os.environ.get("SURF_THRESHOLD") or 3)
-
     state = json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {}
-    hits = find_hits(fetch(), threshold)
 
+    hits = find_hits(fetch(), threshold)
     lines = []
     for spot, day, ev in hits:
         key = f"{spot['id']}|{day}"
