@@ -190,14 +190,18 @@ body.locked{overflow:hidden}
 .buoy svg{width:100%;height:auto;display:block;margin-top:8px}
 .buoy .lg{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:4px}
 .buoy .lg i{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--c);vertical-align:middle;margin-right:5px}
-.agree{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
-.agree i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.agree{grid-column:1 / -1;display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin-top:-2px}
+.agree:empty{display:none}
+.agree i{flex:0 0 9px;width:9px;height:9px;border-radius:50%;background:var(--c);display:block}
+.agree b{color:var(--ink);font-weight:600}
 .logbtn{margin-top:14px;width:100%;justify-content:center;min-height:46px;background:var(--panel);border:1px dashed var(--tacc);color:var(--ink);font-weight:600}
 .form label{display:block;margin-top:12px;font-size:13px;font-weight:600;color:var(--muted)}
 .form input,.form select,.form textarea{width:100%;margin-top:4px;padding:10px 12px;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font:inherit;font-size:16px;color:var(--ink)}
 .qual{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:4px}
 .qual button{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font:700 18px "Barlow Condensed",sans-serif}
 .qual button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.crowdq{grid-template-columns:repeat(4,minmax(0,1fr))}
+.crowdq button{display:flex;align-items:center;justify-content:center;gap:1px;color:var(--ink)}
 .slist div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .slist div:last-child{border-bottom:0}
 .mbars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:130px;margin-top:6px}
@@ -1159,8 +1163,8 @@ function openDetail(id){
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
    <h3 style="margin:18px 0 6px;font:600 19px 'Barlow Condensed',sans-serif">Giorno per giorno</h3>
-   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}<br><span class="agree" data-agree="${d.day}"></span></span>${badge(d.best.score,'sm')}
-    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()}</span></span></div>`).join('')}</div>
+   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
+    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()}</span></span><span class="agree" data-agree="${d.day}"></span></div>`).join('')}</div>
    </div>
   </section>
 
@@ -1304,10 +1308,27 @@ function crowdCalc(sp, score, day, hour){
  const rare = score >= 3 && flatBefore(sp, day);
  if (rare) why.push('prime onde dopo giorni di piatto');
  const x = Math.min(1, q * dayF * hourF * pop * (rare ? 1.25 : 1) * 1.15);
- const lvl = x < .15 ? 0 : x < .35 ? 1 : x < .6 ? 2 : 3;
+ let lvl = x < .15 ? 0 : x < .35 ? 1 : x < .6 ? 2 : 3;
+ const fix = crowdFix(sp);
+ if (fix && score >= 1.5){ lvl = Math.max(0, Math.min(3, Math.round(lvl + fix.shift))); if (Math.abs(fix.shift) >= .5) why.push(`corretta con le tue ${fix.n} segnalazioni`); }
  if (score < 1.5) why.splice(0, why.length, 'onde quasi assenti, in acqua non va quasi nessuno');
  else if (score < 2.5) why.unshift('onde scarse');
  return {lvl, label:['Probabilmente vuoto','Poca gente','Un po\' di gente','Affollato'][lvl], why};
+}
+// scarto medio tra quanta gente hai trovato e quanta ne stimava l'app, nelle tue sessioni su questo spot
+function crowdFix(sp){
+ if (!sp) return null;
+ const rows = store.get('surf.sessions', []).filter(x => x.spot_id === sp.id && x.affollamento_1_4 && x.punteggio_app !== '');
+ if (rows.length < 3) return null;
+ const d = rows.map(x => { const base = crowdCalcRaw(sp, x.punteggio_app, x.data, +x.ora.slice(0,2)); return (x.affollamento_1_4 - 1) - base; });
+ return {n: rows.length, shift: d.reduce((a,b)=>a+b,0)/d.length};
+}
+function crowdCalcRaw(sp, score, day, hour){
+ const q = score < 1.5 ? .05 : score < 2.5 ? .25 : score < 3.5 ? .55 : score < 4.5 ? .8 : 1;
+ const kind = dayKind(day), month = +day.slice(5,7), dayF = kind === 'feriale' ? (month === 8 ? .85 : .6) : 1;
+ const hourF = hour < 7 || hour > 20 ? .1 : hour < 9 ? .8 : hour < 12 ? 1 : hour < 15 ? .7 : hour < 18 ? 1 : .6;
+ const x = Math.min(1, q * dayF * hourF * (SPOT_POP[sp.id] ?? .6) * 1.15);
+ return x < .15 ? 0 : x < .35 ? 1 : x < .6 ? 2 : 3;
 }
 const crowdNow = (sp, ev) => crowdCalc(sp, ev.score, todayIso(), +nowKey().slice(11,13));
 const crowdDay = (sp, d) => crowdCalc(sp, d.best.score, d.day, d.bestHour);
@@ -1362,16 +1383,19 @@ function openLog(sp){
   <label>Quando<input type="datetime-local" id="lgWhen" value="${now.slice(0,13)}:00"></label>
   <label>Onda reale a riva, in metri<input type="number" id="lgWave" inputmode="decimal" step="0.1" min="0" max="8" placeholder="es. 1.2"></label>
   <label>Com'era, da 1 (da non uscire) a 5 (epico)</label><div class="qual" id="lgQual">${[1,2,3,4,5].map(n=>`<button type="button" data-q="${n}" aria-pressed="false">${n}</button>`).join('')}</div>
+  <label>Quanta gente c'era</label><div class="qual crowdq" id="lgCrowd">${[1,2,3,4].map(n=>`<button type="button" data-c="${n}" aria-pressed="false" aria-label="${['Nessuno o quasi','Poca gente','Un po\' di gente','Affollato'][n-1]}">${'<svg width="12" height="16" viewBox="0 0 18 22" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="4"/><path d="M1 21c0-5 3.6-8 8-8s8 3 8 8z"/></svg>'.repeat(n)}</button>`).join('')}</div>
+  <p class="xs muted" id="lgCrowdTxt" style="margin-top:4px">Da 1 (nessuno o quasi) a 4 (affollato)</p>
   <label>Vento in acqua<select id="lgWind"><option value="">Non so</option><option>assente</option><option>offshore</option><option>laterale</option><option>onshore</option></select></label>
   <label>Note<textarea id="lgNote" rows="2" placeholder="es. chiudeva sul reef, marea alta"></textarea></label>
   <p class="err" id="lgErr" hidden></p>
   <button class="pillbtn primary" id="lgSave" style="margin-top:16px">Salva sessione</button></div>`;
  document.body.appendChild(wrap); document.body.classList.add('locked');
- let q = null;
+ let q = null, cr = null;
  const close = ()=>{ wrap.remove(); document.body.classList.remove('locked'); };
  wrap.addEventListener('click', e=>{
   if (e.target.closest('[data-close]')) close();
   const b = e.target.closest('[data-q]'); if (b){ q = +b.dataset.q; wrap.querySelectorAll('[data-q]').forEach(x=>x.setAttribute('aria-pressed', x===b)); }
+  const c = e.target.closest('[data-c]'); if (c){ cr = +c.dataset.c; wrap.querySelectorAll('[data-c]').forEach(x=>x.setAttribute('aria-pressed', x===c)); wrap.querySelector('#lgCrowdTxt').textContent = c.getAttribute('aria-label'); }
  });
  wrap.querySelector('#lgSave').onclick = ()=>{
   const when = wrap.querySelector('#lgWhen').value, wave = parseFloat(wrap.querySelector('#lgWave').value.replace(',', '.'));
@@ -1381,7 +1405,7 @@ function openLog(sp){
   const row = {data: when.slice(0,10), ora: when.slice(11,16), spot_id: sp.id,
    punteggio_app: ev ? ev.score : '', onda_app_m: ev ? +ev.face.toFixed(2) : '', gain: sp.gain ?? 1,
    onda_reale_m: wave, qualita_reale_1_5: q, vento_reale: wrap.querySelector('#lgWind').value,
-   vento_app: ev ? ev.windType : '', note: wrap.querySelector('#lgNote').value.trim()};
+   vento_app: ev ? ev.windType : '', affollamento_1_4: cr ?? '', note: wrap.querySelector('#lgNote').value.trim()};
   store.set('surf.sessions', [...sessions(), row]);
   close(); openDetail(sp.id); openSection('cal', true);
   document.getElementById('sec-cal')?.scrollIntoView({behavior:'smooth', block:'start'});
@@ -1420,7 +1444,7 @@ function calHtml(sp){
   tips += `<p style="margin-top:8px"><b>Punteggio:</b> in media il tuo voto è ${st.bias > 0 ? 'più alto' : 'più basso'} di ${Math.abs(st.bias).toFixed(1)} punti. ${st.bias > 0 ? 'Lo spot rende più di quanto pensi l\'app: forse la finestra di direzioni è troppo stretta.' : 'Lo spot rende meno: forse la finestra è troppo larga o il range di onda troppo basso.'}</p>`;
  if (st.windMiss >= 2)
   tips += `<p style="margin-top:8px"><b>Vento:</b> ${st.windMiss} volte l'app lo dava buono ma in acqua era onshore. Probabilmente la direzione offshore dello spot (ora da ${cardinal(sp.offshore)}) va corretta.</p>`;
- const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m} m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
+ const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m} m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''}${x.affollamento_1_4 ? ', gente ' + x.affollamento_1_4 + '/4' : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
  return `${tips || ''}
   ${cur !== 1 ? `<p class="small" style="margin-top:10px">Correzione attiva su questo telefono: ×${cur.toFixed(2)}. Per usarla anche negli alert Telegram aggiungi <code>"gain": ${cur.toFixed(2)}</code> allo spot in spots.json. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}
   ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px 'Barlow Condensed',sans-serif">Ultime sessioni</h3><div class="slist">${list}</div>` : ''}
@@ -1429,7 +1453,7 @@ function calHtml(sp){
    ${sessions().length ? '<button class="pillbtn" id="calExport">Esporta in sessioni.csv</button>' : ''}</div>
   <p class="xs muted" id="calMsg" style="margin-top:8px">Le sessioni restano su questo telefono. Esportale in sessioni.csv su GitHub per non perderle.</p>`;
 }
-const CSV_COLS = ['data','ora','spot_id','punteggio_app','onda_app_m','onda_reale_m','qualita_reale_1_5','vento_reale','note'];
+const CSV_COLS = ['data','ora','spot_id','punteggio_app','onda_app_m','onda_reale_m','qualita_reale_1_5','vento_reale','affollamento_1_4','note'];
 function bindCal(sp){
  const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
  on('logOpen', ()=>openLog(sp)); on('calLog', ()=>openLog(sp));
@@ -1509,9 +1533,10 @@ async function loadAgreement(sp){
     return m; }).filter(v => v != null);
    if (maxes.length < 2){ el.innerHTML = ''; return; }
    const lo = Math.min(...maxes), hi = Math.max(...maxes), mean = maxes.reduce((a,b)=>a+b,0)/maxes.length;
-   const spread = (hi - lo) / Math.max(mean, 0.4);
-   const [txt, col] = spread <= .25 ? ['modelli d\'accordo','var(--s3)'] : spread <= .5 ? ['modelli abbastanza d\'accordo','var(--s1)'] : ['modelli discordi','#C0504D'];
-   el.innerHTML = `<i style="--c:${col}"></i>${txt}`;
+   const gap = hi - lo, rel = gap / Math.max(mean, 0.4);
+   // d'accordo se differiscono di poco in assoluto o in proporzione
+   const [txt, col] = (gap <= .3 || rel <= .25) ? ['Modelli d\'accordo','var(--s3)'] : (gap <= .6 || rel <= .5) ? ['Modelli abbastanza d\'accordo','var(--s1)'] : ['Modelli discordi','#C0504D'];
+   el.innerHTML = `<i style="--c:${col}"></i><span><b>${txt}</b>: al largo tra ${lo.toFixed(1)} e ${hi.toFixed(1)} m (${maxes.length} modelli)</span>`;
    el.title = `Onda al largo secondo ${maxes.length} modelli: da ${lo.toFixed(1)} a ${hi.toFixed(1)} m`;
   });
  };
