@@ -183,6 +183,17 @@ body.locked{overflow:hidden}
 .t-tide{--sbg:#D8EEF2;--tacc:#1C6A80}
 .t-week{--sbg:#E5E8EB;--tacc:#4A5A66}
 .t-season{--sbg:#E4EFE2;--tacc:#3B6E45}
+.t-cal{--sbg:#EEE8F3;--tacc:#6A4C8C}
+.agree{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.agree i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.logbtn{margin-top:14px;width:100%;justify-content:center;min-height:46px;background:var(--panel);border:1px dashed var(--tacc);color:var(--ink);font-weight:600}
+.form label{display:block;margin-top:12px;font-size:13px;font-weight:600;color:var(--muted)}
+.form input,.form select,.form textarea{width:100%;margin-top:4px;padding:10px 12px;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font:inherit;font-size:16px;color:var(--ink)}
+.qual{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-top:4px}
+.qual button{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font:700 18px "Barlow Condensed",sans-serif}
+.qual button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.slist div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.slist div:last-child{border-bottom:0}
 .mbars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:130px;margin-top:6px}
 .mbars div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
 .mbars span.v{font-size:10px;color:var(--muted);font-weight:600}
@@ -507,7 +518,7 @@ function evaluate(spot, s, i){
  if (s.sh[i] != null && s.sh[i] >= 0.5*hs && s.sd[i] != null && s.sp[i] != null){ dir = s.sd[i]; T = Math.max(T, s.sp[i]); }
  const d = angDiff(dir, spot.facing);
  const dirF = d <= spot.window ? 1 : d >= spot.window+35 ? 0 : 1-(d-spot.window)/35;
- const face = hs * dirF * clamp(0.75+(T-6)*0.06, 0.6, 1.3);
+ const face = hs * dirF * clamp(0.75+(T-6)*0.06, 0.6, 1.3) * (spot.gain ?? 1);
  let hScore;
  if (face < spot.min) hScore = 0.3*face/spot.min;
  else if (face <= spot.max) hScore = 0.6 + 0.4*Math.min(1,(face-spot.min)/((spot.max-spot.min)*0.6));
@@ -602,6 +613,12 @@ async function getJson(url, opts={}, tries=2, ms=20000){
 async function loadSpots(){
  baseSpots = (await getJson('spots.json', {cache:'no-cache'})).spots;
  spots = [...baseSpots, ...store.get('surf.customSpots', [])];
+ applyGains();
+}
+// correzioni dalla taratura salvate su questo telefono: valgono sopra a quelle di spots.json
+function applyGains(){
+ const g = store.get('surf.gain', {});
+ spots.forEach(sp => { if (g[sp.id] != null) sp.gain = g[sp.id]; });
 }
 
 async function fetchForecast(){
@@ -1113,6 +1130,7 @@ function openDetail(id){
     ${ev ? periodCell(sp, ev.T) : ''}</div>
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
    ${camsHtml(sp)}
+   <button class="pillbtn logbtn" id="logOpen">✍️ Com'era davvero? Registra una sessione</button>
   </section>
 
   <section class="dsec t-wx" id="sec-wx">
@@ -1134,7 +1152,7 @@ function openDetail(id){
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
    ${chartHtml(sp)}
    <h3 style="margin:18px 0 6px;font:600 19px 'Barlow Condensed',sans-serif">Giorno per giorno</h3>
-   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
+   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}<br><span class="agree" data-agree="${d.day}"></span></span>${badge(d.best.score,'sm')}
     <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()}</span></span></div>`).join('')}</div>
    </div>
   </section>
@@ -1143,6 +1161,12 @@ function openDetail(id){
    ${MOTIF.season}
    ${secToggle('season', 'Stagioni', 'Quando lo spot lavora, mese per mese', seasonSummary(sp), seasonInfo(sp))}
    <div id="body-season" hidden><div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div></div>
+  </section>
+
+  <section class="dsec t-cal" id="sec-cal">
+   ${MOTIF.cal}
+   ${secToggle('cal', 'Taratura', 'Le tue sessioni confrontate con le previsioni', calSummary(sp), calInfo(sp))}
+   <div id="body-cal" hidden><div id="calBox">${calHtml(sp)}</div></div>
   </section>
 
   <div class="dfoot"${custom ? '' : ' hidden'}>
@@ -1154,6 +1178,8 @@ function openDetail(id){
  initDetailNav();
  loadExtra(sp);
  bindSeason(sp);
+ bindCal(sp);
+ loadAgreement(sp);
  document.getElementById('back').onclick = ()=>setTab(lastTab);
  const sheet = document.getElementById('dialSheet'), opener = document.getElementById('dialBtn');
  const closeSheet = ()=>{ sheet.hidden = true; document.body.classList.remove('locked'); document.removeEventListener('keydown', onKey); opener.focus(); };
@@ -1292,6 +1318,7 @@ const MOTIF = {
  // luna e orbita: la marea
  tide:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/><path d="M132 52 A52 52 0 1 0 150 132 A40 40 0 1 1 132 52Z" fill="currentColor"/></svg>`,
  // calendario: i prossimi giorni
+ cal:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round"><path d="M30 150 L80 100 L115 125 L170 60"/><circle cx="170" cy="60" r="10" fill="currentColor"/><path d="M30 175h140" opacity=".6"/></g><g fill="currentColor"><circle cx="80" cy="100" r="8"/><circle cx="115" cy="125" r="8"/><circle cx="30" cy="150" r="8"/></g></svg>`,
  season:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="86" fill="none" stroke="currentColor" stroke-width="5"/><g fill="currentColor">${Array.from({length:12},(_, i)=>{const a=i*30*Math.PI/180, r=[26,22,16,12,10,8,8,10,16,22,28,30][i]; return `<circle cx="${(100+64*Math.sin(a)).toFixed(1)}" cy="${(100-64*Math.cos(a)).toFixed(1)}" r="${r/2.4}"/>`;}).join('')}</g></svg>`,
  week:`<svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"><rect x="22" y="36" width="156" height="142" rx="16"/><path d="M22 76h156M62 18v34M138 18v34"/></g><g fill="currentColor">${Array.from({length:12},(_, i)=>`<rect x="${40+(i%4)*34}" y="${92+Math.floor(i/4)*28}" width="18" height="14" rx="3"/>`).join('')}</g></svg>`
 };
@@ -1309,6 +1336,136 @@ const secToggle = (key, title, sub, summary, info='') => `<button class="shead s
  <span class="ssum" id="sum-${key}">${summary}</span>
  <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
  <p class="sinfo" id="info-${key}">${info}</p></button>`;
+// ---------- Sessioni reali e taratura ----------
+const sessions = () => store.get('surf.sessions', []);
+const spotSessions = sp => sessions().filter(x => x.spot_id === sp.id);
+function appAt(sp, iso){
+ const s = data[sp.id]; if (!s) return null;
+ const i = s.time.indexOf(iso.slice(0,13) + ':00'); if (i < 0) return null;
+ return evaluate(sp, s, i);
+}
+function openLog(sp){
+ const now = nowKey();
+ const wrap = document.createElement('div');
+ wrap.className = 'sheet'; wrap.id = 'logSheet';
+ wrap.innerHTML = `<div class="sheet-bg" data-close></div><div class="sheet-p form" role="dialog" aria-modal="true" aria-labelledby="logT">
+  <div class="sheet-h"><h2 id="logT">Com'era a ${esc(sp.name)}?</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
+  <p class="small muted" style="margin-top:4px">Serve a capire quanto l'app ci prende su questo spot. Bastano pochi secondi.</p>
+  <label>Quando<input type="datetime-local" id="lgWhen" value="${now.slice(0,13)}:00"></label>
+  <label>Onda reale a riva, in metri<input type="number" id="lgWave" inputmode="decimal" step="0.1" min="0" max="8" placeholder="es. 1.2"></label>
+  <label>Com'era, da 1 (da non uscire) a 5 (epico)</label><div class="qual" id="lgQual">${[1,2,3,4,5].map(n=>`<button type="button" data-q="${n}" aria-pressed="false">${n}</button>`).join('')}</div>
+  <label>Vento in acqua<select id="lgWind"><option value="">Non so</option><option>assente</option><option>offshore</option><option>laterale</option><option>onshore</option></select></label>
+  <label>Note<textarea id="lgNote" rows="2" placeholder="es. chiudeva sul reef, marea alta"></textarea></label>
+  <p class="err" id="lgErr" hidden></p>
+  <button class="pillbtn primary" id="lgSave" style="margin-top:16px">Salva sessione</button></div>`;
+ document.body.appendChild(wrap); document.body.classList.add('locked');
+ let q = null;
+ const close = ()=>{ wrap.remove(); document.body.classList.remove('locked'); };
+ wrap.addEventListener('click', e=>{
+  if (e.target.closest('[data-close]')) close();
+  const b = e.target.closest('[data-q]'); if (b){ q = +b.dataset.q; wrap.querySelectorAll('[data-q]').forEach(x=>x.setAttribute('aria-pressed', x===b)); }
+ });
+ wrap.querySelector('#lgSave').onclick = ()=>{
+  const when = wrap.querySelector('#lgWhen').value, wave = parseFloat(wrap.querySelector('#lgWave').value.replace(',', '.'));
+  const err = wrap.querySelector('#lgErr');
+  if (!when || isNaN(wave) || !q){ err.hidden = false; err.textContent = 'Servono almeno quando, onda reale e voto.'; return; }
+  const ev = appAt(sp, when);
+  const row = {data: when.slice(0,10), ora: when.slice(11,16), spot_id: sp.id,
+   punteggio_app: ev ? ev.score : '', onda_app_m: ev ? +ev.face.toFixed(2) : '', gain: sp.gain ?? 1,
+   onda_reale_m: wave, qualita_reale_1_5: q, vento_reale: wrap.querySelector('#lgWind').value,
+   vento_app: ev ? ev.windType : '', note: wrap.querySelector('#lgNote').value.trim()};
+  store.set('surf.sessions', [...sessions(), row]);
+  close(); openDetail(sp.id); openSection('cal', true);
+  document.getElementById('sec-cal')?.scrollIntoView({behavior:'smooth', block:'start'});
+ };
+ wrap.querySelector('#lgWave').focus();
+}
+const median = a => { const b = [...a].sort((x,y)=>x-y), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m-1]+b[m])/2) : null; };
+function calStats(sp){
+ const ss = spotSessions(sp), withApp = ss.filter(x => x.onda_app_m !== '' && x.onda_app_m > 0.15);
+ const ratios = withApp.map(x => x.onda_reale_m / (x.onda_app_m / (x.gain || 1)));
+ const gain = ratios.length ? median(ratios) : null;
+ const diffs = ss.filter(x => x.punteggio_app !== '').map(x => x.qualita_reale_1_5 - x.punteggio_app);
+ const bias = diffs.length ? diffs.reduce((a,b)=>a+b,0)/diffs.length : null;
+ const windMiss = ss.filter(x => x.vento_reale === 'onshore' && ['offshore','debole'].includes(x.vento_app)).length;
+ return {n: ss.length, nApp: withApp.length, gain, bias, windMiss, ss};
+}
+function calSummary(sp){ const st = calStats(sp); return st.n ? `<span><b>${st.n}</b>${st.n === 1 ? 'sessione' : 'sessioni'}</span>` : '<span>Nessuna sessione</span>'; }
+function calInfo(sp){
+ const st = calStats(sp);
+ if (!st.n) return 'Registra com\'era davvero per rendere il punteggio più preciso';
+ if (st.nApp < 3) return `Ancora ${3 - st.nApp} ${3 - st.nApp === 1 ? 'sessione' : 'sessioni'} per il primo suggerimento`;
+ const pct = Math.round((st.gain / (sp.gain ?? 1) - 1) * 100);
+ return Math.abs(pct) < 10 ? ((sp.gain ?? 1) !== 1 ? 'Correzione attiva: previsioni in linea con la realtà' : 'Le previsioni d\'onda qui sono in linea con la realtà') : `L'app ${pct < 0 ? 'sovrastima' : 'sottostima'} l'onda di circa il ${Math.abs(pct)}%`;
+}
+function calHtml(sp){
+ const st = calStats(sp), cur = sp.gain ?? 1;
+ let tips = '';
+ if (st.nApp >= 3){
+  const pct = Math.round((st.gain / cur - 1) * 100);
+  tips += Math.abs(pct) < 10
+   ? `<p><b>Onda:</b> ${cur !== 1 ? 'con la correzione attiva le previsioni' : 'le previsioni'} sono in linea con quello che hai trovato (scarto ${pct > 0 ? '+' : ''}${pct}%). Niente da correggere.</p>`
+   : `<p><b>Onda:</b> sulle tue ${st.nApp} sessioni l'app ${pct < 0 ? 'sovrastima' : 'sottostima'} l'onda a riva di circa il ${Math.abs(pct)}%. Correzione proposta: ×${st.gain.toFixed(2)}.</p>
+      <button class="pillbtn primary" id="calApply" style="margin-top:8px;width:auto">Applica la correzione</button>`;
+ } else tips += `<p>Servono almeno 3 sessioni con la previsione dell'app per proporre una correzione (ora ${st.nApp}).</p>`;
+ if (st.bias != null && st.n >= 3 && Math.abs(st.bias) >= 1)
+  tips += `<p style="margin-top:8px"><b>Punteggio:</b> in media il tuo voto è ${st.bias > 0 ? 'più alto' : 'più basso'} di ${Math.abs(st.bias).toFixed(1)} punti. ${st.bias > 0 ? 'Lo spot rende più di quanto pensi l\'app: forse la finestra di direzioni è troppo stretta.' : 'Lo spot rende meno: forse la finestra è troppo larga o il range di onda troppo basso.'}</p>`;
+ if (st.windMiss >= 2)
+  tips += `<p style="margin-top:8px"><b>Vento:</b> ${st.windMiss} volte l'app lo dava buono ma in acqua era onshore. Probabilmente la direzione offshore dello spot (ora da ${cardinal(sp.offshore)}) va corretta.</p>`;
+ const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m} m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
+ return `${tips || ''}
+  ${cur !== 1 ? `<p class="small" style="margin-top:10px">Correzione attiva su questo telefono: ×${cur.toFixed(2)}. Per usarla anche negli alert Telegram aggiungi <code>"gain": ${cur.toFixed(2)}</code> allo spot in spots.json. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}
+  ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px 'Barlow Condensed',sans-serif">Ultime sessioni</h3><div class="slist">${list}</div>` : ''}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+   <button class="pillbtn" id="calLog">✍️ Registra una sessione</button>
+   ${sessions().length ? '<button class="pillbtn" id="calExport">Esporta in sessioni.csv</button>' : ''}</div>
+  <p class="xs muted" id="calMsg" style="margin-top:8px">Le sessioni restano su questo telefono. Esportale in sessioni.csv su GitHub per non perderle.</p>`;
+}
+const CSV_COLS = ['data','ora','spot_id','punteggio_app','onda_app_m','onda_reale_m','qualita_reale_1_5','vento_reale','note'];
+function bindCal(sp){
+ const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
+ on('logOpen', ()=>openLog(sp)); on('calLog', ()=>openLog(sp));
+ on('calApply', ()=>{
+  const g = store.get('surf.gain', {}); g[sp.id] = +calStats(sp).gain.toFixed(2); store.set('surf.gain', g);
+  applyGains(); openDetail(sp.id); openSection('cal', true); renderAll();
+ });
+ on('calReset', ()=>{ const g = store.get('surf.gain', {}); delete g[sp.id]; store.set('surf.gain', g); sp.gain = baseSpots.find(b=>b.id===sp.id)?.gain; spots.forEach(x=>{ if (x.id===sp.id) x.gain = sp.gain; }); openDetail(sp.id); openSection('cal', true); renderAll(); });
+ on('calExport', async ()=>{
+  const q = v => { const t = String(v ?? ''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g,'""') + '"' : t; };
+  const txt = sessions().map(r => CSV_COLS.map(c => q(r[c])).join(',')).join('\n');
+  try{ await navigator.clipboard.writeText(txt); }catch(e){}
+  const h = location.hostname, pth = location.pathname.split('/').filter(Boolean);
+  const url = h.endsWith('.github.io') ? `https://github.com/${h.split('.')[0]}/${pth[0] || h}/edit/main/sessioni.csv` : null;
+  document.getElementById('calMsg').textContent = 'Righe copiate. Su GitHub incollale in fondo a sessioni.csv, dopo quelle già presenti, e fai Commit.';
+  if (url) window.open(url, '_blank', 'noopener');
+ });
+}
+
+// ---------- Accordo tra i modelli d'onda ----------
+const agreeCache = {};
+async function loadAgreement(sp){
+ const c = agreeCache[sp.id];
+ const draw = res => {
+  const H = res.hourly, keys = Object.keys(H).filter(k => k.startsWith('wave_height_'));
+  document.querySelectorAll('#v-detail [data-agree]').forEach(el => {
+   const day = el.dataset.agree, maxes = keys.map(k => {
+    let m = null; H.time.forEach((t,i)=>{ if (!t.startsWith(day)) return; const h = +t.slice(11,13); if (h < DAY_START || h > DAY_END) return; const v = H[k][i]; if (v != null) m = Math.max(m ?? 0, v); });
+    return m; }).filter(v => v != null);
+   if (maxes.length < 2){ el.innerHTML = ''; return; }
+   const lo = Math.min(...maxes), hi = Math.max(...maxes), mean = maxes.reduce((a,b)=>a+b,0)/maxes.length;
+   const spread = (hi - lo) / Math.max(mean, 0.4);
+   const [txt, col] = spread <= .25 ? ['modelli d\'accordo','var(--s3)'] : spread <= .5 ? ['modelli abbastanza d\'accordo','var(--s1)'] : ['modelli discordi','#C0504D'];
+   el.innerHTML = `<i style="--c:${col}"></i>${txt}`;
+   el.title = `Onda al largo secondo ${maxes.length} modelli: da ${lo.toFixed(1)} a ${hi.toFixed(1)} m`;
+  });
+ };
+ if (c && Date.now() - c.at < 3600000){ draw(c.res); return; }
+ try{
+  const res = await getJson(`https://marine-api.open-meteo.com/v1/marine?latitude=${sp.lat}&longitude=${sp.lon}&cell_selection=sea&timezone=${encodeURIComponent(TZ)}&forecast_days=7&hourly=wave_height&models=meteofrance_wave,ecmwf_wam025,ncep_gfswave025`);
+  agreeCache[sp.id] = {at:Date.now(), res}; draw(res);
+ }catch(e){}
+}
+
 function openSection(key, open){
  const sec = document.getElementById('sec-' + key); if (!sec) return;
  const btn = sec.querySelector('[data-toggle]'), body = document.getElementById('body-' + key);
