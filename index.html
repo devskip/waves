@@ -448,7 +448,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <h2>Come</h2>
  <div class="card">
   <div class="srow"><div><p style="font-weight:600">Notifiche dell'app</p><p class="xs muted" id="notifState"></p></div><button class="pillbtn" id="notifBtn">Attiva</button></div>
-  <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot con "alert": true in spots.json. La loro soglia è separata: è la variabile SURF_THRESHOLD su GitHub (se non c'è vale 3).</p></div></div>
+  <div class="srow"><div><p style="font-weight:600">Telegram</p><p class="xs muted">Arrivano dal bot anche con l'app chiusa, per gli spot ufficiali con gli alert attivati dall'amministratore. Per ora vanno a una sola chat, con una soglia separata da quella qui sopra.</p></div></div>
   <div class="srow"><div><p style="font-weight:600">Solo ore di luce</p><p class="xs muted">Dalle 7 alle 19</p></div></div>
  </div>
  <h2>Spot seguiti</h2>
@@ -487,7 +487,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  </div>
  <p class="err" id="addErr" hidden></p>
  <button class="pillbtn primary" id="addSave" style="margin-top:24px">Salva spot</button>
- <p class="xs muted" style="margin-top:10px">Lo spot resta su questo telefono. Dal suo dettaglio puoi copiare la configurazione da incollare in spots.json per riceverne gli alert su Telegram.</p>
+ <p class="xs muted" style="margin-top:10px">Lo spot è personale: lo vedi solo tu. Con l'account (Alert › Account) si salva anche online e dal suo dettaglio puoi proporlo alla community.</p>
 </section>
 
 </main>
@@ -513,8 +513,8 @@ const ICON = {
 
 // ---------- Stato ----------
 // ================= Dati: unico punto di lettura e scrittura =================
-// Tutto passa da qui. Oggi salva sul telefono (IndexedDB, con localStorage come riserva);
-// domani lo stesso punto potrà sincronizzare con il database remoto senza toccare il resto dell'app.
+// Tutto passa da qui: salva sul telefono (IndexedDB, con localStorage come riserva)
+// e, con l'account, avvisa Cloud che sincronizza con Supabase.
 //  - Data.prefs: impostazioni e piccoli dati (preferito, ordine, soglia, correzioni…)
 //  - Data.sessions: sessioni registrate
 //  - Data.spots: spot personali
@@ -590,7 +590,7 @@ const Data = (() => {
    save(sp){ const l = api.spots.all(), i = l.findIndex(x => x.id === sp.id); api.set('surf.customSpots', i < 0 ? [...l, sp] : l.map(x => x.id === sp.id ? sp : x)); },
    remove(id){ api.set('surf.customSpots', api.spots.all().filter(x => x.id !== id)); window.__cloudRemoveSpot?.(id); }
   },
-  // copia completa dei dati, per backup e per il futuro trasferimento sul database remoto
+  // copia completa dei dati, per il backup
   exportAll(){ const o = {}; for (const [k, v] of mem) if (!HEAVY(k)) o[k] = v; return {app:'sinis-waves', exported:new Date().toISOString(), data:o}; }
  };
  function newId(){ return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); }
@@ -730,7 +730,7 @@ async function loadSpots(){
  spots = [...baseSpots, ...mine];
  applyGains();
 }
-// correzioni dalla taratura salvate su questo telefono: valgono sopra a quelle di spots.json
+// correzioni personali dalla taratura: valgono sopra a quella dello spot
 function applyGains(){
  const g = store.get('surf.gain', {});
  spots.forEach(sp => { if (g[sp.id] != null) sp.gain = g[sp.id]; });
@@ -1541,14 +1541,12 @@ function calHtml(sp){
   tips += `<p style="margin-top:8px"><b>Vento:</b> ${st.windMiss} volte l'app lo dava buono ma in acqua era onshore. Probabilmente la direzione offshore dello spot (ora da ${cardinal(sp.offshore)}) va corretta.</p>`;
  const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m} m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''}${x.affollamento_1_4 ? ', gente ' + x.affollamento_1_4 + '/4' : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
  return `${tips || ''}
-  ${cur !== 1 ? `<p class="small" style="margin-top:10px">Correzione attiva su questo telefono: ×${cur.toFixed(2)}. Per usarla anche negli alert Telegram aggiungi <code>"gain": ${cur.toFixed(2)}</code> allo spot in spots.json. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}
+  ${cur !== 1 ? `<p class="small" style="margin-top:10px">Correzione personale attiva: ×${cur.toFixed(2)}. Vale per le tue previsioni${Cloud.user ? ' su tutti i tuoi dispositivi' : ' su questo telefono'}; gli alert Telegram usano ancora la taratura ufficiale dello spot. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}
   ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px 'Barlow Condensed',sans-serif">Ultime sessioni</h3><div class="slist">${list}</div>` : ''}
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-   <button class="pillbtn" id="calLog">✍️ Registra una sessione</button>
-   ${sessions().length ? '<button class="pillbtn" id="calExport">Esporta in sessioni.csv</button>' : ''}</div>
-  <p class="xs muted" id="calMsg" style="margin-top:8px">Le sessioni restano su questo telefono. Esportale in sessioni.csv su GitHub per non perderle.</p>`;
+   <button class="pillbtn" id="calLog">✍️ Registra una sessione</button></div>
+  <p class="xs muted" style="margin-top:8px">${Cloud.user ? 'Le sessioni sono salvate anche online, nel tuo account.' : 'Le sessioni restano su questo telefono: entra con l\'account (Alert › Account) per salvarle anche online.'}</p>`;
 }
-const CSV_COLS = ['data','ora','spot_id','punteggio_app','onda_app_m','onda_reale_m','qualita_reale_1_5','vento_reale','affollamento_1_4','note'];
 function bindCal(sp){
  const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
  on('logOpen', ()=>openLog(sp)); on('calLog', ()=>openLog(sp));
@@ -1557,15 +1555,6 @@ function bindCal(sp){
   applyGains(); openDetail(sp.id); openSection('cal', true); renderAll();
  });
  on('calReset', ()=>{ const g = store.get('surf.gain', {}); delete g[sp.id]; store.set('surf.gain', g); sp.gain = baseSpots.find(b=>b.id===sp.id)?.gain; spots.forEach(x=>{ if (x.id===sp.id) x.gain = sp.gain; }); openDetail(sp.id); openSection('cal', true); renderAll(); });
- on('calExport', async ()=>{
-  const q = v => { const t = String(v ?? ''); return /[",\n]/.test(t) ? '"' + t.replace(/"/g,'""') + '"' : t; };
-  const txt = sessions().map(r => CSV_COLS.map(c => q(r[c])).join(',')).join('\n');
-  try{ await navigator.clipboard.writeText(txt); }catch(e){}
-  const h = location.hostname, pth = location.pathname.split('/').filter(Boolean);
-  const url = h.endsWith('.github.io') ? `https://github.com/${h.split('.')[0]}/${pth[0] || h}/edit/main/sessioni.csv` : null;
-  document.getElementById('calMsg').textContent = 'Righe copiate. Su GitHub incollale in fondo a sessioni.csv, dopo quelle già presenti, e fai Commit.';
-  if (url) window.open(url, '_blank', 'noopener');
- });
 }
 
 // ================= Cloud: account e sincronizzazione con Supabase =================
