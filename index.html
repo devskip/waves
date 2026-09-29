@@ -478,6 +478,7 @@ nav.tabs button:active svg{transform:scale(.9)}
 .pcard .srow{padding-left:0;padding-right:0}
 .dsec .field{border-color:rgba(19,40,59,.2)}
 .dsec .opts.two button[aria-pressed="true"]{background:#fff}
+.dsec.pm .motif{width:72px;height:72px;right:16px;top:16px;opacity:.22}
 .dsec .addspot{margin-top:12px;background:rgba(255,255,255,.72);border-color:rgba(19,40,59,.28)}
 .dsec .bempty{padding-bottom:14px}
 @media (prefers-reduced-motion:reduce){.spin,.dot.busy{animation:none}.toast,button,a.pillbtn{transition:none}}
@@ -557,26 +558,26 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <h1 class="sub">Profilo</h1>
  <p class="muted small" style="margin-top:4px">Il tuo account e quello che serve per consigliarti la tavola giusta.</p>
 
- <section class="dsec open t-now">
-  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="70" r="38" fill="currentColor"/><path d="M26 178c0-42 34-68 74-68s74 26 74 68z" fill="currentColor"/></svg>
+ <section class="dsec open pm t-now">
+  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="100" cy="100" r="84" stroke-width="6"/><circle cx="100" cy="82" r="24" stroke-width="6"/><path d="M56 152C60 124 80 112 100 112C120 112 140 124 144 152" stroke-width="6"/></svg>
   <div class="shead"><h2>Account</h2><p class="xs" style="margin-top:2px">Per ritrovare tutto su ogni dispositivo</p></div>
   <div class="pcard" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div>
  </section>
 
- <section class="dsec open t-tide">
-  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><path d="M8 132c26-42 56-42 82 0s56 42 82 0l20-22v82H8z" fill="currentColor"/><path d="M8 92c26-42 56-42 82 0s56 42 82 0" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/></svg>
+ <section class="dsec open pm t-tide">
+  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 62 C27.8 26 40.2 26 56 62 C71.8 98 84.2 98 100 62 C115.8 26 128.2 26 144 62 C159.8 98 172.2 98 188 62" stroke-width="7"/><path d="M12 100 C27.8 64 40.2 64 56 100 C71.8 136 84.2 136 100 100 C115.8 64 128.2 64 144 100 C159.8 136 172.2 136 188 100" stroke-width="7"/><path d="M12 138 C27.8 102 40.2 102 56 138 C71.8 174 84.2 174 100 138 C115.8 102 128.2 102 144 138 C159.8 174 172.2 174 188 138" stroke-width="7"/></svg>
   <div class="shead"><h2>Il tuo surf</h2><p class="xs" style="margin-top:2px">Livello e peso, per i litri giusti</p></div>
   <div class="pcard" id="meSurf"></div>
  </section>
 
- <section class="dsec open t-wx">
-  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g transform="rotate(35 100 100)"><path d="M100 8C132 50 138 122 130 172C126 192 113 198 100 198C87 198 74 192 70 172C62 122 68 50 100 8Z" fill="currentColor"/><path d="M100 30V176" stroke="var(--sbg)" stroke-width="6" stroke-linecap="round"/></g></svg>
+ <section class="dsec open pm t-wx">
+  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(100 100) rotate(38) scale(2) translate(-20 -50)"><path d="M20 2C31 5 34 28 34 50C34 74 30 97 20 98C10 97 6 74 6 50C6 28 9 5 20 2Z" stroke-width="3.2"/><path d="M20 12L20 88" stroke-width="3.2"/></g></svg>
   <div class="shead"><h2>Le tue tavole</h2><p class="xs" style="margin-top:2px">Quelle che porti in acqua</p></div>
   <div id="quiver"></div>
  </section>
 
- <section class="dsec open t-cal">
-  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><path d="M58 150h96a30 30 0 0 0 0-60 44 44 0 0 0-84-10 34 34 0 0 0-12 70z" fill="currentColor"/></svg>
+ <section class="dsec open pm t-cal">
+  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M58 152C28 152 20 108 54 100C50 62 100 48 116 80C146 60 184 84 162 112C192 116 188 152 156 152Z" stroke-width="6.5"/><path d="M100 132L100 92" stroke-width="6.5"/><path d="M82 108L100 90L118 108" stroke-width="6.5"/></svg>
   <div class="shead"><h2>I tuoi dati</h2><p class="xs" style="margin-top:2px">Una copia di sicurezza, quando serve</p></div>
   <div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
  </section>
