@@ -1,97 +1,84 @@
-# Onde
+# Sinis Waves
 
-App di previsioni surf per gli spot della Sardegna, con alert su Telegram. Tutto gratuito: dati Open-Meteo, hosting GitHub Pages, alert con GitHub Actions, mappa Windy incorporata.
+App web per previsioni surf e alert sugli spot del Sinis (Sardegna). Calcola un punteggio da 0 a 5 per ogni spot combinando onda a riva, periodo e vento. Si installa sulla Home dell'iPhone da Safari.
 
-## Cosa c'è nel repository
+**App:** https://devskip.github.io/waves/
 
-| File | A cosa serve |
-|---|---|
-| `index.html` | L'app: schede Spot, Mappa e Alert, dettaglio di ogni spot a 7 giorni |
-| `spots.json` | Gli spot e i loro parametri, letti sia dall'app sia dagli alert |
-| `alert_telegram.py` | Controlla le previsioni e invia i messaggi Telegram |
-| `.github/workflows/alert.yml` | Esegue lo script ogni 3 ore |
-| `sessioni.csv` | Diario delle sessioni reali, per tarare gli spot |
-| `alert_state.json` | Creato in automatico: ricorda gli avvisi già inviati |
+Tutto gira su servizi gratuiti: GitHub Pages (hosting), GitHub Actions (automazioni), Supabase (account e dati), Brevo (email di accesso), Open-Meteo e Copernicus Marine (dati).
 
-## 1. Crea il repository
+## Come funziona
 
-1. Su github.com crea un nuovo repository, per esempio `onde`. Pubblico va bene: dati e codice non sono riservati, e i segreti stanno altrove.
-2. Carica tutti i file di questa cartella, compresa `.github/workflows/alert.yml` (con "Add file › Upload files" trascina la cartella intera, oppure usa git).
+- **L'app** (`index.html`) legge previsioni e meteo da Open-Meteo, le misure delle boe da `buoy.json` e il catalogo degli spot noti da `catalog.json`. I dati personali restano sul telefono (IndexedDB) e, con l'account, si sincronizzano su Supabase.
+- **Le automazioni** su GitHub Actions aggiornano i file delle boe e del catalogo e inviano gli alert Telegram.
+- **Supabase** conserva profili, spot, preferenze e sessioni, con regole che limitano ogni utente ai propri dati. L'accesso avviene con un codice di 6 cifre inviato via email tramite Brevo.
 
-## 2. Crea il bot Telegram
+## File del repository
 
-1. In Telegram apri **@BotFather**, scrivi `/newbot` e scegli nome e username. Ti dà un **token** tipo `123456:ABC...`.
-2. Apri la chat con il tuo nuovo bot e scrivigli un messaggio qualsiasi.
-3. Nel browser apri `https://api.telegram.org/bot<TOKEN>/getUpdates` sostituendo il token. Nel testo cerca `"chat":{"id":` e copia il numero: è il **chat ID**.
-   Per mandare gli alert a un gruppo, aggiungi il bot al gruppo, scrivi un messaggio e ripeti: l'ID del gruppo inizia con `-`.
+I file marcati *generato* li scrivono le automazioni: non vanno modificati a mano.
 
-## 3. Collega Telegram al repository
+| File | Tipo | Contenuto |
+| --- | --- | --- |
+| `index.html` | App | Interfaccia, calcoli, mappa, accesso e sincronizzazione |
+| `spots.json` | Dati di riserva | Spot ufficiali di partenza, usati se il database non risponde |
+| `apple-touch-icon.png` | Immagine | Icona dell'app sulla Home (180×180) |
+| `sinis-waves-logo.svg` | Immagine | Logo vettoriale |
+| `supabase_schema.sql` | Database | Struttura completa del database, rieseguibile |
+| `alert_telegram.py` | Script | Calcola i punteggi e invia gli alert Telegram |
+| `alert_state.json` | Generato | Alert già inviati, per non ripeterli |
+| `build_catalog.py` | Script | Scarica da OpenStreetMap gli spot di surf noti |
+| `catalog.json` | Generato | Catalogo degli spot noti mostrato sulla mappa |
+| `build_buoy.py` | Script | Scarica da Copernicus le misure delle boe intorno alla Sardegna |
+| `buoy.json` | Generato | Ultime 48 ore delle boe entro 300 km dal Sinis |
+| `buoy_history.csv` | Generato | Storico orario: misura della boa contro modello |
+| `sessioni.csv` | Dati | Vecchio registro sessioni (ora le sessioni stanno nel database) |
 
-In GitHub, nel repository: **Settings › Secrets and variables › Actions**.
+## Automazioni
 
-- Scheda *Secrets*, "New repository secret":
-  - `TELEGRAM_TOKEN` = il token del bot
-  - `TELEGRAM_CHAT_ID` = il chat ID
-- Scheda *Variables* (facoltativo): `SURF_THRESHOLD` = soglia di punteggio, per esempio `3` o `3.5`. Se manca vale 3.
+Si lanciano anche a mano da **Actions › nome › Run workflow**.
 
-Il token non va mai scritto nei file del repository.
+| Automazione | Quando gira | Cosa fa |
+| --- | --- | --- |
+| Boe | Ogni ora al minuto 20 | `build_buoy.py` → `buoy.json`, `buoy_history.csv` |
+| Catalogo spot | Giorno 1 del mese, 04:00 UTC | `build_catalog.py` → `catalog.json` |
+| Alert Telegram | Secondo l'orario nel workflow | `alert_telegram.py` → messaggi e `alert_state.json` |
 
-## 4. Prova gli alert
+Se un'automazione fallisce sul "push": **Settings › Actions › General › Workflow permissions › Read and write**.
 
-1. Scheda **Actions**: se chiede di abilitare i workflow, conferma.
-2. Apri "Alert onde" › **Run workflow**.
-3. Dopo circa un minuto il job diventa verde. Se ci sono onde sopra soglia arriva il messaggio su Telegram, altrimenti nel log trovi "Nessun nuovo avviso".
+GitHub sospende i workflow programmati dopo 60 giorni senza attività nel repository; i commit automatici di solito bastano, altrimenti si riattivano dalla scheda Actions.
 
-Da qui in poi parte da solo ogni 3 ore. Ricevi un messaggio solo per un giorno nuovo sopra soglia o quando il punteggio di un giorno già segnalato migliora.
+## Segreti
 
-Nota: GitHub sospende i workflow programmati dopo 60 giorni senza attività nel repository. I commit di `alert_state.json` di solito bastano a tenerlo attivo; se ricevi una mail di sospensione, riattivalo dalla scheda Actions.
+Nessun segreto sta nel codice. In **Settings › Secrets and variables › Actions**:
 
-## 5. Pubblica l'app
+- `TELEGRAM_TOKEN`, `TELEGRAM_CHAT_ID`: bot e chat degli alert
+- `COPERNICUSMARINE_SERVICE_USERNAME`, `COPERNICUSMARINE_SERVICE_PASSWORD`: dati delle boe
+- `SURF_THRESHOLD` (facoltativo): soglia degli alert, di serie 3
 
-1. **Settings › Pages**: in "Source" scegli *Deploy from a branch*, branch `main`, cartella `/ (root)`, Save.
-2. Dopo un paio di minuti l'app è su `https://<tuo-utente>.github.io/onde/`.
-3. Dal telefono aprila e usa "Aggiungi a schermata Home" per averla come un'app.
+Nell'app c'è solo la chiave pubblica di Supabase (`sb_publishable_…`), protetta dalle regole del database. La chiave segreta (`sb_secret_…`) non va mai messa nel repository.
 
-Le notifiche del browser funzionano solo con l'app aperta: per gli avvisi veri c'è Telegram.
+## Ripartire da zero
 
-## 6. Taratura degli spot
+1. Crea un repository pubblico e carica tutti i file, compresa `.github/workflows/`.
+2. **Settings › Pages**: Deploy from a branch, `main`, `/ (root)`.
+3. **Settings › Actions › General**: Workflow permissions su Read and write.
+4. Aggiungi i segreti elencati sopra.
+5. Su Supabase crea un progetto Free (Central EU) ed esegui `supabase_schema.sql` nel SQL Editor.
+6. Se il progetto Supabase è nuovo, aggiorna indirizzo e chiave pubblica in `index.html` (`SUPA_URL`, `SUPA_KEY`) e in `alert_telegram.py` (`SUPABASE_URL`, `SUPABASE_KEY`).
+7. Supabase › Authentication › URL Configuration: Site URL e Redirect URL con l'indirizzo dell'app (`…/waves/` e `…/waves/**`).
+8. Brevo: verifica il mittente e genera una chiave SMTP; in Supabase attiva il custom SMTP (`smtp-relay.brevo.com`, porta 587) e usa `{{ .Token }}` nei modelli "Magic Link" e "Confirm sign up".
+9. Lancia a mano Catalogo spot e Boe e controlla che compaiano `catalog.json` e `buoy.json`.
+10. Accedi dall'app (Alert › Account) e rendi il tuo profilo amministratore:
 
-La precisione dipende dai parametri in `spots.json`, che per ora sono indicativi.
-
-| Campo | Significato |
-|---|---|
-| `lat`, `lon` | Un punto **in mare** davanti allo spot, qualche centinaio di metri al largo. Se l'app dice "Nessun dato", spostalo più al largo |
-| `facing` | Direzione da cui arriva lo swell ideale (0 = N, 90 = E, 180 = S, 270 = O) |
-| `window` | Quanti gradi di scarto dallo swell ideale lo spot accetta ancora |
-| `offshore` | Direzione da cui soffia il vento offshore ideale |
-| `min`, `max` | Onda surfabile a riva, in metri |
-| `minPeriod` | Periodo minimo, in secondi, perché lo spot lavori bene |
-| `alert` | `true` se lo spot deve comparire negli alert Telegram |
-
-Come procedere, per 3-4 settimane:
-
-1. Dopo ogni sessione, o anche solo guardando lo spot, aggiungi una riga a `sessioni.csv`: cosa diceva l'app e com'era davvero.
-2. Ogni settimana guarda le differenze:
-   - l'app sovrastima sempre l'onda → alza `min` e `max` oppure restringi `window`
-   - lo spot funzionava ma l'app lo dava piatto → allarga `window` o correggi `facing`
-   - era rovinato dal vento ma l'app lo dava buono → correggi `offshore`
-3. Modifica `spots.json` direttamente da GitHub (icona matita): app e alert usano subito i nuovi valori.
-
-Il punteggio è calcolato in modo identico in `index.html` (funzione `evaluate`) e in `alert_telegram.py`: se cambi la formula, cambiala in entrambi.
-
-## Aggiungere uno spot
-
-Copia una riga in `spots.json`, dai un `id` unico senza spazi e compila i campi. Dall'app puoi anche creare spot personali, ma restano solo sul dispositivo e non ricevono gli alert Telegram.
-
-## Mappa Windy
-
-Il widget è gratuito e si configura su windy.com/-Embed-widget-on-page/widgets. Se vuoi cambiare zoom, zona o livello mostrato, copia il nuovo indirizzo dell'iframe nella costante `WINDY_URL` in `index.html`.
-
-## Prova in locale
-
-```
-python3 -m http.server 8000     # poi apri http://localhost:8000
-python3 alert_telegram.py --prova   # stampa gli alert senza inviarli
+```sql
+update public.profiles set is_admin = true
+where id = (select id from auth.users where email = 'LA-TUA-EMAIL');
 ```
 
-L'app va aperta tramite un server (anche quello qui sopra), non con doppio clic sul file, perché deve leggere `spots.json`.
+## Fonti e crediti
+
+- Previsioni onde, vento, meteo e marea: [Open-Meteo](https://open-meteo.com) (gratuito per uso non commerciale)
+- Misure delle boe: [Copernicus Marine Service](https://marine.copernicus.eu)
+- Spot noti: © contributori [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
+- Sfondo mappa: Esri World Light Gray
+- Onde animate: embed [Windy](https://www.windy.com)
+- Librerie: Leaflet, Leaflet.markercluster, supabase-js
