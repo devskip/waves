@@ -7,11 +7,13 @@ vanno nei segreti del repository COPERNICUSMARINE_SERVICE_USERNAME e COPERNICUSM
 
 Le boe non sono scritte a mano: lo script legge l'indice dei file "latest" e tiene le piattaforme
 con misure d'onda recenti nei mari intorno alla Sardegna (per esempio la boa Météo-France "Sardaigne",
-al largo della costa ovest)."""
-import csv, glob, io, json, math, os, sys
+al largo della costa ovest).
+
+Tiene anche buoy_history.csv: lo storico ora per ora di ogni boa, misura contro modello Open-Meteo
+nello stesso punto. Ogni run aggiunge le ore nuove e aggiorna quelle già presenti, senza cancellare niente."""
+import csv, glob, io, json, math, os, sys, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
 
-# prima il prodotto del Mediterraneo, poi quello globale (alcune boe, come "Sardaigne", potrebbero stare solo lì)
 DATASETS = ["cmems_obs-ins_med_phybgcwav_mynrt_na_irr"]
 DATASET = DATASETS[0]
 HOME = (40.0, 8.35)                                   # Sinis, davanti a Capo Mannu
@@ -22,6 +24,8 @@ HOURS = 48
 HS_CODES = ("VHM0", "VAVH", "VTDH", "VGHS", "VCAR", "VHZA")
 NAMES = {"6101035": "Boa Sardegna (Météo-France)", "6101031": "Boa Ajaccio", "6101032": "Boa Vecchio",
          "6100023": "Boa Bonifacio", "6100295": "Boa Alistro", "6101033": "Boa Calvi"}
+HISTORY = "buoy_history.csv"
+HCOLS = ["buoy_id", "name", "lat", "lon", "time", "obs_hs", "obs_tp", "obs_dir", "mod_hs", "mod_tp", "mod_dir"]
 
 
 def log(m):
@@ -39,6 +43,50 @@ def write(buoys, via):
                source="Copernicus Marine In Situ" if buoys else None, via=via, buoys=buoys)
     with open("buoy.json", "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+
+
+def model_at(lat, lon):
+    """Onda del modello Open-Meteo nel punto della boa, ora per ora (chiave: 'AAAA-MM-GGTHH')."""
+    q = urllib.parse.urlencode(dict(latitude=lat, longitude=lon, cell_selection="sea", timezone="GMT",
+                                    past_days=3, forecast_days=1, hourly="wave_height,wave_period,wave_direction"))
+    req = urllib.request.Request(f"https://marine-api.open-meteo.com/v1/marine?{q}",
+                                 headers={"User-Agent": "sinis-waves-buoy/1.1"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        h = json.load(r)["hourly"]
+    return {t[:13]: (h["wave_height"][i], h["wave_period"][i], h["wave_direction"][i]) for i, t in enumerate(h["time"])}
+
+
+def save_history(buoys):
+    """Aggiunge a buoy_history.csv le ore misurate, con accanto il valore del modello."""
+    rows = {}
+    if os.path.exists(HISTORY):
+        with open(HISTORY, newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                rows[(r["buoy_id"], r["time"])] = r
+    before = len(rows)
+    blank = lambda x: "" if x is None else x
+    for b in buoys:
+        try:
+            mod = model_at(b["lat"], b["lon"])
+        except Exception as ex:
+            log(f"  modello per la boa {b['id']} non disponibile ({ex}): salvo solo le misure")
+            mod = {}
+        for p in b["series"]:
+            old = rows.get((b["id"], p["t"]), {})
+            m = mod.get(p["t"][:13])
+            rows[(b["id"], p["t"])] = dict(
+                buoy_id=b["id"], name=b["name"] or "", lat=b["lat"], lon=b["lon"], time=p["t"],
+                obs_hs=blank(p["hs"]), obs_tp=blank(p["tp"]), obs_dir=blank(p["dir"]),
+                # se il modello ora non risponde, tengo il valore salvato da un run precedente
+                mod_hs=blank(m[0]) if m else old.get("mod_hs", ""),
+                mod_tp=blank(m[1]) if m else old.get("mod_tp", ""),
+                mod_dir=blank(m[2]) if m else old.get("mod_dir", ""))
+    with open(HISTORY, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=HCOLS)
+        w.writeheader()
+        for k in sorted(rows, key=lambda k: (k[1], k[0])):
+            w.writerow({c: rows[k].get(c, "") for c in HCOLS})
+    log(f"{HISTORY}: {len(rows)} righe ({len(rows) - before} nuove)")
 
 
 def read_index(path):
@@ -199,6 +247,12 @@ def main():
         log(f"Boa {b['id']} {b['name'] or ''} a {b['km']} km: {b['last']['hs']} m alle {b['last']['time']}")
     if not buoys:
         log("Nessuna misura valida nei file scaricati")
+        return
+    # 3) storico: un errore qui non deve mai compromettere buoy.json, già salvato sopra
+    try:
+        save_history(buoys[:4])
+    except Exception as ex:
+        log(f"{HISTORY} non aggiornato ({ex})")
 
 
 if __name__ == "__main__":
