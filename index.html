@@ -709,9 +709,25 @@ async function getJson(url, opts={}, tries=2, ms=20000){
   }finally{ clearTimeout(timer); }
  }
 }
+// spot ufficiali: dal database (visibili a tutti, anche senza account); spots.json resta come riserva
+// e per gli spot che non fossero ancora stati portati nel database
+const dbSpot = r => ({id: r.id, name: r.name, area: r.area || '', lat: +r.lat, lon: +r.lon,
+ beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined, facing: +r.facing, window: +r.window, offshore: +r.offshore,
+ min: +r.min, max: +r.max, minPeriod: +r.min_period, gain: +r.gain || 1, alert: !!r.alert_default, cams: r.cams || []});
 async function loadSpots(){
- baseSpots = (await getJson('spots.json', {cache:'no-cache'})).spots;
- spots = [...baseSpots, ...Data.spots.all()];
+ let fromDb = [], fromFile = [];
+ try{
+  const rows = await getJson(`${SUPA_URL}/rest/v1/spots?select=*&visibility=eq.public&order=created_at`, {headers:{apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`}}, 1, 15000);
+  fromDb = rows.map(dbSpot);
+  if (fromDb.length) store.set('surf.officialSpots', fromDb);
+ }catch(e){ fromDb = store.get('surf.officialSpots', []); console.warn('Spot dal database non disponibili', e); }
+ try{ fromFile = (await getJson('spots.json', {cache:'no-cache'}, 1)).spots; }catch(e){}
+ const ids = new Set(fromDb.map(s => s.id));
+ baseSpots = [...fromDb, ...fromFile.filter(s => !ids.has(s.id))];
+ if (!baseSpots.length) throw new Error('elenco spot non disponibile');
+ const official = new Set(baseSpots.map(s => s.id));
+ const mine = Data.spots.all().filter(s => !official.has(s.id));   // uno spot personale diventato ufficiale non si ripete
+ spots = [...baseSpots, ...mine];
  applyGains();
 }
 // correzioni dalla taratura salvate su questo telefono: valgono sopra a quelle di spots.json
@@ -1270,9 +1286,9 @@ function openDetail(id){
   </section>
 
   <div class="dfoot"${custom ? '' : ' hidden'}>
-  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="pillbtn primary" id="saveGit" style="width:auto">Salva nell'elenco (GitHub)</button><button class="pillbtn" id="copySpot">Copia per spots.json</button><button class="pillbtn" id="delSpot">Elimina spot</button>
+  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${!Cloud.user ? '' : Cloud.admin ? '<button class="pillbtn primary" id="pubSpot" style="width:auto">Pubblica come spot ufficiale</button>' : sp.visibility === 'proposed' ? '<span class="small muted" style="align-self:center">Proposto alla community: in attesa di approvazione</span>' : '<button class="pillbtn primary" id="propSpot" style="width:auto">Proponi alla community</button>'}<button class="pillbtn" id="delSpot">Elimina spot</button>
   <a class="pillbtn" href="https://www.openstreetmap.org/edit#map=18/${beach(sp).lat}/${beach(sp).lon}" target="_blank" rel="noopener" style="text-decoration:none">Segnalalo su OpenStreetMap ↗</a></div>
-  <p class="xs muted" id="copyMsg" style="margin-top:8px">Per gli alert Telegram incolla la configurazione in spots.json.</p>` : ''}
+  <p class="xs muted" id="copyMsg" style="margin-top:8px">${Cloud.user ? 'Lo spot è personale: lo vedi solo tu, su tutti i tuoi dispositivi.' : 'Entra con l\'account (Alert › Account) per salvarlo online e poterlo condividere.'}</p>` : ''}
   </div>`;
  showView('detail');
  initDetailNav();
@@ -1296,16 +1312,10 @@ function openDetail(id){
    t.textContent = on ? `Alert attivi: ti avvisiamo quando ${sp.name} arriva a ${threshold}/5.` : 'Alert disattivati per questo spot.';
    h.appendChild(t); setTimeout(()=>t.remove(), 3500); }
  };
- const repo = (()=>{ const h = location.hostname, p = location.pathname.split('/').filter(Boolean);
-  return h.endsWith('.github.io') ? `https://github.com/${h.split('.')[0]}/${p[0] || h}/edit/main/spots.json` : null; })();
- const sg = document.getElementById('saveGit');
- if (sg) sg.onclick = async ()=>{
-  const txt = ',\n  ' + JSON.stringify({...sp, id: slug(sp.name) || sp.id, area: sp.area === 'Spot personale' ? 'I miei spot' : sp.area, alert:true});
-  const msg = document.getElementById('copyMsg');
-  try{ await navigator.clipboard.writeText(txt); }catch(e){}
-  msg.textContent = "Riga copiata. Si apre spots.json su GitHub: incollala subito prima dell'ultima riga con ] e fai Commit. Poi da questo telefono puoi eliminare la copia personale.";
-  if (repo) window.open(repo, '_blank', 'noopener'); else msg.textContent = txt;
- };
+ const msgEl = () => document.getElementById('copyMsg');
+ const pub = document.getElementById('pubSpot'), prop = document.getElementById('propSpot');
+ if (pub) pub.onclick = async ()=>{ try{ await Cloud.setVisibility(id, 'public'); baseSpots = []; await refresh(); openDetail(id); }catch(e){ msgEl().textContent = 'Non riuscito: ' + e.message; } };
+ if (prop) prop.onclick = async ()=>{ try{ await Cloud.setVisibility(id, 'proposed'); openDetail(id); }catch(e){ msgEl().textContent = 'Non riuscito: ' + e.message; } };
  const ca = document.getElementById('camAdd');
  if (ca) ca.onclick = ()=>{
   const url = prompt('Incolla il link della webcam'); if (!url || !/^https?:\/\//.test(url.trim())) return;
@@ -1317,13 +1327,6 @@ function openDetail(id){
   Data.spots.save(list[i]);
   spots = spots.map(x => x.id === id ? list[i] : x);
   openDetail(id);
- };
- const cp = document.getElementById('copySpot');
- if (cp) cp.onclick = async ()=>{
-  const txt = ',\n  ' + JSON.stringify({...sp, id: slug(sp.name) || sp.id, alert:true});
-  const msg = document.getElementById('copyMsg');
-  try{ await navigator.clipboard.writeText(txt); msg.textContent = 'Copiato. Su GitHub apri spots.json, matita, incolla prima della riga con ] e fai il commit.'; }
-  catch(e){ msg.textContent = txt; }
  };
  const del = document.getElementById('delSpot');
  if (del) del.onclick = ()=>{
@@ -1573,7 +1576,8 @@ const SUPA_URL = 'https://djicqanyclbrfzhxlsxm.supabase.co';
 const SUPA_KEY = 'sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf';
 const Cloud = (() => {
  let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null;
- const api = {ready:false, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
+ let admin = false;
+ const api = {ready:false, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
  const SYNC_KEYS = ['surf.sessions','surf.customSpots','surf.favorite','surf.followed','surf.order','surf.gain'];
  const isUuid = v => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || '');
  // --- conversioni tra formato del telefono e formato del database ---
@@ -1591,7 +1595,7 @@ const Cloud = (() => {
   affollamento_1_4: r.crowd ?? '', note: r.note || '', created: r.created_at}; };
  const spotOut = x => ({id: x.id, name: x.name, area: x.area || null, lat: x.lat, lon: x.lon, beach_lat: x.beachLat ?? null, beach_lon: x.beachLon ?? null,
   facing: x.facing, window: x.window, offshore: x.offshore, min: x.min, max: x.max, min_period: x.minPeriod,
-  cams: x.cams || [], visibility: 'private', owner: user.id});
+  cams: x.cams || [], owner: user.id});
  const spotIn = r => ({id: r.id, name: r.name, area: r.area || 'Spot personale', lat: r.lat, lon: r.lon, beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined,
   facing: +r.facing, window: +r.window, offshore: +r.offshore, min: +r.min, max: +r.max, minPeriod: +r.min_period, alert: true, cams: r.cams || []});
  const userSpotRows = () => {
@@ -1605,12 +1609,26 @@ const Cloud = (() => {
   if (!window.supabase?.createClient){ status(); return; }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
   try{ const {data} = await sb.auth.getSession(); user = data?.session?.user || null; }catch(e){ user = null; }
-  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; status(); if (user && user.id !== was) api.sync(); });
+  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; if (!user) admin = false; status(); if (user && user.id !== was){ api.checkAdmin(); api.sync(); } });
   api.ready = true;
   window.__cloudTouch = k => { if (user && SYNC_KEYS.includes(k)){ clearTimeout(timer); timer = setTimeout(() => api.push(), 2500); } };
   window.__cloudRemoveSpot = id => { if (user && sb) sb.from('spots').delete().eq('id', id).eq('owner', user.id).then(()=>{}); };
   status();
-  if (user) api.sync();
+  if (user){ api.checkAdmin(); api.sync(); }
+ };
+ api.checkAdmin = async () => {
+  try{ const {data} = await sb.from('profiles').select('is_admin').eq('id', user.id).single(); admin = !!data?.is_admin; }catch(e){ admin = false; }
+  status();
+ };
+ // proporre uno spot alla community (chiunque) o renderlo ufficiale (solo amministratore)
+ api.setVisibility = async (id, vis) => {
+  if (!user) throw new Error('serve l\'accesso');
+  await api.push();   // prima mi assicuro che lo spot sia nel database
+  const {error} = await sb.from('spots').update({visibility: vis, updated_at: new Date().toISOString()}).eq('id', id);
+  if (error) throw error;
+  const list = Data.spots.all();
+  if (vis === 'public') Data.set('surf.customSpots', list.filter(x => x.id !== id));   // ora è tra gli ufficiali
+  else Data.set('surf.customSpots', list.map(x => x.id === id ? {...x, visibility: vis} : x));
  };
  // accesso con codice via email: funziona anche dentro l'app salvata sulla Home (il link aprirebbe Safari)
  api.sendCode = async email => {
@@ -1640,7 +1658,8 @@ const Cloud = (() => {
   if (!user || busy) return;
   busy = true; lastErr = null;
   try{
-   const mine = Data.spots.all();
+   const official = new Set(baseSpots.map(b => b.id));
+   const mine = Data.spots.all().filter(x => !official.has(x.id) && x.visibility !== 'public');
    if (mine.length){ const {error} = await sb.from('spots').upsert(mine.map(spotOut)); if (error) throw error; }
    // solo spot che il database conosce (ufficiali e miei): altrimenti il collegamento fallirebbe
    const known = await sb.from('spots').select('id'); if (known.error) throw known.error;
