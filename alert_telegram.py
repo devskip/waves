@@ -23,7 +23,35 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SPOTS = [s for s in json.loads((ROOT / "spots.json").read_text(encoding="utf-8"))["spots"] if s.get("alert")]
+# Spot: prima dal database (quelli ufficiali con alert attivo), poi da spots.json per quelli non ancora migrati.
+# La chiave "publishable" è pubblica: legge solo gli spot ufficiali.
+SUPABASE_URL = os.environ.get("SUPABASE_URL") or "https://djicqanyclbrfzhxlsxm.supabase.co"
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY") or "sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf"
+
+
+def load_spots():
+    db = []
+    try:
+        req = urllib.request.Request(f"{SUPABASE_URL}/rest/v1/spots?select=*&visibility=eq.public",
+                                     headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            for x in json.load(r):
+                db.append(dict(id=x["id"], name=x["name"], lat=x["lat"], lon=x["lon"], facing=float(x["facing"]),
+                               window=float(x["window"]), offshore=float(x["offshore"]), min=float(x["min"]),
+                               max=float(x["max"]), minPeriod=float(x["min_period"]), gain=float(x.get("gain") or 1),
+                               alert=bool(x.get("alert_default"))))
+        print(f"Spot dal database: {len(db)}")
+    except Exception as ex:
+        print(f"Database non raggiungibile ({ex}): uso solo spots.json")
+    ids = {s["id"] for s in db}
+    try:
+        extra = [s for s in json.loads((ROOT / "spots.json").read_text(encoding="utf-8"))["spots"] if s["id"] not in ids]
+    except Exception:
+        extra = []
+    return [s for s in db + extra if s.get("alert")]
+
+
+SPOTS = load_spots()
 TZ = "Europe/Rome"
 DAY_START, DAY_END = 7, 19
 DAYS_AHEAD = 4
