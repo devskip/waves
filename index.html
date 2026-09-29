@@ -456,7 +456,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <h2>Account</h2>
  <div class="card" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div>
  <h2>I tuoi dati</h2>
- <div class="card"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Sessioni, spot personali e impostazioni stanno su questo telefono. Copiane un backup ogni tanto.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
+ <div class="card"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
 </section>
 
 <!-- NUOVO SPOT -->
@@ -1706,8 +1706,8 @@ function renderAccount(){
  if (Cloud.pendingEmail){
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   box.innerHTML = `<div class="acct"><p class="small">Ti abbiamo mandato un'email a <b>${esc(Cloud.pendingEmail)}</b>.</p>
-   ${standalone ? `<p class="xs muted" style="margin-top:6px">Nell'email <b>non toccare</b> "Sign in": tienilo premuto, scegli <b>Copia link</b> e incollalo qui sotto.</p>` : `<p class="xs muted" style="margin-top:6px">Tocca "Sign in" nell'email: si riapre l'app già collegata. Oppure copia il link e incollalo qui.</p>`}
-   <input class="field" id="acCode" autocomplete="one-time-code" placeholder="Incolla il link (o il codice, se c'è)">
+   <p class="xs muted" style="margin-top:6px">Scrivi qui il codice di 6 cifre che trovi nell'email.${standalone ? '' : ' Oppure tocca il link nell\'email: si riapre l\'app già collegata.'}</p>
+   <input class="field" id="acCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Codice di 6 cifre (o incolla il link)">
    <p class="err" id="acErr" hidden></p>
    <div class="row2"><button class="pillbtn primary" id="acVerify" style="width:auto">Entra</button><button class="pillbtn" id="acBack">Indietro</button></div></div>`;
   document.getElementById('acBack').onclick = () => Cloud.cancelCode();
@@ -1715,7 +1715,7 @@ function renderAccount(){
    const e = document.getElementById('acErr');
    const v = document.getElementById('acCode').value.trim();
    try{ if (/^https?:\/\//.test(v)) await Cloud.verifyLink(v); else await Cloud.verifyCode(v); }
-   catch(err){ e.hidden = false; e.textContent = 'Link o codice non valido o già usato: richiedine un altro e incollalo senza aprirlo.'; }
+   catch(err){ e.hidden = false; e.textContent = 'Codice non valido o scaduto: controlla le cifre o torna indietro e richiedine un altro.'; }
   };
   return;
  }
