@@ -461,7 +461,8 @@ nav.tabs button:active svg{transform:scale(.9)}
 .btile{width:64px;height:64px;border-radius:18px;background:color-mix(in srgb,var(--bc,#1D5F8A) 14%,#fff);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
 .btile.big{width:96px;height:96px;border-radius:26px}
 .bico{display:block}
-.bcard{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px 10px 10px;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;cursor:pointer}
+.bcard{display:flex;align-items:center;gap:12px;width:100%;padding:12px 0;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;cursor:pointer}
+.bcard:first-child{border-top:1px solid var(--line)}
 .bcard:last-child{border-bottom:0}
 .bname{display:block;font:700 21px/1.1 "Barlow Condensed",sans-serif;overflow-wrap:anywhere}
 .bchev{flex-shrink:0;display:flex}
@@ -471,9 +472,13 @@ nav.tabs button:active svg{transform:scale(.9)}
 .bprev{display:flex;gap:14px;align-items:center;margin-top:12px}
 .bhead{display:flex;gap:12px;align-items:center;margin-top:8px}
 /* dentro un riquadro colorato la tavola sta su un fondo bianco, così si stacca */
-.board .btile{background:#fff;box-shadow:0 1px 4px rgba(19,40,59,.16)}
+.dsec .btile{background:#fff;box-shadow:0 1px 4px rgba(19,40,59,.16)}
 /* schede bianche dentro le sezioni colorate del profilo: ripristino i colori normali dei campi */
-.pcard{background:#fff;border:1px solid rgba(19,40,59,.08);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(19,40,59,.06);--panel:#FFFFFF;--line:#CFD9DB;--bg:#EEF3F1;--sea:#DCE8EA}
+.pcard{background:none;border:0}
+.pcard .acct{padding:0}
+.pcard .srow{padding-left:0;padding-right:0}
+.dsec .field{border-color:rgba(19,40,59,.2)}
+.dsec .opts.two button[aria-pressed="true"]{background:#fff}
 .dsec .addspot{margin-top:12px;background:rgba(255,255,255,.72);border-color:rgba(19,40,59,.28)}
 .dsec .bempty{padding-bottom:14px}
 @media (prefers-reduced-motion:reduce){.spin,.dot.busy{animation:none}.toast,button,a.pillbtn{transition:none}}
