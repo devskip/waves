@@ -443,8 +443,8 @@ nav.tabs button:active svg{transform:scale(.9)}
 .dot.busy{background:var(--accent);animation:pulse 1s ease-in-out infinite}
 .dot.err{background:#C0504D}
 .lvi{display:flex;gap:3px;align-items:flex-end;height:20px;margin-bottom:2px}
-.lvi i{width:5px;border-radius:2px;background:#CBD6D9}
-.lvi i.on{background:var(--accent)}
+.lvi i{width:4px;border-radius:2px;background:rgba(19,40,59,.16)}
+.lvi i.on{background:currentColor}
 .opts.two button{position:relative}
 .opts.two button b{font-size:15px;font-weight:700}
 .opts.two button[aria-pressed="true"]{background:rgba(29,95,138,.08)}
@@ -457,9 +457,9 @@ nav.tabs button:active svg{transform:scale(.9)}
 .refbox{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--bg)}
 .bmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .bchip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:11px;background:rgba(19,40,59,.07);font-size:12px;font-weight:600;color:var(--muted);line-height:1.5}
-.bchip.l{background:color-mix(in srgb,var(--bc,#1D5F8A) 16%,#fff);color:var(--ink)}
-.btile{width:64px;height:64px;border-radius:18px;background:color-mix(in srgb,var(--bc,#1D5F8A) 14%,#fff);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
-.btile.big{width:96px;height:96px;border-radius:26px}
+.bchip.l{background:rgba(255,255,255,.75);border:1px solid var(--line);color:var(--ink)}
+.btile{width:48px;height:48px;border-radius:14px;background:#fff;border:1px solid var(--line);color:var(--ink);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
+.btile.big{width:96px;height:96px;border-radius:24px}
 .bico{display:block}
 .bcard{display:flex;align-items:center;gap:12px;width:100%;padding:12px 0;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;cursor:pointer}
 .bcard:first-child{border-top:1px solid var(--line)}
@@ -468,11 +468,10 @@ nav.tabs button:active svg{transform:scale(.9)}
 .bchev{flex-shrink:0;display:flex}
 .bempty{padding:18px 14px;text-align:center}
 .bfan{display:flex;justify-content:center;gap:8px;margin-bottom:10px}
-.bfan .btile{width:56px;height:56px;border-radius:16px}
+.bfan .btile{width:48px;height:48px;border-radius:14px}
 .bprev{display:flex;gap:14px;align-items:center;margin-top:12px}
 .bhead{display:flex;gap:12px;align-items:center;margin-top:8px}
 /* dentro un riquadro colorato la tavola sta su un fondo bianco, così si stacca */
-.dsec .btile{background:#fff;box-shadow:0 1px 4px rgba(19,40,59,.16)}
 /* schede bianche dentro le sezioni colorate del profilo: ripristino i colori normali dei campi */
 .pcard{background:none;border:0}
 .pcard .acct{padding:0}
@@ -1522,13 +1521,14 @@ function parseLen(s){
  if (f < 4 || f > 12 || i > 11) return {text:s, ft:null};
  return {text:`${f}'${i}"`, ft: f + i / 12};
 }
-function boardIcon(type, ft, tilt = 32, k = 1){
+function boardIcon(type, ft, tilt = 65, k = 1, sw = 1.7){
  const t = BOARD_SHAPE[type] ? type : 'shortboard', L = ft || BOARD_FT[t];
- const H = Math.round(clamp(30 + (L - 5) * 6.5, 30, 58) * k), W = Math.round(H * .4);
- const band = t === 'foam' ? '<path d="M9 40H31" stroke="#fff" stroke-width="6" opacity=".5"/>' : '';
- return `<svg class="bico" width="${W}" height="${H}" viewBox="0 0 40 100" style="transform:rotate(${tilt}deg)" aria-hidden="true"><path d="${BOARD_SHAPE[t]}" fill="${BOARD_COLOR[t]}"/>${band}<path d="M20 8V90" stroke="#fff" stroke-width="1.6" opacity=".45" stroke-linecap="round"/></svg>`;
+ const H = Math.round(clamp(30 + (L - 5) * 2, 30, 38) * k), W = Math.round(H * .44);   // la lunghezza si vede, ma resta un'icona
+ const ln = 'vector-effect="non-scaling-stroke"';
+ const band = t === 'foam' ? `<path d="M9 40H31" ${ln}/>` : '';
+ return `<svg class="bico" width="${W}" height="${H}" viewBox="0 0 40 100" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${tilt}deg)" aria-hidden="true"><path d="${BOARD_SHAPE[t]}" ${ln}/>${band}<path d="M20 14V86" opacity=".45" ${ln}/></svg>`;
 }
-const boardTile = (type, ft, big = false) => `<span class="btile${big ? ' big' : ''}" style="--bc:${BOARD_COLOR[type] || BOARD_COLOR.shortboard}">${boardIcon(type, ft, 32, big ? 1.45 : 1)}</span>`;
+const boardTile = (type, ft, big = false) => `<span class="btile${big ? ' big' : ''}">${boardIcon(type, ft, 65, big ? 2.05 : 1, big ? 2.6 : 1.7)}</span>`;
 // dal nome ("Fish rosso", "Egg 7'2"...) provo a indovinare il tipo
 function guessBoardType(name){
  const n = String(name).toLowerCase();
@@ -1578,7 +1578,7 @@ function renderProfile(){
   return `<button type="button" class="bcard" data-bedit="${b.id}" style="--bc:${BOARD_COLOR[b.type] || BOARD_COLOR.shortboard}" aria-label="Modifica ${esc(b.name)}">${boardTile(b.type, pl.ft)}
    <span style="flex:1;min-width:0"><b class="bname">${esc(b.name)}</b><span class="bmeta"><span class="bchip l">${esc(t ? t.s : b.type)}</span>${b.litres ? `<span class="bchip">${b.litres} L</span>` : ''}${pl.text ? `<span class="bchip">${esc(pl.text)}</span>` : ''}</span></span>
    <span class="bchev">${ICON.chev}</span></button>`; }).join('');
- const empty = `<div class="bempty"><div class="bfan" aria-hidden="true">${[['fish', -20], ['shortboard', 0], ['longboard', 20]].map(([t, r]) => `<span class="btile" style="--bc:${BOARD_COLOR[t]}">${boardIcon(t, null, 32 + r, .85)}</span>`).join('')}</div>
+ const empty = `<div class="bempty"><div class="bfan" aria-hidden="true">${['fish', 'shortboard', 'longboard'].map(t => `<span class="btile">${boardIcon(t, null)}</span>`).join('')}</div>
   <p class="small muted">Nessuna tavola. Aggiungi quelle che hai e l'app ti dice quale portare, spot per spot.</p></div>`;
  qBox.innerHTML = `<div class="pcard">${q.length ? rows : empty}</div><button class="pillbtn addspot" id="bAdd">${ICON_PLUS}Aggiungi una tavola</button>`;
  qBox.querySelectorAll('[data-bedit]').forEach(b => b.onclick = () => openBoard(b.dataset.bedit));
