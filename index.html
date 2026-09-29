@@ -384,6 +384,23 @@ body.locked{overflow:hidden}
 .field{width:100%;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;font-size:16px}
 .err{color:var(--s4);margin-top:12px;font-weight:500}
 .err .pillbtn{margin-top:8px;color:var(--ink)}
+/* fattori del punteggio nella card e carta d'identità dello spot */
+.hfac{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.hfac span{display:inline-flex;align-items:center;gap:6px;padding:5px 11px 5px 6px;border-radius:15px;background:rgba(255,255,255,.82);color:#13283B;font-size:13px;font-weight:600}
+.hfac i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.hfac .ok i{background:#25864B}.hfac .mid i{background:#B7862A}.hfac .ko i{background:#C0504D}
+.idstrip{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.idchip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 10px;border-radius:22px;background:var(--panel);border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:14px;line-height:1.1;text-align:left}
+.idchip svg{flex-shrink:0}
+.idchip small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.idchip.locals{background:var(--ink);border-color:var(--ink);color:#fff}
+.idchip.locals small{color:#E6B24A}
+.idchip.add{border-style:dashed;color:var(--accent);background:transparent}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.opts button{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:10px 6px;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-weight:600;font-size:14px;text-align:center;color:var(--ink)}
+.opts button span{font-size:12px;font-weight:500;color:var(--muted)}
+.opts button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
+.tgl{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:max(6px, calc(env(safe-area-inset-bottom,0px) - 16px)) 0}
 nav.tabs button{min-height:52px;padding:0;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
@@ -462,7 +479,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 <!-- NUOVO SPOT -->
 <section id="v-add" hidden>
  <button class="backlink" id="addBack"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>Annulla</button>
- <h1 class="sub" style="margin-top:6px">Nuovo spot</h1>
+ <h1 class="sub" style="margin-top:6px" id="addTitle">Nuovo spot</h1>
  <div class="step">
   <h2>Dov'è lo spot?</h2>
   <p class="small muted">Tocca la mappa sul punto dove entri in acqua, oppure usa la tua posizione se sei lì.</p>
@@ -478,12 +495,20 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
   <div class="compass" id="compass"></div>
  </div>
  <div class="step">
-  <h2>Che tipo di spot è?</h2>
-  <div class="types" id="types"></div>
+  <h2>Che fondale ha?</h2>
+  <div class="opts" id="kinds"></div>
+  <div class="tgl"><div><p style="font-weight:600">Si attiva solo con le mareggiate</p><p class="xs muted">Spot riparato che vuole mare grosso</p></div><button class="switch" id="addBig" aria-pressed="false" aria-label="Si attiva solo con le mareggiate"></button></div>
+ </div>
+ <div class="step">
+  <h2>Chi ci può surfare?</h2>
+  <div class="opts" id="accessOpts"></div>
  </div>
  <div class="step">
   <h2>Come si chiama?</h2>
   <input class="field" id="addName" placeholder="Es. Sa Mesa Longa" autocomplete="off">
+  <h2 style="margin-top:20px">Dove si trova?</h2>
+  <input class="field" id="addArea" placeholder="Es. Lanzarote, Canarie" autocomplete="off">
+  <p class="xs muted" style="margin-top:6px">La compilo io dal punto sulla mappa: correggila se serve.</p>
  </div>
  <p class="err" id="addErr" hidden></p>
  <button class="pillbtn primary" id="addSave" style="margin-top:24px">Salva spot</button>
@@ -631,7 +656,7 @@ function evaluate(spot, s, i){
  else if (windType === 'laterale') windF = clamp(1-(ws-8)/35, 0.35, 1);
  else if (windType === 'onshore') windF = clamp(1-(ws-8)/22, 0.1, 1);
  const score = Math.min(5, Math.round(5*hScore*periodF*windF*2)/2);
- return {score, face, hs, dir, T, ws, wd, windType};
+ return {score, face, hs, dir, T, ws, wd, windType, windF, periodF};
 }
 
 function tone(sc){
@@ -713,7 +738,8 @@ async function getJson(url, opts={}, tries=2, ms=20000){
 // e per gli spot che non fossero ancora stati portati nel database
 const dbSpot = r => ({id: r.id, name: r.name, area: r.area || '', lat: +r.lat, lon: +r.lon,
  beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined, facing: +r.facing, window: +r.window, offshore: +r.offshore,
- min: +r.min, max: +r.max, minPeriod: +r.min_period, gain: +r.gain || 1, alert: !!r.alert_default, cams: r.cams || []});
+ min: +r.min, max: +r.max, minPeriod: +r.min_period, gain: +r.gain || 1, alert: !!r.alert_default, cams: r.cams || [],
+ kind: r.kind || null, access: r.access || null, bigOnly: !!r.big_only});
 async function loadSpots(){
  let fromDb = [], fromFile = [];
  try{
@@ -834,7 +860,7 @@ function renderSpot(){
  const gripHtml = sp => `<span class="grip" role="button" tabindex="0" aria-label="Sposta ${esc(sp.name)}: frecce su e giù">${GRIP}</span>`;
  const fullRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="row" data-open="${r.sp.id}">${dial(r.sp, r.ev)}
    <div class="grow"><p class="name">${esc(r.sp.name)}</p>
-    <p class="xs muted" style="margin-top:2px">${esc(r.sp.area||'')}${r.dist!=null?`, ${km(r.dist)}`:''}</p>
+    <p class="xs muted" style="margin-top:2px">${esc(metaLine(r.sp))}${r.dist!=null?`, ${km(r.dist)}`:''}</p>
     <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
    <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
    ${badge(r.ev.score)}</button></div>`;
@@ -1113,7 +1139,7 @@ function addFromOsm(o){
  openAdd();
  if (add.map) setPos(o.lat, o.lon, 15);
  else add.pos = [o.lat, o.lon];
- if (o.kind) add.type = o.kind;
+ if (o.kind) add.kind = o.kind;
  document.getElementById('addName').value = o.name || '';
  drawAdd();
 }
@@ -1178,6 +1204,39 @@ initDrag(document.getElementById('activeList'));
 initDrag(document.getElementById('offList'));
 document.getElementById('resetOrder').onclick = ()=>{ store.set('surf.order', null); renderSpot(); };
 
+// ---------- Carta d'identità dello spot: fondale e accesso ----------
+const svgI = (d, w=22) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const KINDS = [
+ {id:'beach', t:'Beach break', d:'Fondale di sabbia', icon:svgI('<path d="M2 10c2.5-2.5 5-2.5 7.5 0s5 2.5 7.5 0 3.5-1.5 5-1"/><path d="M3 19c3-3 15-3 18 0"/><path d="M7 17.2h.01M12 16.4h.01M17 17.2h.01"/>')},
+ {id:'reef', t:'Reef', d:'Fondale di roccia', icon:svgI('<path d="M2 8c2.5-2.5 5-2.5 7.5 0s5 2.5 7.5 0 3.5-1.5 5-1"/><path d="M3 20l3.5-5 2.5 2 4-6 3 4 1.5-1.5L21 20z"/>')},
+ {id:'point', t:'Point break', d:'Onda lungo una punta', icon:svgI('<path d="M3 20h8l10-12"/><path d="M4 12c2-2.5 5-3 8-1.5"/><path d="M5 16c2-1.5 4-1.8 6-1"/>')}
+];
+const ICON_LOCALS = svgI('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
+const ICON_OPEN = svgI('<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M15.5 14.3c3 .2 5.5 2.3 5.5 5.7"/>');
+const ACCESS = [
+ {id:'open', t:'Tutti', d:'Spot aperto', icon:ICON_OPEN},
+ {id:'locals', t:'Only locals', d:'Serve rispetto', icon:ICON_LOCALS},
+ {id:'unknown', t:'Non so', d:'Da scoprire', icon:svgI('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.6"/><path d="M12 17h.01"/>')}
+];
+const metaLine = sp => [sp.area, KINDS.find(k => k.id === sp.kind)?.t, sp.access === 'locals' ? 'Only locals' : null].filter(Boolean).join(' · ');
+function idStrip(sp, custom){
+ const k = KINDS.find(x => x.id === sp.kind), chips = [];
+ if (k) chips.push(`<span class="idchip">${k.icon}<span>${k.t}<small>${k.d}${sp.bigOnly ? ', solo con mareggiate' : ''}</small></span></span>`);
+ if (sp.access === 'locals') chips.push(`<span class="idchip locals">${ICON_LOCALS}<span>Only locals<small>Entra in punta di piedi</small></span></span>`);
+ else if (sp.access === 'open') chips.push(`<span class="idchip">${ICON_OPEN}<span>Aperto a tutti<small>Rispetta le precedenze</small></span></span>`);
+ if (custom && (!k || !sp.access)) chips.push(`<button class="idchip add" id="idEdit">+ ${!k && !sp.access ? 'Fondale e accesso' : !k ? 'Fondale' : 'Accesso'}</button>`);
+ return chips.length ? `<div class="idstrip">${chips.join('')}</div>` : '';
+}
+// perché il punteggio è quello: onda, periodo e vento, ognuno con il suo stato
+function factorsHtml(sp, ev){
+ const wave = ev.face < sp.min ? (ev.face >= .7*sp.min ? ['mid','Onda al limite'] : ['ko','Onda troppo piccola'])
+  : ev.face > sp.max ? (ev.face <= 1.3*sp.max ? ['mid','Onda grossa'] : ['ko','Onda troppo grossa']) : ['ok','Onda giusta'];
+ const per = ev.periodF >= 1 ? ['ok', `Periodo ${Math.round(ev.T)} s`] : ev.periodF >= .6 ? ['mid','Periodo corto'] : ['ko','Periodo troppo corto'];
+ const wind = ev.windF >= .9 ? ['ok', ev.windType === 'offshore' ? 'Vento offshore' : 'Vento debole'] : ev.windF >= .6 ? ['mid', `Vento ${ev.windType}`] : ['ko', `Vento ${ev.windType} forte`];
+ const g = {ok:'✓', mid:'!', ko:'✕'};
+ return `<div class="hfac" role="list" aria-label="Cosa determina il punteggio">${[wave, per, wind].map(([c,t]) => `<span class="${c}" role="listitem"><i aria-hidden="true">${g[c]}</i>${t}</span>`).join('')}</div>`;
+}
+
 function offReason(sp, ev){
  if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)} m al largo, swell fuori finestra` : 'Piatto';
  if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)} m, onshore ${Math.round(ev.ws)} km/h`;
@@ -1224,7 +1283,8 @@ function openDetail(id){
     <button class="hdial" id="dialBtn" aria-label="Come leggere il cerchio">${dial(sp, ev, 108)}<span class="info" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 11v6M12 7v.5"/></svg></span></button>
     <div class="hscore"><div class="row1">${badge(ev?.score,'lg')}<p class="hlab">${scoreLabel(ev?.score)}<br><span style="font-size:16px;font-weight:500;color:var(--hmut)">adesso</span></p></div>
      ${ev ? `<p class="hsum"><b>${ev.face.toFixed(1)} m</b> a riva, <b>${Math.round(ev.T)} s</b> da ${cardinal(ev.dir)}<br>vento ${ev.windType} ${Math.round(ev.ws)} km/h</p>` : ''}</div>
-   </div></div>
+   </div>${ev ? factorsHtml(sp, ev) : ''}</div>
+  ${idStrip(sp, custom)}
   <div class="sheet" id="dialSheet" hidden><div class="sheet-bg" data-close></div>
    <div class="sheet-p" role="dialog" aria-modal="true" aria-labelledby="sheetT">
     <div class="sheet-h"><h2 id="sheetT">Come leggere il cerchio</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
@@ -1286,7 +1346,7 @@ function openDetail(id){
   </section>
 
   <div class="dfoot"${custom ? '' : ' hidden'}>
-  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${!Cloud.user ? '' : Cloud.admin ? '<button class="pillbtn primary" id="pubSpot" style="width:auto">Pubblica come spot ufficiale</button>' : sp.visibility === 'proposed' ? '<span class="small muted" style="align-self:center">Proposto alla community: in attesa di approvazione</span>' : '<button class="pillbtn primary" id="propSpot" style="width:auto">Proponi alla community</button>'}<button class="pillbtn" id="delSpot">Elimina spot</button>
+  ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${!Cloud.user ? '' : Cloud.admin ? '<button class="pillbtn primary" id="pubSpot" style="width:auto">Pubblica come spot ufficiale</button>' : sp.visibility === 'proposed' ? '<span class="small muted" style="align-self:center">Proposto alla community: in attesa di approvazione</span>' : '<button class="pillbtn primary" id="propSpot" style="width:auto">Proponi alla community</button>'}<button class="pillbtn" id="editSpot">Modifica</button><button class="pillbtn" id="delSpot">Elimina spot</button>
   <a class="pillbtn" href="https://www.openstreetmap.org/edit#map=18/${beach(sp).lat}/${beach(sp).lon}" target="_blank" rel="noopener" style="text-decoration:none">Segnalalo su OpenStreetMap ↗</a></div>
   <p class="xs muted" id="copyMsg" style="margin-top:8px">${Cloud.user ? 'Lo spot è personale: lo vedi solo tu, su tutti i tuoi dispositivi.' : 'Entra con l\'account (Alert › Account) per salvarlo online e poterlo condividere.'}</p>` : ''}
   </div>`;
@@ -1328,6 +1388,9 @@ function openDetail(id){
   spots = spots.map(x => x.id === id ? list[i] : x);
   openDetail(id);
  };
+ const ed = document.getElementById('editSpot'), idE = document.getElementById('idEdit');
+ if (ed) ed.onclick = ()=>openAdd(sp);
+ if (idE) idE.onclick = ()=>openAdd(sp);
  const del = document.getElementById('delSpot');
  if (del) del.onclick = ()=>{
   Data.spots.remove(id);
@@ -1584,9 +1647,10 @@ const Cloud = (() => {
   affollamento_1_4: r.crowd ?? '', note: r.note || '', created: r.created_at}; };
  const spotOut = x => ({id: x.id, name: x.name, area: x.area || null, lat: x.lat, lon: x.lon, beach_lat: x.beachLat ?? null, beach_lon: x.beachLon ?? null,
   facing: x.facing, window: x.window, offshore: x.offshore, min: x.min, max: x.max, min_period: x.minPeriod,
-  cams: x.cams || [], owner: user.id});
+  cams: x.cams || [], kind: x.kind || null, access: x.access || null, big_only: !!x.bigOnly, owner: user.id});
  const spotIn = r => ({id: r.id, name: r.name, area: r.area || 'Spot personale', lat: r.lat, lon: r.lon, beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined,
-  facing: +r.facing, window: +r.window, offshore: +r.offshore, min: +r.min, max: +r.max, minPeriod: +r.min_period, alert: true, cams: r.cams || []});
+  facing: +r.facing, window: +r.window, offshore: +r.offshore, min: +r.min, max: +r.max, minPeriod: +r.min_period, alert: true, cams: r.cams || [],
+  kind: r.kind || null, access: r.access || null, bigOnly: !!r.big_only});
  const userSpotRows = () => {
   const fav = store.get('surf.favorite', null), fol = store.get('surf.followed', null), ord = store.get('surf.order', null) || [], g = store.get('surf.gain', {});
   return spots.map(sp => ({user_id: user.id, spot_id: sp.id, favorite: fav === sp.id,
@@ -1715,6 +1779,8 @@ function renderAccount(){
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   box.innerHTML = `<div class="acct"><p class="small">Ti abbiamo mandato un'email a <b>${esc(Cloud.pendingEmail)}</b>.</p>
    <p class="xs muted" style="margin-top:6px">Scrivi qui il codice di 6 cifre che trovi nell'email.${standalone ? '' : ' Oppure tocca il link nell\'email: si riapre l\'app già collegata.'}</p>
+   <p class="xs muted" style="margin-top:6px"><b>Non la trovi?</b> Può metterci un minuto. Guarda anche nello spam o in Promozioni e, se è lì, segnala «Non è spam»: le prossime arriveranno in posta in arrivo.</p>
+   <p class="xs" style="margin-top:6px"><b>Non la trovi?</b> Guarda nella cartella Spam o Promozioni: la prima volta capita spesso. Se la segni come "non spam", le prossime arrivano in posta in arrivo.</p>
    <input class="field" id="acCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Codice di 6 cifre (o incolla il link)">
    <p class="err" id="acErr" hidden></p>
    <div class="row2"><button class="pillbtn primary" id="acVerify" style="width:auto">Entra</button><button class="pillbtn" id="acBack">Indietro</button></div></div>`;
@@ -2366,20 +2432,48 @@ function drawArrow(){
 }
 function drawAdd(){
  buildCompass(); updateCompass();
- document.getElementById('types').innerHTML = TYPES.map(t =>
-  `<button aria-pressed="${add.type===t.id}" data-type="${t.id}"><b>${t.t}</b><span class="xs muted">${t.d}</span></button>`).join('');
+ document.getElementById('kinds').innerHTML = KINDS.map(k =>
+  `<button type="button" aria-pressed="${add.kind===k.id}" data-kind="${k.id}">${k.icon}${k.t}<span>${k.d}</span></button>`).join('');
+ document.getElementById('accessOpts').innerHTML = ACCESS.map(a =>
+  `<button type="button" aria-pressed="${(add.access || 'unknown')===a.id}" data-access="${a.id}">${a.icon}${a.t}<span>${a.d}</span></button>`).join('');
+ document.getElementById('addBig').setAttribute('aria-pressed', !!add.big);
  drawArrow();
 }
+// zona dello spot: la propongo dal punto sulla mappa (OpenStreetMap), finché l'utente non la scrive lui
+let geoTimer = null;
+function guessArea(lat, lon){
+ clearTimeout(geoTimer);
+ geoTimer = setTimeout(async ()=>{
+  if (!add.areaAuto) return;
+  try{
+   const r = await getJson(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10&accept-language=it`, {}, 1, 8000);
+   const a = r.address || {};
+   const place = a.town || a.village || a.city || a.municipality || a.hamlet;
+   const region = a.island || a.archipelago || a.county || a.state || a.country;
+   const txt = [...new Set([place, region].filter(Boolean))].join(', ');
+   if (txt && add.areaAuto) document.getElementById('addArea').value = txt;
+  }catch(e){}
+ }, 700);
+}
+// da quali parametri era partito uno spot salvato prima che esistessero fondale e mareggiate
+const typeOf = s => s.min >= 1.2 ? 'big' : s.min >= 0.8 ? 'reef' : 'beach';
 function setPos(lat, lon, zoom){
  add.pos = [lat, lon];
  if (add.marker) add.marker.setLatLng(add.pos);
  else add.marker = L.circleMarker(add.pos, {radius:9, color:'#fff', weight:3, fillColor:'#1D5F8A', fillOpacity:1}).addTo(add.map);
  if (zoom) add.map.setView(add.pos, zoom);
  drawArrow();
+ if (add.areaAuto) guessArea(lat, lon);
 }
-function openAdd(){
- add = {...add, pos:null, facing:null, type:'beach'};
- document.getElementById('addName').value = '';
+function openAdd(edit){
+ const e = edit && edit.id ? (Data.spots.all().find(x => x.id === edit.id) || edit) : null;
+ add = {...add, editId: e ? e.id : null, pos: e ? [e.beachLat ?? e.lat, e.beachLon ?? e.lon] : null, facing: e ? e.facing : null,
+  kind: e ? (e.kind || (typeOf(e) === 'beach' ? 'beach' : 'reef')) : 'beach', big: e ? (e.bigOnly ?? typeOf(e) === 'big') : false,
+  access: e ? (e.access || null) : null, areaAuto: !e};
+ document.getElementById('addName').value = e ? e.name : '';
+ document.getElementById('addArea').value = e && e.area && e.area !== 'Spot personale' ? e.area : '';
+ document.getElementById('addTitle').textContent = e ? 'Modifica spot' : 'Nuovo spot';
+ document.getElementById('addSave').textContent = e ? 'Salva le modifiche' : 'Salva spot';
  document.getElementById('addErr').hidden = true;
  showView('add');
  if (!window.L){ document.getElementById('pickMap').innerHTML = '<p class="muted" style="padding:14px">Mappa non disponibile: controlla la connessione e riapri.</p>'; drawAdd(); return; }
@@ -2388,15 +2482,16 @@ function openAdd(){
   add.osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap'}).addTo(add.map);
   add.sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, attribution:'Esri, Maxar'});
   add.map.on('click', e => setPos(+e.latlng.lat.toFixed(5), +e.latlng.lng.toFixed(5)));
- } else {
-  if (add.marker){ add.map.removeLayer(add.marker); add.marker = null; }
-  add.map.setView(SINIS, 11);
- }
+ } else if (add.marker){ add.map.removeLayer(add.marker); add.marker = null; }
+ const start = add.pos; add.pos = null;
+ if (start) setPos(start[0], start[1], 15); else add.map.setView(SINIS, 11);
  setTimeout(()=>add.map.invalidateSize(), 60);
  drawAdd();
 }
-document.getElementById('addOpen').onclick = openAdd;
-document.getElementById('addBack').onclick = ()=>setTab('spot');
+document.getElementById('addOpen').onclick = ()=>openAdd();
+document.getElementById('addBack').onclick = ()=> add.editId ? openDetail(add.editId) : setTab('spot');
+document.getElementById('addArea').addEventListener('input', e=>{ add.areaAuto = !e.target.value.trim(); });
+document.getElementById('addBig').onclick = ()=>{ add.big = !add.big; drawAdd(); };
 document.getElementById('addHere').onclick = ()=>{
  navigator.geolocation?.getCurrentPosition(p=>setPos(+p.coords.latitude.toFixed(5), +p.coords.longitude.toFixed(5), 15),
   ()=>{ const e = document.getElementById('addErr'); e.hidden = false; e.textContent = 'Posizione non concessa: tocca il punto sulla mappa.'; });
@@ -2409,17 +2504,29 @@ document.getElementById('addSat').onclick = e=>{
  if (on){ add.map.removeLayer(add.osm); add.sat.addTo(add.map); } else { add.map.removeLayer(add.sat); add.osm.addTo(add.map); }
 };
 document.getElementById('v-add').addEventListener('click', e=>{
- const t = e.target.closest('[data-type]'); if (t){ add.type = t.dataset.type; drawAdd(); }
+ const k = e.target.closest('[data-kind]'); if (k){ add.kind = k.dataset.kind; drawAdd(); return; }
+ const a = e.target.closest('[data-access]'); if (a){ add.access = a.dataset.access === 'unknown' ? null : a.dataset.access; drawAdd(); }
 });
 document.getElementById('addSave').onclick = ()=>{
  const err = document.getElementById('addErr'), name = document.getElementById('addName').value.trim();
  const miss = !add.pos ? 'Tocca la mappa per indicare lo spot.' : add.facing == null ? 'Scegli sul cerchio da che parte è il mare aperto.' : !name ? 'Dai un nome allo spot.' : '';
  if (miss){ err.hidden = false; err.textContent = miss; return; }
- const t = TYPES.find(x=>x.id===add.type), [lat, lon] = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
- const sp = {id:'c-'+Date.now(), name, area:'Spot personale', lat, lon, beachLat:add.pos[0], beachLon:add.pos[1],
-  facing:add.facing, window:t.window, offshore:(add.facing+180)%360, min:t.min, max:t.max, minPeriod:t.minPeriod, alert:true};
+ const typeId = add.big ? 'big' : add.kind === 'beach' ? 'beach' : 'reef';
+ const t = TYPES.find(x=>x.id===typeId), [lat, lon] = offshorePoint(add.pos[0], add.pos[1], add.facing, 1.5);
+ const old = add.editId ? Data.spots.all().find(x => x.id === add.editId) : null;
+ // in modifica tengo range e finestra già tarati, a meno che cambi il tipo di spot
+ const keep = old && typeOf(old) === typeId;
+ const area = document.getElementById('addArea').value.trim();
+ const sp = {...(old || {}), id: old ? old.id : 'c-'+Date.now(), name, area: area || 'Spot personale', lat, lon, beachLat:add.pos[0], beachLon:add.pos[1],
+  facing:add.facing, offshore:(add.facing+180)%360,
+  window: keep ? old.window : t.window, min: keep ? old.min : t.min, max: keep ? old.max : t.max, minPeriod: keep ? old.minPeriod : t.minPeriod,
+  kind:add.kind, bigOnly:!!add.big, access:add.access, alert: old ? old.alert : true};
  Data.spots.save(sp);
- spots.push(sp); setTab('spot'); refresh().then(()=>openDetail(sp.id));
+ if (old){
+  spots = spots.map(x => x.id === sp.id ? sp : x); delete data[sp.id];
+  if (leafPins[sp.id] && myLayer){ myLayer.removeLayer(leafPins[sp.id]); delete leafPins[sp.id]; }
+ } else spots.push(sp);
+ applyGains(); setTab('spot'); refresh().then(()=>openDetail(sp.id));
 };
 
 // ---------- Navigazione ----------
