@@ -458,9 +458,8 @@ nav.tabs button:active svg{transform:scale(.9)}
 .bmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .bchip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:11px;background:rgba(19,40,59,.07);font-size:12px;font-weight:600;color:var(--muted);line-height:1.5}
 .bchip.l{background:color-mix(in srgb,var(--bc,#1D5F8A) 16%,#fff);color:var(--ink)}
-.btile{width:56px;height:64px;border-radius:16px;background:color-mix(in srgb,var(--bc,#1D5F8A) 14%,#fff);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
-.btile.big{width:88px;height:96px;border-radius:22px}
-.btile.big .bico{transform:rotate(32deg) scale(1.5)}
+.btile{width:64px;height:64px;border-radius:18px;background:color-mix(in srgb,var(--bc,#1D5F8A) 14%,#fff);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
+.btile.big{width:96px;height:96px;border-radius:26px}
 .bico{display:block}
 .bcard{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px 10px 10px;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;cursor:pointer}
 .bcard:last-child{border-bottom:0}
@@ -468,9 +467,15 @@ nav.tabs button:active svg{transform:scale(.9)}
 .bchev{flex-shrink:0;display:flex}
 .bempty{padding:18px 14px;text-align:center}
 .bfan{display:flex;justify-content:center;gap:8px;margin-bottom:10px}
-.bfan .btile{width:48px;height:56px}
+.bfan .btile{width:56px;height:56px;border-radius:16px}
 .bprev{display:flex;gap:14px;align-items:center;margin-top:12px}
 .bhead{display:flex;gap:12px;align-items:center;margin-top:8px}
+/* dentro un riquadro colorato la tavola sta su un fondo bianco, così si stacca */
+.board .btile{background:#fff;box-shadow:0 1px 4px rgba(19,40,59,.16)}
+/* schede bianche dentro le sezioni colorate del profilo: ripristino i colori normali dei campi */
+.pcard{background:#fff;border:1px solid rgba(19,40,59,.08);border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(19,40,59,.06);--panel:#FFFFFF;--line:#CFD9DB;--bg:#EEF3F1;--sea:#DCE8EA}
+.dsec .addspot{margin-top:12px;background:rgba(255,255,255,.72);border-color:rgba(19,40,59,.28)}
+.dsec .bempty{padding-bottom:14px}
 @media (prefers-reduced-motion:reduce){.spin,.dot.busy{animation:none}.toast,button,a.pillbtn{transition:none}}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:max(6px, calc(env(safe-area-inset-bottom,0px) - 16px)) 0}
 nav.tabs button{min-height:52px;padding:0;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
@@ -547,14 +552,30 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 <section id="v-me" hidden>
  <h1 class="sub">Profilo</h1>
  <p class="muted small" style="margin-top:4px">Il tuo account e quello che serve per consigliarti la tavola giusta.</p>
- <h2>Account</h2>
- <div class="card" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div>
- <h2>Il tuo surf</h2>
- <div class="card" id="meSurf"></div>
- <h2>Le tue tavole</h2>
- <div id="quiver"></div>
- <h2>I tuoi dati</h2>
- <div class="card"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
+
+ <section class="dsec open t-now">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="70" r="38" fill="currentColor"/><path d="M26 178c0-42 34-68 74-68s74 26 74 68z" fill="currentColor"/></svg>
+  <div class="shead"><h2>Account</h2><p class="xs" style="margin-top:2px">Per ritrovare tutto su ogni dispositivo</p></div>
+  <div class="pcard" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div>
+ </section>
+
+ <section class="dsec open t-tide">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><path d="M8 132c26-42 56-42 82 0s56 42 82 0l20-22v82H8z" fill="currentColor"/><path d="M8 92c26-42 56-42 82 0s56 42 82 0" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round"/></svg>
+  <div class="shead"><h2>Il tuo surf</h2><p class="xs" style="margin-top:2px">Livello e peso, per i litri giusti</p></div>
+  <div class="pcard" id="meSurf"></div>
+ </section>
+
+ <section class="dsec open t-wx">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><g transform="rotate(35 100 100)"><path d="M100 8C132 50 138 122 130 172C126 192 113 198 100 198C87 198 74 192 70 172C62 122 68 50 100 8Z" fill="currentColor"/><path d="M100 30V176" stroke="var(--sbg)" stroke-width="6" stroke-linecap="round"/></g></svg>
+  <div class="shead"><h2>Le tue tavole</h2><p class="xs" style="margin-top:2px">Quelle che porti in acqua</p></div>
+  <div id="quiver"></div>
+ </section>
+
+ <section class="dsec open t-cal">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><path d="M58 150h96a30 30 0 0 0 0-60 44 44 0 0 0-84-10 34 34 0 0 0-12 70z" fill="currentColor"/></svg>
+  <div class="shead"><h2>I tuoi dati</h2><p class="xs" style="margin-top:2px">Una copia di sicurezza, quando serve</p></div>
+  <div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
+ </section>
 </section>
 
 <!-- NUOVO SPOT -->
@@ -1328,8 +1349,8 @@ function factorsHtml(sp, ev){
 // Sono regole pratiche, non una legge fisica: partono da altezza e potenza dell'onda (altezza x periodo),
 // dal fondale, dal vento e dal livello di chi surfa, e si possono affinare con l'esperienza.
 const SURF_LEVELS = [
- {id:'principiante', t:'Principiante', d:'Sto imparando: onde piccole e già rotte'},
- {id:'intermedio', t:'Intermedio', d:'Prendo le onde verdi e faccio le prime manovre'},
+ {id:'principiante', t:'Principiante', d:'Sto imparando: onde piccole, anche solo sulla schiuma'},
+ {id:'intermedio', t:'Intermedio', d:'Parto sull\'onda prima che si rompa e faccio le prime virate'},
  {id:'avanzato', t:'Avanzato', d:'Surfo con sicurezza onde medie, anche su reef'},
  {id:'esperto', t:'Esperto', d:'Onde grosse e impegnative'}
 ];
@@ -1496,13 +1517,13 @@ function parseLen(s){
  if (f < 4 || f > 12 || i > 11) return {text:s, ft:null};
  return {text:`${f}'${i}"`, ft: f + i / 12};
 }
-function boardIcon(type, ft, tilt = 32){
+function boardIcon(type, ft, tilt = 32, k = 1){
  const t = BOARD_SHAPE[type] ? type : 'shortboard', L = ft || BOARD_FT[t];
- const H = Math.round(clamp(30 + (L - 5) * 6.5, 30, 58)), W = Math.round(H * .4);
+ const H = Math.round(clamp(30 + (L - 5) * 6.5, 30, 58) * k), W = Math.round(H * .4);
  const band = t === 'foam' ? '<path d="M9 40H31" stroke="#fff" stroke-width="6" opacity=".5"/>' : '';
  return `<svg class="bico" width="${W}" height="${H}" viewBox="0 0 40 100" style="transform:rotate(${tilt}deg)" aria-hidden="true"><path d="${BOARD_SHAPE[t]}" fill="${BOARD_COLOR[t]}"/>${band}<path d="M20 8V90" stroke="#fff" stroke-width="1.6" opacity=".45" stroke-linecap="round"/></svg>`;
 }
-const boardTile = (type, ft, big = false) => `<span class="btile${big ? ' big' : ''}" style="--bc:${BOARD_COLOR[type] || BOARD_COLOR.shortboard}">${boardIcon(type, ft)}</span>`;
+const boardTile = (type, ft, big = false) => `<span class="btile${big ? ' big' : ''}" style="--bc:${BOARD_COLOR[type] || BOARD_COLOR.shortboard}">${boardIcon(type, ft, 32, big ? 1.45 : 1)}</span>`;
 // dal nome ("Fish rosso", "Egg 7'2"...) provo a indovinare il tipo
 function guessBoardType(name){
  const n = String(name).toLowerCase();
@@ -1552,9 +1573,9 @@ function renderProfile(){
   return `<button type="button" class="bcard" data-bedit="${b.id}" style="--bc:${BOARD_COLOR[b.type] || BOARD_COLOR.shortboard}" aria-label="Modifica ${esc(b.name)}">${boardTile(b.type, pl.ft)}
    <span style="flex:1;min-width:0"><b class="bname">${esc(b.name)}</b><span class="bmeta"><span class="bchip l">${esc(t ? t.s : b.type)}</span>${b.litres ? `<span class="bchip">${b.litres} L</span>` : ''}${pl.text ? `<span class="bchip">${esc(pl.text)}</span>` : ''}</span></span>
    <span class="bchev">${ICON.chev}</span></button>`; }).join('');
- const empty = `<div class="bempty"><div class="bfan" aria-hidden="true">${[['fish', -20], ['shortboard', 0], ['longboard', 20]].map(([t, r]) => `<span class="btile" style="--bc:${BOARD_COLOR[t]}">${boardIcon(t, null, 32 + r)}</span>`).join('')}</div>
+ const empty = `<div class="bempty"><div class="bfan" aria-hidden="true">${[['fish', -20], ['shortboard', 0], ['longboard', 20]].map(([t, r]) => `<span class="btile" style="--bc:${BOARD_COLOR[t]}">${boardIcon(t, null, 32 + r, .85)}</span>`).join('')}</div>
   <p class="small muted">Nessuna tavola. Aggiungi quelle che hai e l'app ti dice quale portare, spot per spot.</p></div>`;
- qBox.innerHTML = `<div class="card">${q.length ? rows : empty}</div><button class="pillbtn addspot" id="bAdd">${ICON_PLUS}Aggiungi una tavola</button>`;
+ qBox.innerHTML = `<div class="pcard">${q.length ? rows : empty}</div><button class="pillbtn addspot" id="bAdd">${ICON_PLUS}Aggiungi una tavola</button>`;
  qBox.querySelectorAll('[data-bedit]').forEach(b => b.onclick = () => openBoard(b.dataset.bedit));
  qBox.querySelector('#bAdd').onclick = () => openBoard();
 }
