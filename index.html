@@ -612,7 +612,7 @@ const Data = (() => {
   },
   spots: {
    all: () => api.get('surf.customSpots', []),
-   save(sp){ const l = api.spots.all(), i = l.findIndex(x => x.id === sp.id); api.set('surf.customSpots', i < 0 ? [...l, sp] : l.map(x => x.id === sp.id ? sp : x)); },
+   save(sp){ sp.updated = new Date().toISOString(); const l = api.spots.all(), i = l.findIndex(x => x.id === sp.id); api.set('surf.customSpots', i < 0 ? [...l, sp] : l.map(x => x.id === sp.id ? sp : x)); },
    remove(id){ api.set('surf.customSpots', api.spots.all().filter(x => x.id !== id)); window.__cloudRemoveSpot?.(id); }
   },
   // copia completa dei dati, per il backup
@@ -1647,10 +1647,13 @@ const Cloud = (() => {
   affollamento_1_4: r.crowd ?? '', note: r.note || '', created: r.created_at}; };
  const spotOut = x => ({id: x.id, name: x.name, area: x.area || null, lat: x.lat, lon: x.lon, beach_lat: x.beachLat ?? null, beach_lon: x.beachLon ?? null,
   facing: x.facing, window: x.window, offshore: x.offshore, min: x.min, max: x.max, min_period: x.minPeriod,
-  cams: x.cams || [], kind: x.kind || null, access: x.access || null, big_only: !!x.bigOnly, owner: user.id});
+  cams: x.cams || [], kind: x.kind || null, access: x.access || null, big_only: !!x.bigOnly, owner: user.id,
+  updated_at: x.updated || new Date().toISOString()});
  const spotIn = r => ({id: r.id, name: r.name, area: r.area || 'Spot personale', lat: r.lat, lon: r.lon, beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined,
   facing: +r.facing, window: +r.window, offshore: +r.offshore, min: +r.min, max: +r.max, minPeriod: +r.min_period, alert: true, cams: r.cams || [],
-  kind: r.kind || null, access: r.access || null, bigOnly: !!r.big_only});
+  kind: r.kind || null, access: r.access || null, bigOnly: !!r.big_only, visibility: r.visibility, updated: r.updated_at});
+ const stamp = s => s ? new Date(s).getTime() : 0;
+ const sameSpot = (a, b) => ['name','area','lat','lon','beachLat','beachLon','facing','window','offshore','min','max','minPeriod','kind','access','bigOnly','visibility'].every(k => (a[k] ?? null) === (b[k] ?? null));
  const userSpotRows = () => {
   const fav = store.get('surf.favorite', null), fol = store.get('surf.followed', null), ord = store.get('surf.order', null) || [], g = store.get('surf.gain', {});
   return spots.map(sp => ({user_id: user.id, spot_id: sp.id, favorite: fav === sp.id,
@@ -1712,11 +1715,18 @@ const Cloud = (() => {
   busy = true; lastErr = null;
   try{
    const official = new Set(baseSpots.map(b => b.id));
-   const mine = Data.spots.all().filter(x => !official.has(x.id) && x.visibility !== 'public');
-   if (mine.length){ const {error} = await sb.from('spots').upsert(mine.map(spotOut)); if (error) throw error; }
+   const known = await sb.from('spots').select('id,updated_at,owner'); if (known.error) throw known.error;
+   const rmap = new Map(known.data.map(r => [r.id, r]));
+   // spedisco solo gli spot nuovi o modificati DOPO la versione che sta nel database:
+   // così un telefono rimasto indietro non cancella le modifiche fatte da un altro
+   const mine = Data.spots.all().filter(x => !official.has(x.id) && x.visibility !== 'public')
+    .filter(x => { const r = rmap.get(x.id); return !r || (x.updated && stamp(x.updated) > stamp(r.updated_at)); });
+   if (mine.length){ const {error} = await sb.from('spots').upsert(mine.map(spotOut)); if (error) throw error;
+    mine.forEach(x => rmap.set(x.id, {id:x.id, owner:user.id, updated_at:x.updated})); }
+   // ricordo quali spot miei il database conosce: se sparisce da lì, è stato eliminato da un altro dispositivo
+   Data.set('surf.syncedSpots', [...rmap.values()].filter(r => r.owner === user.id).map(r => r.id));
    // solo spot che il database conosce (ufficiali e miei): altrimenti il collegamento fallirebbe
-   const known = await sb.from('spots').select('id'); if (known.error) throw known.error;
-   const ok = new Set(known.data.map(r => r.id));
+   const ok = new Set(rmap.keys());
    const ses = Data.sessions.all().filter(x => isUuid(x.id) && ok.has(x.spot_id) && x.onda_reale_m !== '' && x.qualita_reale_1_5);
    if (ses.length){ const {error} = await sb.from('sessions').upsert(ses.map(sessionOut)); if (error) throw error; }
    const us = userSpotRows().filter(r => ok.has(r.spot_id));
@@ -1742,9 +1752,27 @@ const Cloud = (() => {
    const add = rs.data.filter(r => !ids.has(r.id)).map(sessionIn);
    if (add.length) Data.set('surf.sessions', [...local, ...add]);
    // spot personali: unione
-   const lsp = Data.spots.all(), sids = new Set(lsp.map(x => x.id));
-   const addSp = rp.data.filter(r => !sids.has(r.id)).map(spotIn);
-   if (addSp.length){ Data.set('surf.customSpots', [...lsp, ...addSp]); changedSpots = true; }
+   const remoteMine = rp.data.filter(r => r.visibility !== 'public');
+   const rById = new Map(remoteMine.map(r => [r.id, r]));
+   const synced = new Set(store.get('surf.syncedSpots', []));
+   const lsp = Data.spots.all();
+   // eliminati da un altro dispositivo: erano già nel database e ora non ci sono più
+   const kept = lsp.filter(x => !(synced.has(x.id) && !rById.has(x.id)));
+   // modificati altrove: se la versione del database è più recente, vince quella
+   const merged = kept.map(x => {
+    const r = rById.get(x.id); if (!r) return x;
+    const remoteNewer = !x.updated || stamp(r.updated_at) > stamp(x.updated);
+    if (!remoteNewer) return x;
+    const n = spotIn(r); return sameSpot(n, x) ? {...x, updated: n.updated} : n;
+   });
+   const lids = new Set(lsp.map(x => x.id));
+   const added = remoteMine.filter(r => !lids.has(r.id)).map(spotIn);
+   const next = [...merged, ...added];
+   if (next.length !== lsp.length || next.some((x, i) => x !== lsp[i])){
+    Data.set('surf.customSpots', next);
+    changedSpots = next.length !== lsp.length || next.some((x, i) => lsp[i] && !sameSpot(x, lsp[i]));
+   }
+   Data.set('surf.syncedSpots', [...rById.keys()]);
    // scelte personali: se nel database ci sono già, valgono quelle
    if (ru.data.length){
     const fav = ru.data.find(r => r.favorite)?.spot_id ?? null;
