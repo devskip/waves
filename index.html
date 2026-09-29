@@ -478,7 +478,6 @@ nav.tabs button:active svg{transform:scale(.9)}
 .pcard .srow{padding-left:0;padding-right:0}
 .dsec .field{border-color:rgba(19,40,59,.2)}
 .dsec .opts.two button[aria-pressed="true"]{background:#fff}
-.dsec.pm .motif{width:72px;height:72px;right:16px;top:16px;opacity:.22}
 .dsec .addspot{margin-top:12px;background:rgba(255,255,255,.72);border-color:rgba(19,40,59,.28)}
 .dsec .bempty{padding-bottom:14px}
 @media (prefers-reduced-motion:reduce){.spin,.dot.busy{animation:none}.toast,button,a.pillbtn{transition:none}}
@@ -558,28 +557,48 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
  <h1 class="sub">Profilo</h1>
  <p class="muted small" style="margin-top:4px">Il tuo account e quello che serve per consigliarti la tavola giusta.</p>
 
- <section class="dsec open pm t-now">
-  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="100" cy="100" r="84" stroke-width="6"/><circle cx="100" cy="82" r="24" stroke-width="6"/><path d="M56 152C60 124 80 112 100 112C120 112 140 124 144 152" stroke-width="6"/></svg>
-  <div class="shead"><h2>Account</h2><p class="xs" style="margin-top:2px">Per ritrovare tutto su ogni dispositivo</p></div>
-  <div class="pcard" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div>
+ <section class="dsec t-now" id="sec-me-acc">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><circle cx="100" cy="74" r="34" fill="currentColor"/><path d="M44 160C44 126 68 108 100 108C132 108 156 126 156 160Z" fill="currentColor"/></svg>
+  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-acc" data-toggle="me-acc">
+   <div style="grid-column:1;grid-row:1"><h2>Account</h2></div>
+   <p class="xs muted sub" style="margin-top:2px">Per ritrovare tutto su ogni dispositivo</p>
+   <span class="ssum" id="sum-me-acc"></span>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
+   <p class="sinfo" id="info-me-acc"></p></button>
+  <div id="body-me-acc" hidden><div class="pcard" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div></div>
  </section>
 
- <section class="dsec open pm t-tide">
-  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 62 C27.8 26 40.2 26 56 62 C71.8 98 84.2 98 100 62 C115.8 26 128.2 26 144 62 C159.8 98 172.2 98 188 62" stroke-width="7"/><path d="M12 100 C27.8 64 40.2 64 56 100 C71.8 136 84.2 136 100 100 C115.8 64 128.2 64 144 100 C159.8 136 172.2 136 188 100" stroke-width="7"/><path d="M12 138 C27.8 102 40.2 102 56 138 C71.8 174 84.2 174 100 138 C115.8 102 128.2 102 144 138 C159.8 174 172.2 174 188 138" stroke-width="7"/></svg>
-  <div class="shead"><h2>Il tuo surf</h2><p class="xs" style="margin-top:2px">Livello e peso, per i litri giusti</p></div>
-  <div class="pcard" id="meSurf"></div>
+ <section class="dsec t-tide" id="sec-me-surf">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><defs><clipPath id="mclip"><circle cx="100" cy="100" r="80"/></clipPath></defs><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g clip-path="url(#mclip)"><path d="M0 112C32 74 66 74 100 108C134 142 168 142 200 106L200 200L0 200Z" fill="currentColor" opacity=".5"/><path d="M0 146C32 108 66 108 100 142C134 176 168 176 200 140L200 200L0 200Z" fill="currentColor"/></g></svg>
+  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-surf" data-toggle="me-surf">
+   <div style="grid-column:1;grid-row:1"><h2>Il tuo surf</h2></div>
+   <p class="xs muted sub" style="margin-top:2px">Livello e peso, per i litri giusti</p>
+   <span class="ssum" id="sum-me-surf"></span>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
+   <p class="sinfo" id="info-me-surf"></p></button>
+  <div id="body-me-surf" hidden><div class="pcard" id="meSurf"></div></div>
  </section>
 
- <section class="dsec open pm t-wx">
-  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="translate(100 100) rotate(38) scale(2) translate(-20 -50)"><path d="M20 2C31 5 34 28 34 50C34 74 30 97 20 98C10 97 6 74 6 50C6 28 9 5 20 2Z" stroke-width="3.2"/><path d="M20 12L20 88" stroke-width="3.2"/></g></svg>
-  <div class="shead"><h2>Le tue tavole</h2><p class="xs" style="margin-top:2px">Quelle che porti in acqua</p></div>
-  <div id="quiver"></div>
+ <section class="dsec t-wx" id="sec-me-boards">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g transform="translate(100 100) rotate(38) scale(1.9 1.5) translate(-20 -50)"><path d="M20 2C29 20 31 48 28 74C26.5 88 23.5 96 20 96C16.5 96 13.5 88 12 74C9 48 11 20 20 2Z" fill="currentColor"/><path d="M20 10L20 80" stroke="var(--sbg)" stroke-width="2.4" stroke-linecap="round"/></g></svg>
+  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-boards" data-toggle="me-boards">
+   <div style="grid-column:1;grid-row:1"><h2>Le tue tavole</h2></div>
+   <p class="xs muted sub" style="margin-top:2px">Quelle che porti in acqua</p>
+   <span class="ssum" id="sum-me-boards"></span>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
+   <p class="sinfo" id="info-me-boards"></p></button>
+  <div id="body-me-boards" hidden><div id="quiver"></div></div>
  </section>
 
- <section class="dsec open pm t-cal">
-  <svg class="motif" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M58 152C28 152 20 108 54 100C50 62 100 48 116 80C146 60 184 84 162 112C192 116 188 152 156 152Z" stroke-width="6.5"/><path d="M100 132L100 92" stroke-width="6.5"/><path d="M82 108L100 90L118 108" stroke-width="6.5"/></svg>
-  <div class="shead"><h2>I tuoi dati</h2><p class="xs" style="margin-top:2px">Una copia di sicurezza, quando serve</p></div>
-  <div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div>
+ <section class="dsec t-cal" id="sec-me-data">
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g transform="translate(-6 -6)"><path d="M58 152C28 152 20 108 54 100C50 62 100 48 116 80C146 60 184 84 162 112C192 116 188 152 156 152Z" fill="currentColor"/><path d="M104 140L104 104" stroke="var(--sbg)" stroke-width="9" stroke-linecap="round"/><path d="M86 120L104 102L122 120" stroke="var(--sbg)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g></svg>
+  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-data" data-toggle="me-data">
+   <div style="grid-column:1;grid-row:1"><h2>I tuoi dati</h2></div>
+   <p class="xs muted sub" style="margin-top:2px">Una copia di sicurezza, quando serve</p>
+   <span class="ssum" id="sum-me-data"></span>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
+   <p class="sinfo" id="info-me-data"></p></button>
+  <div id="body-me-data" hidden><div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div></div>
  </section>
 </section>
 
@@ -1542,9 +1561,34 @@ function guessBoardType(name){
 // ---------- Profilo: livello, peso e quiver ----------
 const lvIcon = i => `<span class="lvi" aria-hidden="true">${[0, 1, 2, 3].map(k => `<i class="${k <= i ? 'on' : ''}" style="height:${6 + k * 4.5}px"></i>`).join('')}</span>`;
 let weightTimer = null;
+// ---------- Sezioni del profilo ad accordion ----------
+const ME_KEYS = ['me-acc', 'me-surf', 'me-boards', 'me-data'];
+let meInit = false;
+function updateMeSummaries(){
+ const set = (k, sum, info) => { const s = document.getElementById('sum-' + k), i = document.getElementById('info-' + k); if (s) s.innerHTML = sum; if (i) i.textContent = info; };
+ const pr = surfProfile(), lv = SURF_LEVELS.find(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200, q = Data.boards.all();
+ if (!Cloud.ready || !Cloud.user) set('me-acc', '<span><b>Non collegato</b>tocca per entrare</span>', 'Entra per non perdere i tuoi dati');
+ else set('me-acc', `<span><b>Collegato</b>${Cloud.lastErr ? 'errore' : (Cloud.busy || !Cloud.lastSync) ? 'sincronizzo…' : 'sincronizzato'}</span>`, Cloud.user.email || '');
+ set('me-surf', lv || okW ? `<span><b>${lv ? lv.t : 'Livello?'}</b>${okW ? pr.weight + ' kg' : 'peso?'}</span>` : '<span>Da impostare</span>',
+  lv && okW ? `Shortboard di riferimento: ~${Math.round(pr.weight * LKG[pr.level])} L` : 'Livello e peso servono a consigliarti la tavola');
+ const L = q.map(b => b.litres).filter(x => x);
+ set('me-boards', q.length ? `<span><b>${q.length} ${q.length === 1 ? 'tavola' : 'tavole'}</b>${L.length ? (Math.min(...L) === Math.max(...L) ? Math.min(...L) : Math.min(...L) + '–' + Math.max(...L)) + ' L' : ''}</span>` : '<span>Nessuna tavola</span>',
+  q.length ? q.map(b => b.name).join(', ') : 'Aggiungi le tue tavole per sapere quale portare');
+ set('me-data', '<span><b>Backup</b>manuale</span>', 'Copia di sicurezza di sessioni, spot e impostazioni');
+}
+// la prima volta in una sessione apro solo ciò che richiede un'azione; poi decide la persona
+function initMeOpen(){
+ if (meInit) return; meInit = true;
+ const pr = surfProfile(), done = SURF_LEVELS.some(l => l.id === pr.level) && pr.weight >= 30;
+ const def = {'me-acc': !Cloud.user, 'me-surf': !done, 'me-boards': Data.boards.all().length === 0, 'me-data': false};
+ ME_KEYS.forEach(k => openSection(k, def[k]));
+}
+document.querySelectorAll('#v-me [data-toggle]').forEach(t => { t.onclick = () => openSection(t.dataset.toggle); });
+
 function renderProfile(){
  const pr = surfProfile(), sBox = document.getElementById('meSurf'), qBox = document.getElementById('quiver');
  if (!sBox || !qBox) return;
+ initMeOpen(); updateMeSummaries();
  const hasLv = SURF_LEVELS.some(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200;
  const ref = hasLv && okW ? `<div class="refbox"><p class="xs muted">Litri di riferimento per te</p><div class="bmeta">${['shortboard', 'fish', 'midlength', 'longboard'].map(t =>
   `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])} L</span>`).join('')}</div></div>` : '';
@@ -2271,7 +2315,7 @@ const Cloud = (() => {
  return api;
 })();
 
-function renderAccount(){ renderAccountBox(); renderTelegram(); }
+function renderAccount(){ renderAccountBox(); renderTelegram(); updateMeSummaries(); }
 function renderTelegram(){
  const box = document.getElementById('tgBox'); if (!box) return;
  const head = t => `<p style="font-weight:600">Telegram</p><p class="xs muted">${t}</p>`;
