@@ -47,11 +47,19 @@ create table if not exists public.spots (
   gain numeric not null default 1,
   alert_default boolean not null default false,
   cams jsonb not null default '[]',
+  kind text check (kind in ('beach','reef','point')),          -- fondale: beach break, reef, point break
+  access text check (access in ('open','locals')),             -- aperto a tutti o only locals (null = non si sa)
+  big_only boolean not null default false,                     -- si attiva solo con le mareggiate
   owner uuid references auth.users on delete cascade default auth.uid(),
   visibility text not null default 'private' check (visibility in ('public','private','proposed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- colonne aggiunte dopo la prima versione: su un database già creato le aggiungono, altrimenti non fanno nulla
+alter table public.spots add column if not exists kind text check (kind in ('beach','reef','point'));
+alter table public.spots add column if not exists access text check (access in ('open','locals'));
+alter table public.spots add column if not exists big_only boolean not null default false;
 
 -- ---------- Scelte personali per spot ----------
 create table if not exists public.user_spots (
