@@ -411,6 +411,67 @@ body.locked{overflow:hidden}
 .opts.two button{min-height:96px;padding:10px 8px}
 .brow{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}
 .brow:last-child{border-bottom:0}
+/* feedback al tocco: l'evidenziazione nativa è spenta, quindi senza questi stati su iPhone i tasti sembrano fermi */
+button,a.pillbtn{transition:transform .09s ease,background-color .12s ease,filter .12s ease,box-shadow .12s ease,border-color .12s ease,opacity .12s ease}
+.pillbtn{box-shadow:0 1px 2px rgba(19,40,59,.1);border-color:#BCC9CD}
+.pillbtn.primary{box-shadow:0 2px 6px rgba(29,95,138,.3)}
+.pillbtn:not([disabled]):active,.locbtn:active,.hstar:active,.idchip:active,.sheet-x:active,.wstep:active,.chips button:active,.kmchips button:active,.seg button:active,.opts button:active,.types button:active,.switch:active{transform:scale(.95)}
+.pillbtn:not([disabled]):not(.primary):active,.locbtn:not([aria-pressed="true"]):active,.wstep:active,.sheet-x:active{background:#DCE6E9;box-shadow:inset 0 1px 3px rgba(19,40,59,.2)}
+.pillbtn.primary:not([disabled]):active{filter:brightness(.86);box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
+.pillbtn[disabled]{opacity:.65;cursor:default}
+.opts button:not([aria-pressed="true"]):active,.types button:active,.chips button:not([aria-pressed="true"]):active,.kmchips button:not([aria-pressed="true"]):active,.seg button:not([aria-pressed="true"]):active{background:#DCE6E9}
+.row:active,.mini:active,.mapcard:active,.alist button:active,.bcard:active,.dnav button:active,.sbtn:active{background-color:rgba(19,40,59,.06)}
+.banner:active{filter:brightness(.9)}.fav:active{filter:brightness(1.14)}
+.linkbtn:active,.backlink:active{opacity:.5}
+nav.tabs button:active{background:rgba(29,95,138,.1)}
+nav.tabs button:active svg{transform:scale(.9)}
+.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{opacity:.3}}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:3000;transform:translate(-50%,14px);display:flex;align-items:center;gap:9px;max-width:calc(100% - 40px);padding:10px 16px 10px 10px;border-radius:24px;background:var(--ink);color:#fff;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(19,40,59,.32);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast i{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#25864B;display:grid;place-items:center;font-style:normal;font-size:13px}
+.toast.err i{background:#C0504D}
+/* profilo */
+.acct .lab{font-weight:600}
+.mehero{display:flex;align-items:center;gap:12px}
+.ava{width:48px;height:48px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 24px "Barlow Condensed",sans-serif;flex-shrink:0}
+.who{min-width:0}
+.who .mail{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-top:1px}
+.dot{width:8px;height:8px;border-radius:50%;background:#25864B;flex-shrink:0}
+.dot.busy{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+.dot.err{background:#C0504D}
+.lvi{display:flex;gap:3px;align-items:flex-end;height:20px;margin-bottom:2px}
+.lvi i{width:5px;border-radius:2px;background:#CBD6D9}
+.lvi i.on{background:var(--accent)}
+.opts.two button{position:relative}
+.opts.two button b{font-size:15px;font-weight:700}
+.opts.two button[aria-pressed="true"]{background:rgba(29,95,138,.08)}
+.opts.two button[aria-pressed="true"]::after{content:"✓";position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;display:grid;place-items:center}
+.wrow{display:flex;align-items:center;gap:10px;margin-top:8px}
+.wstep{flex-shrink:0;width:48px;height:48px;border-radius:50%;border:1px solid #BCC9CD;background:var(--panel);font-size:26px;line-height:1;display:grid;place-items:center;padding:0;box-shadow:0 1px 2px rgba(19,40,59,.1);color:var(--accent)}
+.inunit{position:relative;flex:1;min-width:0}
+.inunit .field{margin-top:0;text-align:center;font:700 24px "Barlow Condensed",sans-serif;padding-right:40px;padding-left:40px}
+.inunit .unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:600;pointer-events:none}
+.refbox{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--bg)}
+.bmeta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.bchip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:11px;background:rgba(19,40,59,.07);font-size:12px;font-weight:600;color:var(--muted);line-height:1.5}
+.bchip.l{background:color-mix(in srgb,var(--bc,#1D5F8A) 16%,#fff);color:var(--ink)}
+.btile{width:56px;height:64px;border-radius:16px;background:color-mix(in srgb,var(--bc,#1D5F8A) 14%,#fff);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
+.btile.big{width:88px;height:96px;border-radius:22px}
+.btile.big .bico{transform:rotate(32deg) scale(1.5)}
+.bico{display:block}
+.bcard{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px 10px 10px;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:inherit;cursor:pointer}
+.bcard:last-child{border-bottom:0}
+.bname{display:block;font:700 21px/1.1 "Barlow Condensed",sans-serif;overflow-wrap:anywhere}
+.bchev{flex-shrink:0;display:flex}
+.bempty{padding:18px 14px;text-align:center}
+.bfan{display:flex;justify-content:center;gap:8px;margin-bottom:10px}
+.bfan .btile{width:48px;height:56px}
+.bprev{display:flex;gap:14px;align-items:center;margin-top:12px}
+.bhead{display:flex;gap:12px;align-items:center;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.spin,.dot.busy{animation:none}.toast,button,a.pillbtn{transition:none}}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--panel);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:max(6px, calc(env(safe-area-inset-bottom,0px) - 16px)) 0}
 nav.tabs button{min-height:52px;padding:0;border:0;background:transparent;color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
@@ -1393,35 +1454,107 @@ function boardHtml(sp, ev){
  if (a.c.generic || !a.c.weight) hints.push(`<button class="linkbtn" data-goto="me" style="min-height:36px">Imposta ${a.c.generic ? 'livello' : ''}${a.c.generic && !a.c.weight ? ' e ' : ''}${a.c.weight ? '' : 'peso'} per un consiglio su misura</button>`);
  if (!a.mine && !a.tooBig) hints.push(`<button class="linkbtn" data-goto="me" style="min-height:36px">Aggiungi le tue tavole per sapere quale portare</button>`);
  return `<div class="board"><div class="ctop"><span class="xs muted">Che tavola portare</span>${top}</div>
-  <b class="bn">${name}</b>${sub ? `<p class="small" style="margin-top:2px">${sub}</p>` : ''}${why}${extra}
+  <div class="bhead">${a.tooBig ? '' : boardTile(m ? m.b.type : a.best.id, m ? parseLen(m.b.length).ft : null)}<div style="min-width:0"><b class="bn">${name}</b>${sub ? `<p class="small" style="margin-top:2px">${sub}</p>` : ''}</div></div>${why}${extra}
   ${a.warn ? `<p class="bwarn" role="note">${a.warn}</p>` : ''}${hints.length ? `<div>${hints.join('<br>')}</div>` : ''}
   <p class="xs muted" style="margin-top:6px">Indicazione di massima: conta anche come ti senti tu e come sono le onde davvero.</p></div>`;
 }
 
+// ---------- Avvisi a comparsa ----------
+let toastTimer = null;
+function toast(msg, kind = 'ok'){
+ let t = document.getElementById('toast');
+ if (!t){ t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
+ t.className = 'toast ' + kind;
+ t.innerHTML = `<i aria-hidden="true">${kind === 'err' ? '!' : '✓'}</i>${esc(msg)}`;
+ void t.offsetWidth; t.classList.add('on');
+ clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2400);
+}
+const ICON_SYNC = svgI('<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/>', 17);
+const ICON_OUT = svgI('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>', 17);
+const ICON_PLUS = svgI('<path d="M12 5v14M5 12h14"/>', 18);
+
+// ---------- Tavole disegnate: ogni tipo ha la sua sagoma e la sua lunghezza ----------
+const BOARD_COLOR = {foam:'#D9A441', longboard:'#2F9E8F', midlength:'#4C9F5B', fish:'#E0705A', hybrid:'#A0578E', shortboard:'#1D5F8A', stepup:'#4B3A9E', gun:'#13283B'};
+const BOARD_SHAPE = {
+ shortboard:'M20 2C29 20 31 48 28 74C26.5 88 23.5 96 20 96C16.5 96 13.5 88 12 74C9 48 11 20 20 2Z',
+ fish:'M20 8C31 18 35 44 33 66C32 76 30 84 27 92L20 84L13 92C10 84 8 76 7 66C5 44 9 18 20 8Z',
+ longboard:'M20 2C31 5 34 28 34 50C34 74 30 97 20 98C10 97 6 74 6 50C6 28 9 5 20 2Z',
+ foam:'M20 2C31 5 34 28 34 50C34 74 30 97 20 98C10 97 6 74 6 50C6 28 9 5 20 2Z',
+ midlength:'M20 4C32 14 35 40 33 62C31 82 26 94 20 94C14 94 9 82 7 62C5 40 8 14 20 4Z',
+ hybrid:'M20 10C33 17 37 42 35 64C34 80 31 88 27 90L13 90C9 88 6 80 5 64C3 42 7 17 20 10Z',
+ stepup:'M20 1C27 20 30 52 27 80C26 90 23 97 20 98C17 97 14 90 13 80C10 52 13 20 20 1Z',
+ gun:'M20 0C26 22 28 58 25.5 88L20 100L14.5 88C12 58 14 22 20 0Z'
+};
+const BOARD_FT = {foam:8, longboard:9, midlength:7.2, fish:5.8, hybrid:6, shortboard:6, stepup:6.8, gun:8};   // lunghezza tipica in piedi
+// "6", "5.8", "5'8", "5 8" diventano 6'0", 5'8"...: se non riconosco la misura la lascio com'è
+function parseLen(s){
+ s = String(s || '').trim();
+ if (!s) return {text:'', ft:null};
+ const m = s.match(/^(\d{1,2})\s*(?:'|’|ft|piedi|-|\.|,|\s)?\s*(\d{1,2})?\s*(?:"|”|in)?$/i);
+ if (!m) return {text:s, ft:null};
+ const f = +m[1], i = m[2] == null ? 0 : +m[2];
+ if (f < 4 || f > 12 || i > 11) return {text:s, ft:null};
+ return {text:`${f}'${i}"`, ft: f + i / 12};
+}
+function boardIcon(type, ft, tilt = 32){
+ const t = BOARD_SHAPE[type] ? type : 'shortboard', L = ft || BOARD_FT[t];
+ const H = Math.round(clamp(30 + (L - 5) * 6.5, 30, 58)), W = Math.round(H * .4);
+ const band = t === 'foam' ? '<path d="M9 40H31" stroke="#fff" stroke-width="6" opacity=".5"/>' : '';
+ return `<svg class="bico" width="${W}" height="${H}" viewBox="0 0 40 100" style="transform:rotate(${tilt}deg)" aria-hidden="true"><path d="${BOARD_SHAPE[t]}" fill="${BOARD_COLOR[t]}"/>${band}<path d="M20 8V90" stroke="#fff" stroke-width="1.6" opacity=".45" stroke-linecap="round"/></svg>`;
+}
+const boardTile = (type, ft, big = false) => `<span class="btile${big ? ' big' : ''}" style="--bc:${BOARD_COLOR[type] || BOARD_COLOR.shortboard}">${boardIcon(type, ft)}</span>`;
+// dal nome ("Fish rosso", "Egg 7'2"...) provo a indovinare il tipo
+function guessBoardType(name){
+ const n = String(name).toLowerCase();
+ const rules = [[/step\s*-?up|semi\s*-?gun/, 'stepup'], [/\bgun\b/, 'gun'], [/fish|twin|keel/, 'fish'], [/hybrid|grovel/, 'hybrid'],
+  [/\begg\b|mid\s*-?length|midlength|funboard|\bfun\b/, 'midlength'], [/long\s*-?board|\blog\b|malibu|\bmal\b/, 'longboard'],
+  [/soft\s*-?top|softop|foam/, 'foam'], [/short|thruster|performance|\bpw\b/, 'shortboard']];
+ const r = rules.find(([re]) => re.test(n)); return r ? r[1] : null;
+}
+
 // ---------- Profilo: livello, peso e quiver ----------
+const lvIcon = i => `<span class="lvi" aria-hidden="true">${[0, 1, 2, 3].map(k => `<i class="${k <= i ? 'on' : ''}" style="height:${6 + k * 4.5}px"></i>`).join('')}</span>`;
+let weightTimer = null;
 function renderProfile(){
  const pr = surfProfile(), sBox = document.getElementById('meSurf'), qBox = document.getElementById('quiver');
  if (!sBox || !qBox) return;
- sBox.innerHTML = `<div class="acct"><p style="font-weight:600">Livello</p>
-  <div class="opts two">${SURF_LEVELS.map(l => `<button type="button" data-lvl="${l.id}" aria-pressed="${pr.level === l.id}">${l.t}<span>${l.d}</span></button>`).join('')}</div>
-  <label for="meW" style="display:block;margin-top:14px;font-weight:600">Peso (kg)</label>
-  <input class="field" id="meW" type="number" inputmode="decimal" min="30" max="200" step="1" placeholder="es. 75" value="${pr.weight ?? ''}">
-  <p class="err" id="meErr" hidden></p>
-  <p class="xs muted" style="margin-top:6px">Serve solo a calcolare i litri giusti per te. ${Cloud.user ? 'Si salva nel tuo account e lo vedi solo tu.' : 'Resta su questo telefono finché non entri con l\'account.'}</p></div>`;
- sBox.querySelectorAll('[data-lvl]').forEach(b => b.onclick = () => { saveProfile({level:b.dataset.lvl}); renderProfile(); });
- sBox.querySelector('#meW').onchange = e => {
-  const raw = e.target.value.trim().replace(',', '.'), err = document.getElementById('meErr');
-  if (!raw){ err.hidden = true; saveProfile({weight:null}); return; }
+ const hasLv = SURF_LEVELS.some(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200;
+ const ref = hasLv && okW ? `<div class="refbox"><p class="xs muted">Litri di riferimento per te</p><div class="bmeta">${['shortboard', 'fish', 'midlength', 'longboard'].map(t =>
+  `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])} L</span>`).join('')}</div></div>` : '';
+ sBox.innerHTML = `<div class="acct"><p class="lab">Livello</p>
+  <div class="opts two">${SURF_LEVELS.map((l, i) => `<button type="button" data-lvl="${l.id}" aria-pressed="${pr.level === l.id}">${lvIcon(i)}<b>${l.t}</b><span>${l.d}</span></button>`).join('')}</div>
+  <p class="lab" style="margin-top:18px">Peso</p>
+  <div class="wrow"><button type="button" class="wstep" id="wMinus" aria-label="Un chilo in meno">−</button>
+   <div class="inunit"><input class="field" id="meW" type="number" inputmode="decimal" min="30" max="200" step="1" placeholder="75" value="${pr.weight ?? ''}" aria-label="Peso in chili"><span class="unit">kg</span></div>
+   <button type="button" class="wstep" id="wPlus" aria-label="Un chilo in più">+</button></div>
+  <p class="err" id="meErr" hidden></p>${ref}
+  <p class="xs muted" style="margin-top:12px">Serve solo a calcolare i litri giusti per te. ${Cloud.user ? 'Si salva nel tuo account e lo vedi solo tu.' : 'Resta su questo telefono finché non entri con l\'account.'}</p></div>`;
+ sBox.querySelectorAll('[data-lvl]').forEach(b => b.onclick = () => {
+  const l = SURF_LEVELS.find(x => x.id === b.dataset.lvl);
+  saveProfile({level:l.id}); renderProfile(); toast('Livello: ' + l.t);
+ });
+ const inp = sBox.querySelector('#meW'), err = sBox.querySelector('#meErr');
+ const commit = (raw, viaStep) => {
+  raw = String(raw).trim().replace(',', '.');
+  if (!raw){ err.hidden = true; saveProfile({weight:null}); renderProfile(); toast('Peso rimosso'); return; }
   const w = parseFloat(raw);
   if (isNaN(w) || w < 30 || w > 200){ err.hidden = false; err.textContent = 'Scrivi un peso tra 30 e 200 kg.'; return; }
-  err.hidden = true; saveProfile({weight:Math.round(w * 10) / 10});
+  err.hidden = true; const v = Math.round(w * 10) / 10; saveProfile({weight:v});
+  clearTimeout(weightTimer); weightTimer = setTimeout(() => { renderProfile(); toast(`Peso salvato: ${v} kg`); }, viaStep ? 700 : 0);
  };
+ inp.onchange = e => commit(e.target.value, false);
+ const step = d => { const cur = parseFloat(String(inp.value).replace(',', '.')); const v = clamp(Math.round((isNaN(cur) ? (pr.weight || 70) : cur) + d), 30, 200); inp.value = v; commit(v, true); };
+ sBox.querySelector('#wMinus').onclick = () => step(-1);
+ sBox.querySelector('#wPlus').onclick = () => step(1);
+
  const q = Data.boards.all();
- qBox.innerHTML = `<div class="card">${q.length ? q.map(b => `<div class="brow"><div style="flex:1;min-width:0"><p style="font-weight:600">${esc(b.name)}</p>
-   <p class="xs muted">${esc(boardType(b.type)?.t || b.type)}${b.litres ? ', ' + b.litres + ' L' : ''}${b.length ? ', ' + esc(b.length) : ''}</p></div>
-   <button class="pillbtn" data-bedit="${b.id}">Modifica</button></div>`).join('')
-   : `<div class="srow"><p class="small muted">Nessuna tavola. Aggiungi quelle che hai e l'app ti dice quale portare, spot per spot.</p></div>`}</div>
-  <button class="pillbtn addspot" id="bAdd">+ Aggiungi una tavola</button>`;
+ const rows = q.map(b => { const t = boardType(b.type), pl = parseLen(b.length);
+  return `<button type="button" class="bcard" data-bedit="${b.id}" style="--bc:${BOARD_COLOR[b.type] || BOARD_COLOR.shortboard}" aria-label="Modifica ${esc(b.name)}">${boardTile(b.type, pl.ft)}
+   <span style="flex:1;min-width:0"><b class="bname">${esc(b.name)}</b><span class="bmeta"><span class="bchip l">${esc(t ? t.s : b.type)}</span>${b.litres ? `<span class="bchip">${b.litres} L</span>` : ''}${pl.text ? `<span class="bchip">${esc(pl.text)}</span>` : ''}</span></span>
+   <span class="bchev">${ICON.chev}</span></button>`; }).join('');
+ const empty = `<div class="bempty"><div class="bfan" aria-hidden="true">${[['fish', -20], ['shortboard', 0], ['longboard', 20]].map(([t, r]) => `<span class="btile" style="--bc:${BOARD_COLOR[t]}">${boardIcon(t, null, 32 + r)}</span>`).join('')}</div>
+  <p class="small muted">Nessuna tavola. Aggiungi quelle che hai e l'app ti dice quale portare, spot per spot.</p></div>`;
+ qBox.innerHTML = `<div class="card">${q.length ? rows : empty}</div><button class="pillbtn addspot" id="bAdd">${ICON_PLUS}Aggiungi una tavola</button>`;
  qBox.querySelectorAll('[data-bedit]').forEach(b => b.onclick = () => openBoard(b.dataset.bedit));
  qBox.querySelector('#bAdd').onclick = () => openBoard();
 }
@@ -1431,9 +1564,9 @@ function openBoard(id){
  wrap.className = 'sheet'; wrap.id = 'boardSheet';
  wrap.innerHTML = `<div class="sheet-bg" data-close></div><div class="sheet-p form" role="dialog" aria-modal="true" aria-labelledby="bdT">
   <div class="sheet-h"><h2 id="bdT">${b ? 'Modifica tavola' : 'Nuova tavola'}</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
+  <div class="bprev"><span id="bdPrev"></span><p class="xs muted" id="bdHint" style="flex:1"></p></div>
   <label>Nome<input id="bdName" maxlength="60" autocomplete="off" placeholder="Es. Fish rossa" value="${b ? esc(b.name) : ''}"></label>
   <label>Tipo<select id="bdType">${BOARD_TYPES.map(t => `<option value="${t.id}"${(b ? b.type : 'shortboard') === t.id ? ' selected' : ''}>${t.t}</option>`).join('')}</select></label>
-  <p class="xs muted" id="bdHint" style="margin-top:4px"></p>
   <label>Litri (facoltativo)<input id="bdL" type="number" inputmode="decimal" step="0.1" min="5" max="150" placeholder="es. 32" value="${b && b.litres != null ? b.litres : ''}"></label>
   <p class="xs muted" style="margin-top:4px">Di solito sono scritti sulla tavola o sul sito di chi l'ha fatta. Senza litri il consiglio guarda solo il tipo.</p>
   <label>Misura (facoltativo)<input id="bdLen" maxlength="12" autocomplete="off" placeholder="es. 5'8&quot;" value="${b ? esc(b.length || '') : ''}"></label>
@@ -1442,20 +1575,29 @@ function openBoard(id){
   ${b ? '<button class="pillbtn" id="bdDel" style="margin-top:8px;width:100%;justify-content:center">Elimina tavola</button>' : ''}</div>`;
  document.body.appendChild(wrap); document.body.classList.add('locked');
  const close = () => { wrap.remove(); document.body.classList.remove('locked'); };
- const hint = () => { wrap.querySelector('#bdHint').textContent = boardType(wrap.querySelector('#bdType').value)?.d || ''; };
- hint(); wrap.querySelector('#bdType').onchange = hint;
+ const nameEl = wrap.querySelector('#bdName'), typeEl = wrap.querySelector('#bdType'), lenEl = wrap.querySelector('#bdLen');
+ let touched = !!b;                         // se la persona sceglie il tipo, non lo cambio più io dal nome
+ const preview = () => {
+  const el = wrap.querySelector('#bdPrev'), t = typeEl.value;
+  el.innerHTML = boardTile(t, parseLen(lenEl.value).ft, true);
+  wrap.querySelector('#bdHint').textContent = boardType(t)?.d || '';
+ };
+ preview();
+ typeEl.onchange = () => { touched = true; preview(); };
+ lenEl.oninput = preview;
+ nameEl.oninput = () => { if (touched) return; const g = guessBoardType(nameEl.value); if (g && g !== typeEl.value){ typeEl.value = g; preview(); } };
  wrap.addEventListener('click', e => { if (e.target.closest('[data-close]')) close(); });
  wrap.querySelector('#bdSave').onclick = () => {
-  const name = wrap.querySelector('#bdName').value.trim(), type = wrap.querySelector('#bdType').value, err = wrap.querySelector('#bdErr');
+  const name = nameEl.value.trim(), type = typeEl.value, err = wrap.querySelector('#bdErr');
   const rawL = wrap.querySelector('#bdL').value.trim().replace(',', '.'), litres = rawL ? parseFloat(rawL) : null;
   if (!name){ err.hidden = false; err.textContent = 'Dai un nome alla tavola.'; return; }
   if (litres != null && (isNaN(litres) || litres < 5 || litres > 150)){ err.hidden = false; err.textContent = 'I litri devono essere tra 5 e 150.'; return; }
-  Data.boards.save({...(b || {}), id: b ? b.id : uid(), name, type, litres: litres == null ? null : Math.round(litres * 10) / 10, length: wrap.querySelector('#bdLen').value.trim()});
-  close(); renderProfile();
+  Data.boards.save({...(b || {}), id: b ? b.id : uid(), name, type, litres: litres == null ? null : Math.round(litres * 10) / 10, length: parseLen(lenEl.value).text});
+  close(); renderProfile(); toast(b ? 'Tavola aggiornata' : 'Tavola aggiunta');
  };
  const del = wrap.querySelector('#bdDel');
- if (del) del.onclick = () => { Data.boards.remove(b.id); close(); renderProfile(); };
- wrap.querySelector('#bdName').focus();
+ if (del) del.onclick = () => { Data.boards.remove(b.id); close(); renderProfile(); toast('Tavola eliminata'); };
+ nameEl.focus();
 }
 
 function offReason(sp, ev){
@@ -1790,7 +1932,7 @@ function openLog(sp){
    tavola: '', tavola_tipo: ''};
   const bsel = wrap.querySelector('#lgBoard'), bused = bsel && bsel.value ? Data.boards.all().find(x => x.id === bsel.value) : null;
   if (bused){ row.tavola = bused.name; row.tavola_tipo = bused.type; }
-  Data.sessions.add(row);
+  Data.sessions.add(row); toast('Sessione salvata');
   close(); openDetail(sp.id); openSection('cal', true);
   document.getElementById('sec-cal')?.scrollIntoView({behavior:'smooth', block:'start'});
  };
@@ -1855,7 +1997,7 @@ const SUPA_KEY = 'sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf';
 const Cloud = (() => {
  let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null;
  let admin = false;
- const api = {ready:false, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
+ const api = {ready:false, get busy(){ return busy; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
  const SYNC_KEYS = ['surf.sessions','surf.customSpots','surf.favorite','surf.followed','surf.order','surf.gain','surf.threshold','surf.profile','surf.boards'];
  let tg = {linked:false, link:null}, tgTimer = null;
  // vale la soglia di questo dispositivo solo se l'ha scelta la persona (o se c'era già prima che la soglia viaggiasse sull'account)
@@ -1948,7 +2090,7 @@ const Cloud = (() => {
   if (!user) return;
   const {data} = await sb.from('profiles').select('telegram_chat_id').eq('id', user.id).maybeSingle();
   const was = tg.linked; tg.linked = !!data?.telegram_chat_id;
-  if (tg.linked){ tg.link = null; clearInterval(tgTimer); }
+  if (tg.linked){ if (tg.link) toast('Telegram collegato'); tg.link = null; clearInterval(tgTimer); }
   if (tg.linked !== was) status();
  };
  api.linkTelegram = async () => {
@@ -2112,7 +2254,7 @@ function renderTelegram(){
  const t = Cloud.tg();
  if (t.linked){
   box.innerHTML = `<div class="srow"><div>${head(`Collegato ✓ Ti scrivo per gli spot che segui, da ${threshold}/5, anche con l'app chiusa. Per smettere puoi anche scrivere /stop al bot.`)}</div><button class="pillbtn" id="tgOut">Scollega</button></div><p class="err" id="tgErr" hidden></p>`;
-  document.getElementById('tgOut').onclick = async () => { try{ await Cloud.unlinkTelegram(); }catch(e){ const x = document.getElementById('tgErr'); x.hidden = false; x.textContent = 'Non riuscito: ' + e.message; } };
+  document.getElementById('tgOut').onclick = async () => { try{ await Cloud.unlinkTelegram(); toast('Telegram scollegato'); }catch(e){ const x = document.getElementById('tgErr'); x.hidden = false; x.textContent = 'Non riuscito: ' + e.message; } };
  } else if (t.link){
   box.innerHTML = `<div class="srow" style="align-items:flex-start;flex-direction:column"><div>${head('Ultimo passo: si apre Telegram, tocca <b>Avvia</b> (Start). Poi torna qui: il collegamento si vede da solo.')}</div>
    <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="pillbtn primary" style="width:auto;text-decoration:none" href="${esc(t.link.url)}" target="_blank" rel="noopener">Apri Telegram ↗</a><button class="pillbtn" id="tgRetry">Ho toccato Avvia</button></div></div><p class="err" id="tgErr" hidden></p>`;
@@ -2127,11 +2269,14 @@ function renderAccountBox(){
  const hm2 = d => d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
  if (!Cloud.ready){ box.innerHTML = `<div class="acct"><p class="small muted">Account non disponibile: controlla la connessione e riapri l'app.</p></div>`; return; }
  if (Cloud.user){
-  box.innerHTML = `<div class="acct"><p style="font-weight:600">${esc(Cloud.user.email || 'Account')}</p>
-   <p class="xs muted" style="margin-top:2px">${Cloud.lastErr ? 'Sincronizzazione non riuscita: ' + esc(Cloud.lastErr) : Cloud.lastSync ? `Sessioni, spot personali e preferenze sincronizzati alle ${hm2(Cloud.lastSync)}.` : 'Sincronizzo…'}</p>
-   <div class="row2"><button class="pillbtn" id="acSync">Sincronizza ora</button><button class="pillbtn" id="acOut">Esci</button></div></div>`;
-  document.getElementById('acSync').onclick = () => Cloud.sync();
-  document.getElementById('acOut').onclick = () => Cloud.signOut();
+  const ini = esc((Cloud.user.email || '?').trim().charAt(0).toUpperCase());
+  const st = Cloud.lastErr ? ['err', 'Sincronizzazione non riuscita: ' + Cloud.lastErr] : (Cloud.busy || !Cloud.lastSync) ? ['busy', 'Sincronizzo…'] : ['ok', `Sincronizzato alle ${hm2(Cloud.lastSync)}`];
+  box.innerHTML = `<div class="acct"><div class="mehero"><span class="ava" aria-hidden="true">${ini}</span><div class="who"><p class="mail">${esc(Cloud.user.email || 'Account')}</p>
+   <p class="stat" role="status"><i class="dot ${st[0]}"></i>${esc(st[1])}</p></div></div>
+   <div class="row2"><button class="pillbtn" id="acSync"${Cloud.busy ? ' disabled' : ''}>${Cloud.busy ? '<i class="spin"></i>Sincronizzo…' : ICON_SYNC + 'Sincronizza ora'}</button>
+   <button class="pillbtn" id="acOut">${ICON_OUT}Esci</button></div></div>`;
+  document.getElementById('acSync').onclick = async () => { await Cloud.sync(); toast(Cloud.lastErr ? 'Sincronizzazione non riuscita' : 'Tutto sincronizzato', Cloud.lastErr ? 'err' : 'ok'); };
+  document.getElementById('acOut').onclick = async e => { const b = e.currentTarget; b.disabled = true; b.innerHTML = '<i class="spin"></i>Esco…'; await Cloud.signOut(); toast('Sei uscito dall\'account'); };
   return;
  }
  if (Cloud.pendingEmail){
@@ -2139,7 +2284,6 @@ function renderAccountBox(){
   box.innerHTML = `<div class="acct"><p class="small">Ti abbiamo mandato un'email a <b>${esc(Cloud.pendingEmail)}</b>.</p>
    <p class="xs muted" style="margin-top:6px">Scrivi qui il codice di 6 cifre che trovi nell'email.${standalone ? '' : ' Oppure tocca il link nell\'email: si riapre l\'app già collegata.'}</p>
    <p class="xs muted" style="margin-top:6px"><b>Non la trovi?</b> Può metterci un minuto. Guarda anche nello spam o in Promozioni e, se è lì, segnala «Non è spam»: le prossime arriveranno in posta in arrivo.</p>
-   <p class="xs" style="margin-top:6px"><b>Non la trovi?</b> Guarda nella cartella Spam o Promozioni: la prima volta capita spesso. Se la segni come "non spam", le prossime arrivano in posta in arrivo.</p>
    <input class="field" id="acCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Codice di 6 cifre (o incolla il link)">
    <p class="err" id="acErr" hidden></p>
    <div class="row2"><button class="pillbtn primary" id="acVerify" style="width:auto">Entra</button><button class="pillbtn" id="acBack">Indietro</button></div></div>`;
@@ -2880,7 +3024,7 @@ document.getElementById('addSave').onclick = ()=>{
   facing:add.facing, offshore:(add.facing+180)%360,
   window: keep ? old.window : t.window, min: keep ? old.min : t.min, max: keep ? old.max : t.max, minPeriod: keep ? old.minPeriod : t.minPeriod,
   kind:add.kind, bigOnly:!!add.big, access:add.access, alert: old ? old.alert : true};
- Data.spots.save(sp);
+ Data.spots.save(sp); toast(old ? 'Modifiche salvate' : 'Spot salvato');
  if (old){
   spots = spots.map(x => x.id === sp.id ? sp : x); delete data[sp.id];
   if (leafPins[sp.id] && myLayer){ myLayer.removeLayer(leafPins[sp.id]); delete leafPins[sp.id]; }
@@ -2962,8 +3106,9 @@ document.addEventListener('click', e=>{
 document.getElementById('bkBtn').onclick = async ()=>{
  const txt = JSON.stringify(Data.exportAll()), st = document.getElementById('bkState');
  try{ if (navigator.share && /iPhone|iPad|Android/.test(navigator.userAgent)) await navigator.share({title:'Backup Sinis Waves', text:txt}); else await navigator.clipboard.writeText(txt);
-  st.textContent = `Backup pronto (${Data.sessions.all().length} sessioni, ${Data.spots.all().length} spot personali). Salvalo nelle Note o mandalo a te stesso.`; }
- catch(e){ st.textContent = 'Copia non riuscita: riprova.'; }
+  st.textContent = `Backup pronto (${Data.sessions.all().length} sessioni, ${Data.spots.all().length} spot personali). Salvalo nelle Note o mandalo a te stesso.`;
+  toast('Backup copiato'); }
+ catch(e){ st.textContent = 'Copia non riuscita: riprova.'; toast('Copia non riuscita', 'err'); }
 };
 document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
 document.getElementById('nearBtn').onclick = e=>{
@@ -2978,6 +3123,7 @@ document.getElementById('nearBtn').onclick = e=>{
 document.addEventListener('gesturestart', e => { if (!e.target.closest || !e.target.closest('.leaflet-container')) e.preventDefault(); });
 document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.target.closest('.leaflet-container')) e.preventDefault(); }, {passive:false});
 
+document.addEventListener('touchstart', () => {}, {passive:true});   // su iOS serve perché :active dia feedback al tocco
 setInterval(refresh, 3*60*60*1000);
 Data.init().then(() => {
  // rileggo le impostazioni dal database (possono essere più aggiornate della copia di riserva)
