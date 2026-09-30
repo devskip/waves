@@ -27,6 +27,8 @@ I file marcati *generato* li scrivono le automazioni: non vanno modificati a man
 | `index.html` | App | Interfaccia, calcoli, mappa, accesso e sincronizzazione |
 | `spots.json` | Dati di riserva | Spot ufficiali di partenza, usati se il database non risponde |
 | `apple-touch-icon.png` | Immagine | Icona dell'app sulla Home (180×180) |
+| `manifest.webmanifest`, `sw.js` | App | Descrizione dell'app per l'installazione su Android (nome, colori, icone, schermo intero); `sw.js` è un service worker minimo che non salva nulla |
+| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | Immagini | Icone dell'app per Android (normale e per la maschera adattiva) |
 | `sinis-waves-logo.svg` | Immagine | Logo vettoriale |
 | `supabase_schema.sql` | Database | Struttura completa del database, rieseguibile |
 | `aggiorna_spot.sql`, `aggiorna_telegram.sql`, `aggiorna_tavole.sql` | Database | Aggiornamenti una tantum per un database già creato (fondale e accesso degli spot; collegamento a Telegram; livello, peso e tavole) |

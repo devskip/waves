@@ -6,6 +6,8 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#EEF3F1">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Sinis Waves">
 <title>Sinis Waves</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-68%20-90%20738%20738%22%3E%3Crect%20x%3D%22-68%22%20y%3D%22-90%22%20width%3D%22738%22%20height%3D%22738%22%20rx%3D%22148%22%20fill%3D%22%23fff%22/%3E%3Cpath%20fill%3D%22%2313283B%22%20fill-rule%3D%22evenodd%22%20d%3D%22M7%20488%20L7%20551%20L596%20550%20L595%20505%20L352%20505%20L272%20492%20L241%20490%20L231%20488Z%20M6%20420%20L6%20457%20L8%20459%20L238%20459%20L271%20463%20L288%20467%20L353%20477%20L596%20476%20L595%20438%20L350%20438%20L309%20432%20L258%20422%20L221%20418%20L7%20418Z%20M6%20351%20L7%20389%20L223%20389%20L257%20393%20L294%20401%20L345%20409%20L596%20408%20L595%20373%20L347%20373%20L304%20366%20L273%20358%20L222%20350Z%20M7%207%20L7%20323%20L100%20323%20L120%20319%20L130%20315%20L150%20304%20L160%20296%20L180%20255%20L185%20249%20L192%20245%20L271%20229%20L293%20223%20L322%20219%20L334%20214%20L352%20184%20L363%20161%20L370%20153%20L374%20151%20L508%20150%20L518%20156%20L523%20167%20L559%20305%20L565%20315%20L572%20321%20L588%20329%20L596%20330%20L596%207Z%22/%3E%3C/svg%3E">
@@ -3272,6 +3274,7 @@ function setupPullToRefresh(){
 }
 if (STANDALONE) setupPullToRefresh();
 
+if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });   // solo per l'installazione su Android
 document.addEventListener('touchstart', () => {}, {passive:true});   // su iOS serve perché :active dia feedback al tocco
 setInterval(refresh, 3*60*60*1000);
 Data.init().then(() => {

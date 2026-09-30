@@ -1,0 +1,19 @@
+{
+  "name": "Sinis Waves",
+  "short_name": "Sinis Waves",
+  "description": "Previsioni surf, alert onde e la tavola giusta per gli spot del Sinis",
+  "lang": "it",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF3F1",
+  "theme_color": "#EEF3F1",
+  "categories": ["sports", "weather"],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
