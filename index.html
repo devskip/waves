@@ -6,8 +6,6 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#EEF3F1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Sinis Waves">
 <title>Sinis Waves</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-68%20-90%20738%20738%22%3E%3Crect%20x%3D%22-68%22%20y%3D%22-90%22%20width%3D%22738%22%20height%3D%22738%22%20rx%3D%22148%22%20fill%3D%22%23fff%22/%3E%3Cpath%20fill%3D%22%2313283B%22%20fill-rule%3D%22evenodd%22%20d%3D%22M7%20488%20L7%20551%20L596%20550%20L595%20505%20L352%20505%20L272%20492%20L241%20490%20L231%20488Z%20M6%20420%20L6%20457%20L8%20459%20L238%20459%20L271%20463%20L288%20467%20L353%20477%20L596%20476%20L595%20438%20L350%20438%20L309%20432%20L258%20422%20L221%20418%20L7%20418Z%20M6%20351%20L7%20389%20L223%20389%20L257%20393%20L294%20401%20L345%20409%20L596%20408%20L595%20373%20L347%20373%20L304%20366%20L273%20358%20L222%20350Z%20M7%207%20L7%20323%20L100%20323%20L120%20319%20L130%20315%20L150%20304%20L160%20296%20L180%20255%20L185%20249%20L192%20245%20L271%20229%20L293%20223%20L322%20219%20L334%20214%20L352%20184%20L363%20161%20L370%20153%20L374%20151%20L508%20150%20L518%20156%20L523%20167%20L559%20305%20L565%20315%20L572%20321%20L588%20329%20L596%20330%20L596%207Z%22/%3E%3C/svg%3E">
@@ -444,7 +442,6 @@ nav.tabs button:active svg{transform:scale(.9)}
 .dot{width:8px;height:8px;border-radius:50%;background:#25864B;flex-shrink:0}
 .dot.busy{background:var(--accent);animation:pulse 1s ease-in-out infinite}
 .dot.err{background:#C0504D}
-.dot.warn{background:#D09A2B}
 .lvi{display:flex;gap:3px;align-items:flex-end;height:20px;margin-bottom:2px}
 .lvi i{width:4px;border-radius:2px;background:rgba(19,40,59,.16)}
 .lvi i.on{background:currentColor}
@@ -477,6 +474,25 @@ nav.tabs button:active svg{transform:scale(.9)}
 /* dentro un riquadro colorato la tavola sta su un fondo bianco, così si stacca */
 /* schede bianche dentro le sezioni colorate del profilo: ripristino i colori normali dei campi */
 .pcard{background:none;border:0}
+/* statistiche di utilizzo (solo amministratore) */
+.admhero{padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--line);margin-top:10px}
+.admbig{font:700 44px/1 "Barlow Condensed",sans-serif;margin-top:2px}
+.admbig span{font:500 14px Barlow,sans-serif;color:var(--muted);margin-left:8px}
+.admbar{height:8px;border-radius:4px;background:var(--sea);margin-top:8px;overflow:hidden}
+.admbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.admgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.admtile{padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}
+.admtile b{display:block;font:700 28px/1.05 "Barlow Condensed",sans-serif}
+.admrow{margin-top:14px}
+.admrow .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.admchart{display:flex;align-items:flex-end;gap:1px;height:64px;margin-top:8px}
+.admcol{flex:1;height:100%;display:flex;flex-direction:column-reverse;min-width:0}
+.admcol i{display:block;width:100%}
+.admcol i.u{background:var(--accent)}
+.admcol i.g{background:#9BB4C0}
+.admax{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px}
+.admleg{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-top:6px}
+.admleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:baseline}
 .pcard .acct{padding:0}
 .pcard .srow{padding-left:0;padding-right:0}
 .dsec .field{border-color:rgba(19,40,59,.2)}
@@ -608,7 +624,19 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
    <span class="ssum" id="sum-me-data"></span>
    <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
    <p class="sinfo" id="info-me-data"></p></button>
-  <div id="body-me-data" hidden><div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div></div></div>
+  <div id="body-me-data" hidden><div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div>
+   <p class="xs muted" style="margin-top:8px">Conteggio anonimo: al massimo una volta al giorno l'app registra di essere stata aperta, con un codice casuale e nessun dato personale, solo per capire quanto viene usata.</p></div></div>
+ </section>
+
+ <section class="dsec t-wx" id="sec-me-admin" hidden>
+  <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g fill="currentColor"><rect x="52" y="112" width="20" height="40" rx="4"/><rect x="86" y="82" width="20" height="70" rx="4"/><rect x="120" y="56" width="20" height="96" rx="4"/></g></svg>
+  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-admin" data-toggle="me-admin">
+   <div style="grid-column:1;grid-row:1"><h2>Statistiche</h2></div>
+   <p class="xs muted sub" style="margin-top:2px">Solo per l'amministratore</p>
+   <span class="ssum" id="sum-me-admin"></span>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
+   <p class="sinfo" id="info-me-admin"></p></button>
+  <div id="body-me-admin" hidden><div class="pcard" id="adminBox"></div></div>
  </section>
 </section>
 
@@ -1572,28 +1600,34 @@ function guessBoardType(name){
 const lvIcon = i => `<span class="lvi" aria-hidden="true">${[0, 1, 2, 3].map(k => `<i class="${k <= i ? 'on' : ''}" style="height:${6 + k * 4.5}px"></i>`).join('')}</span>`;
 let weightTimer = null;
 // ---------- Sezioni del profilo ad accordion ----------
-const ME_KEYS = ['me-acc', 'me-surf', 'me-boards', 'me-data'];
+const ME_KEYS = ['me-acc', 'me-surf', 'me-boards', 'me-data', 'me-admin'];
 let meInit = false;
+const adm = {days: 30, data: null, busy: false, err: null, at: 0};
 function updateMeSummaries(){
  const set = (k, sum, info) => { const s = document.getElementById('sum-' + k), i = document.getElementById('info-' + k); if (s) s.innerHTML = sum; if (i) i.textContent = info; };
  const pr = surfProfile(), lv = SURF_LEVELS.find(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200, q = Data.boards.all();
  if (!Cloud.ready || !Cloud.user) set('me-acc', '<span><b>Non collegato</b>tocca per entrare</span>', 'Entra per non perdere i tuoi dati');
- else set('me-acc', `<span><b>Collegato</b>${Cloud.lastErr ? 'errore' : (Cloud.busy || !Cloud.lastSync) ? 'sincronizzo…' : Cloud.partialErr ? 'da controllare' : 'sincronizzato'}</span>`, Cloud.user.email || '');
+ else set('me-acc', `<span><b>Collegato</b>${Cloud.lastErr ? 'errore' : (Cloud.busy || !Cloud.lastSync) ? 'sincronizzo…' : 'sincronizzato'}</span>`, Cloud.user.email || '');
  set('me-surf', lv || okW ? `<span><b>${lv ? lv.t : 'Livello?'}</b>${okW ? pr.weight + ' kg' : 'peso?'}</span>` : '<span>Da impostare</span>',
   lv && okW ? `Shortboard di riferimento: ~${Math.round(pr.weight * LKG[pr.level])} L` : 'Livello e peso servono a consigliarti la tavola');
  const L = q.map(b => b.litres).filter(x => x);
  set('me-boards', q.length ? `<span><b>${q.length} ${q.length === 1 ? 'tavola' : 'tavole'}</b>${L.length ? (Math.min(...L) === Math.max(...L) ? Math.min(...L) : Math.min(...L) + '–' + Math.max(...L)) + ' L' : ''}</span>` : '<span>Nessuna tavola</span>',
   q.length ? q.map(b => b.name).join(', ') : 'Aggiungi le tue tavole per sapere quale portare');
  set('me-data', '<span><b>Backup</b>manuale</span>', 'Copia di sicurezza di sessioni, spot e impostazioni');
+ const asec = document.getElementById('sec-me-admin');
+ if (asec) asec.hidden = !(Cloud.ready && Cloud.user && Cloud.admin);
+ const ap = adm.data && adm.data.registered > 0 ? Math.round(adm.data.registered_active * 100 / adm.data.registered) : null;
+ set('me-admin', ap != null ? `<span><b>${ap}%</b>attivi in ${adm.data.days} g</span>` : '<span><b>Admin</b>tocca per aprire</span>',
+  adm.data ? `${adm.data.registered} registrati, ${adm.data.guests_active} guest attivi` : 'Utenti e utilizzo dell\'app');
 }
 // la prima volta in una sessione apro solo ciò che richiede un'azione; poi decide la persona
 function initMeOpen(){
  if (meInit) return; meInit = true;
  const pr = surfProfile(), done = SURF_LEVELS.some(l => l.id === pr.level) && pr.weight >= 30;
- const def = {'me-acc': !Cloud.user, 'me-surf': !done, 'me-boards': Data.boards.all().length === 0, 'me-data': false};
+ const def = {'me-acc': !Cloud.user, 'me-surf': !done, 'me-boards': Data.boards.all().length === 0, 'me-data': false, 'me-admin': false};
  ME_KEYS.forEach(k => openSection(k, def[k]));
 }
-document.querySelectorAll('#v-me [data-toggle]').forEach(t => { t.onclick = () => openSection(t.dataset.toggle); });
+document.querySelectorAll('#v-me [data-toggle]').forEach(t => { t.onclick = () => { openSection(t.dataset.toggle); if (t.dataset.toggle === 'me-admin' && t.getAttribute('aria-expanded') === 'true') loadAdminStats(); }; });
 
 function renderProfile(){
  const pr = surfProfile(), sBox = document.getElementById('meSurf'), qBox = document.getElementById('quiver');
@@ -2077,11 +2111,9 @@ function bindCal(sp){
 const SUPA_URL = 'https://djicqanyclbrfzhxlsxm.supabase.co';
 const SUPA_KEY = 'sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf';
 const Cloud = (() => {
- let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null, partialErr = null;
- // errore "a metà": spot e sessioni si sincronizzano, ma profilo e tavole no (di solito manca l'aggiornamento del database)
- const friendly = m => /schema cache|does not exist|relation|column|permission denied/i.test(m || '') ? 'il database non è ancora aggiornato (serve aggiorna_tavole.sql)' : (m || 'errore sconosciuto');
+ let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null;
  let admin = false;
- const api = {ready:false, get busy(){ return busy; }, get partialErr(){ return partialErr; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
+ const api = {ready:false, get busy(){ return busy; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
  const SYNC_KEYS = ['surf.sessions','surf.customSpots','surf.favorite','surf.followed','surf.order','surf.gain','surf.threshold','surf.profile','surf.boards'];
  let tg = {linked:false, link:null}, tgTimer = null;
  // vale la soglia di questo dispositivo solo se l'ha scelta la persona (o se c'era già prima che la soglia viaggiasse sull'account)
@@ -2125,17 +2157,44 @@ const Cloud = (() => {
   if (!window.supabase?.createClient){ status(); return; }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
   try{ const {data} = await sb.auth.getSession(); user = data?.session?.user || null; }catch(e){ user = null; }
-  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; if (!user) admin = false; status(); if (user && user.id !== was){ api.checkAdmin(); api.sync(); } });
+  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; if (!user) admin = false; status(); if (user && user.id !== was){ api.checkAdmin(); api.sync(); api.ping(); } });
   api.ready = true;
   window.__cloudTouch = k => { if (user && SYNC_KEYS.includes(k)){ clearTimeout(timer); timer = setTimeout(() => api.push(), 2500); } };
   window.__cloudRemoveSpot = id => { if (user && sb) sb.from('spots').delete().eq('id', id).eq('owner', user.id).then(()=>{}); };
   window.__cloudRemoveBoard = id => { if (user && sb) sb.from('boards').delete().eq('id', id).eq('user_id', user.id).then(()=>{}); };
   status();
   if (user){ api.checkAdmin(); api.sync(); }
+  api.ping();
  };
  api.checkAdmin = async () => {
   try{ const {data} = await sb.from('profiles').select('is_admin').eq('id', user.id).single(); admin = !!data?.is_admin; }catch(e){ admin = false; }
   status();
+ };
+ // conteggio anonimo degli accessi: al massimo un ping al giorno per dispositivo, anche da ospite
+ const deviceId = () => {
+  let id = store.get('surf.deviceId', null);
+  if (!isUuid(id)){
+   const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+   const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+   id = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+   store.set('surf.deviceId', id);
+  }
+  return id;
+ };
+ api.ping = async () => {
+  try{
+   if (!sb) return;
+   const day = new Date().toLocaleDateString('sv-SE', {timeZone: 'Europe/Rome'}), key = `${day}|${user?.id || '-'}`;
+   if (store.get('surf.lastPing', null) === key) return;
+   const {error} = await sb.rpc('log_ping', {p_device: deviceId()});
+   if (!error) store.set('surf.lastPing', key);
+  }catch(e){ /* il conteggio è facoltativo: se non riesce, si riprova alla prossima apertura */ }
+ };
+ // statistiche di utilizzo: le calcola il database e le concede solo all'amministratore
+ api.stats = async days => {
+  const {data, error} = await sb.rpc('admin_stats', {p_days: days});
+  if (error) throw error;
+  return data;
  };
  // proporre uno spot alla community (chiunque) o renderlo ufficiale (solo amministratore)
  api.setVisibility = async (id, vis) => {
@@ -2222,7 +2281,6 @@ const Cloud = (() => {
     if (r.error) console.warn('Soglia non salvata', r.error); else store.set('surf.thresholdDirty', false);
    }
    // profilo surfista e tavole: se questa parte non è ancora pronta sul database non deve bloccare il resto
-   partialErr = null;
    try{
     const pf = store.get('surf.profile', null);
     if (pf && store.get('surf.profileDirty', false)){
@@ -2234,7 +2292,7 @@ const Cloud = (() => {
     const bmine = Data.boards.all().filter(x => { const r = bmap.get(x.id); return !r || (x.updated && stamp(x.updated) > stamp(r.updated_at)); });
     if (bmine.length){ const {error} = await sb.from('boards').upsert(bmine.map(boardOut)); if (error) throw error; bmine.forEach(x => bmap.set(x.id, {id: x.id, updated_at: x.updated})); }
     store.set('surf.syncedBoards', [...bmap.keys()]);
-   }catch(e){ partialErr = friendly(e.message || String(e)); console.warn('Profilo e tavole non sincronizzati', e); }
+   }catch(e){ console.warn('Profilo e tavole non sincronizzati', e); }
    lastSync = new Date();
   }catch(e){ lastErr = e.message || String(e); console.warn('Sincronizzazione', e); }
   busy = false; status();
@@ -2330,6 +2388,51 @@ const Cloud = (() => {
 })();
 
 function renderAccount(){ renderAccountBox(); renderTelegram(); updateMeSummaries(); }
+
+// ---------- Statistiche di utilizzo (amministratore) ----------
+async function loadAdminStats(force){
+ if (!Cloud.admin || adm.busy) return;
+ if (!force && adm.data && adm.data.days === adm.days && Date.now() - adm.at < 60000) return;
+ adm.busy = true; adm.err = null; renderAdmin();
+ try{ adm.data = await Cloud.stats(adm.days); adm.at = Date.now(); }catch(e){ adm.err = e?.message || String(e); }
+ adm.busy = false; renderAdmin(); updateMeSummaries();
+}
+function renderAdmin(){
+ const box = document.getElementById('adminBox'); if (!box) return;
+ const d = adm.data, pct = (a, b) => b > 0 ? Math.round(a * 100 / b) : null;
+ const seg = `<div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="group" aria-label="Periodo">${[7, 30, 90].map(n => `<button data-days="${n}" aria-pressed="${adm.days === n}">${n} giorni</button>`).join('')}</div>`;
+ let body;
+ if (adm.err){
+  const missing = /function|schema cache|does not exist|PGRST202/i.test(adm.err);
+  body = `<p class="err" style="margin-top:10px">${missing ? 'Statistiche non ancora attive: esegui aggiorna_statistiche.sql in Supabase.' : 'Non riuscito: ' + esc(adm.err)}</p>`;
+ } else if (!d){
+  body = '<p class="small muted" style="margin-top:10px">Carico…</p>';
+ } else {
+  const p = pct(d.registered_active, d.registered), days = d.days;
+  const line = (label, a, b) => { const q = pct(a, b); return `<div class="admrow"><div class="top"><span class="small">${label}</span><span class="small"><b>${q == null ? '—' : q + '%'}</b> <span class="muted">(${a} su ${b})</span></span></div><div class="admbar"><i style="width:${q || 0}%"></i></div></div>`; };
+  const s = Array.isArray(d.series) ? d.series : [], mx = Math.max(1, ...s.map(x => x.users + x.guests));
+  const h = v => v ? Math.max(4, v / mx * 100) : 0;
+  const dt = x => new Date(x + 'T12:00:00').toLocaleDateString('it-IT', {day: 'numeric', month: 'short'});
+  const bars = s.map(x => `<span class="admcol" title="${esc(dt(x.day))}: ${x.users} registrati, ${x.guests} guest"><i class="g" style="height:${h(x.guests)}%"></i><i class="u" style="height:${h(x.users)}%"></i></span>`).join('');
+  body = `<div class="admhero"><p class="xs muted">Utenti registrati attivi negli ultimi ${days} giorni</p>
+   <p class="admbig">${p == null ? '—' : p + '%'}<span>${d.registered_active} su ${d.registered}</span></p><div class="admbar"><i style="width:${p || 0}%"></i></div></div>
+   <div class="admgrid">
+    <div class="admtile"><b>${d.registered}</b><span class="xs muted">registrati</span></div>
+    <div class="admtile"><b>+${d.registered_new}</b><span class="xs muted">nuovi in ${days} giorni</span></div>
+    <div class="admtile"><b>${d.guests_active}</b><span class="xs muted">guest attivi</span></div>
+    <div class="admtile"><b>${d.telegram_linked}</b><span class="xs muted">con Telegram</span></div>
+   </div>
+   <div class="admrow"><p class="small" style="font-weight:600">Quanto fanno gli altri (${days} giorni)</p></div>
+   ${line('Sessioni registrate', d.sessions_others, d.sessions_total)}${line('Spot creati', d.spots_others, d.spots_total)}
+   ${s.length ? `<div class="admrow"><p class="small" style="font-weight:600">Accessi al giorno</p><div class="admchart">${bars}</div>
+    <div class="admax"><span>${dt(s[0].day)}</span><span>max ${mx}</span><span>${dt(s[s.length - 1].day)}</span></div>
+    <div class="admleg"><span><i style="background:var(--accent)"></i>registrati</span><span><i style="background:#9BB4C0"></i>guest</span></div></div>` : ''}
+   <p class="xs muted" style="margin-top:12px">Il tuo uso e quello di altri amministratori è escluso. I guest sono dispositivi senza account: il conteggio è approssimato (stessa persona su app installata e su Safari conta due volte).</p>`;
+ }
+ box.innerHTML = `${seg}${body}<div style="margin-top:12px"><button class="pillbtn" id="admRefresh"${adm.busy ? ' disabled' : ''}>${adm.busy ? '<i class="spin"></i>Aggiorno…' : ICON_SYNC + 'Aggiorna'}</button></div>`;
+ box.querySelectorAll('[data-days]').forEach(b => { b.onclick = () => { adm.days = +b.dataset.days; adm.data = adm.data && adm.data.days === adm.days ? adm.data : null; loadAdminStats(true); }; });
+ const r = document.getElementById('admRefresh'); if (r) r.onclick = () => loadAdminStats(true);
+}
 function renderTelegram(){
  const box = document.getElementById('tgBox'); if (!box) return;
  const head = t => `<p style="font-weight:600">Telegram</p><p class="xs muted">${t}</p>`;
@@ -2355,12 +2458,12 @@ function renderAccountBox(){
  if (!Cloud.ready){ box.innerHTML = `<div class="acct"><p class="small muted">Account non disponibile: controlla la connessione e riapri l'app.</p></div>`; return; }
  if (Cloud.user){
   const ini = esc((Cloud.user.email || '?').trim().charAt(0).toUpperCase());
-  const st = Cloud.lastErr ? ['err', 'Sincronizzazione non riuscita: ' + Cloud.lastErr] : (Cloud.busy || !Cloud.lastSync) ? ['busy', 'Sincronizzo…'] : Cloud.partialErr ? ['warn', 'Spot e sessioni sì, ma profilo e tavole no: ' + Cloud.partialErr] : ['ok', `Sincronizzato alle ${hm2(Cloud.lastSync)}`];
+  const st = Cloud.lastErr ? ['err', 'Sincronizzazione non riuscita: ' + Cloud.lastErr] : (Cloud.busy || !Cloud.lastSync) ? ['busy', 'Sincronizzo…'] : ['ok', `Sincronizzato alle ${hm2(Cloud.lastSync)}`];
   box.innerHTML = `<div class="acct"><div class="mehero"><span class="ava" aria-hidden="true">${ini}</span><div class="who"><p class="mail">${esc(Cloud.user.email || 'Account')}</p>
    <p class="stat" role="status"><i class="dot ${st[0]}"></i>${esc(st[1])}</p></div></div>
    <div class="row2"><button class="pillbtn" id="acSync"${Cloud.busy ? ' disabled' : ''}>${Cloud.busy ? '<i class="spin"></i>Sincronizzo…' : ICON_SYNC + 'Sincronizza ora'}</button>
    <button class="pillbtn" id="acOut">${ICON_OUT}Esci</button></div></div>`;
-  document.getElementById('acSync').onclick = async () => { await Cloud.sync(); if (Cloud.lastErr) toast('Sincronizzazione non riuscita', 'err'); else if (Cloud.partialErr) toast('Profilo e tavole non sincronizzati', 'err'); else toast('Tutto sincronizzato'); };
+  document.getElementById('acSync').onclick = async () => { await Cloud.sync(); toast(Cloud.lastErr ? 'Sincronizzazione non riuscita' : 'Tutto sincronizzato', Cloud.lastErr ? 'err' : 'ok'); };
   document.getElementById('acOut').onclick = async e => { const b = e.currentTarget; b.disabled = true; b.innerHTML = '<i class="spin"></i>Esco…'; await Cloud.signOut(); toast('Sei uscito dall\'account'); };
   return;
  }
@@ -3278,7 +3381,6 @@ function setupPullToRefresh(){
 }
 if (STANDALONE) setupPullToRefresh();
 
-if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });   // solo per l'installazione su Android
 document.addEventListener('touchstart', () => {}, {passive:true});   // su iOS serve perché :active dia feedback al tocco
 setInterval(refresh, 3*60*60*1000);
 Data.init().then(() => {
