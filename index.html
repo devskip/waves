@@ -910,6 +910,7 @@ const dbSpot = r => ({id: r.id, name: r.name, area: r.area || '', lat: +r.lat, l
  beachLat: r.beach_lat ?? undefined, beachLon: r.beach_lon ?? undefined, facing: +r.facing, window: +r.window, offshore: +r.offshore,
  min: +r.min, max: +r.max, minPeriod: +r.min_period, gain: +r.gain || 1, alert: !!r.alert_default, cams: r.cams || [],
  kind: r.kind || null, access: r.access || null, bigOnly: !!r.big_only});
+let spotsFresh = false;
 async function loadSpots(){
  let fromDb = [], fromFile = [];
  try{
@@ -925,6 +926,8 @@ async function loadSpots(){
  const mine = Data.spots.all().filter(s => !official.has(s.id));   // uno spot personale diventato ufficiale non si ripete
  spots = [...baseSpots, ...mine];
  applyGains();
+ spotsFresh = true;
+ store.set('surf.baseSpots', baseSpots);   // serve a mostrare la Home subito, alla prossima apertura
 }
 // correzioni personali dalla taratura: valgono sopra a quella dello spot
 function applyGains(){
@@ -3250,7 +3253,7 @@ async function refresh(){
  const up = document.getElementById('updated'), st = document.getElementById('status');
  up.textContent = 'Scarico le previsioni…'; st.hidden = true;
  try{
-  if (!baseSpots.length) await loadSpots();
+  if (!baseSpots.length || !spotsFresh) await loadSpots();
   data = await fetchForecast();
   store.set('surf.cache', {at: Date.now(), data});
   await loadBuoys();
@@ -3383,11 +3386,29 @@ if (STANDALONE) setupPullToRefresh();
 
 document.addEventListener('touchstart', () => {}, {passive:true});   // su iOS serve perché :active dia feedback al tocco
 setInterval(refresh, 3*60*60*1000);
-Data.init().then(() => {
+// se il database locale del telefono non risponde (succede a volte su iPhone) l'app parte lo stesso dopo 4 secondi
+Promise.race([Data.init().catch(e => console.warn('Database locale non disponibile', e)), new Promise(ok => setTimeout(ok, 4000))]).then(() => {
  // rileggo le impostazioni dal database (possono essere più aggiornate della copia di riserva)
  threshold = store.get('surf.threshold', 3); followed = store.get('surf.followed', null); favorite = store.get('surf.favorite', null);
  document.getElementById('catBtn')?.setAttribute('aria-pressed', store.get('surf.showCat', true));
- refresh();
+ // Home subito: se ho previsioni salvate di meno di 24 ore e l'elenco spot, le mostro all'istante
+ // e scarico quelle nuove poco dopo, senza far aspettare
+ let seeded = false;
+ try{
+  const c = store.get('surf.cache', null), base = store.get('surf.baseSpots', null) || store.get('surf.officialSpots', null);
+  if (c && c.data && Array.isArray(base) && base.length && Date.now() - c.at < 24*60*60*1000){
+   const ids = new Set(base.map(s => s.id));
+   const mine = Data.spots.all().filter(s => !ids.has(s.id));
+   const all = [...base, ...mine];
+   if (all.every(sp => c.data[sp.id])){
+    baseSpots = base; spots = all; data = c.data; applyGains();
+    document.getElementById('updated').textContent = `Previsioni salvate delle ${hhmm(c.at)}`;
+    renderAll(); seeded = true;
+    if (Date.now() - c.at > 10*60*1000) setTimeout(() => refresh(), 2500);
+   }
+  }
+ }catch(e){ console.warn('Partenza dalla copia salvata non riuscita', e); baseSpots = []; spots = []; data = {}; }
+ if (!seeded) refresh();
  Cloud.init();
 });
 </script>
