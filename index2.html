@@ -604,7 +604,7 @@ a{color:var(--amber)}
 .dname{margin:8px 0 0;font:700 32px/1.1 var(--mono);letter-spacing:-.02em;overflow-wrap:anywhere}
 .hero{margin-top:14px;padding:16px;border-radius:28px;background:var(--light);color:var(--lightink);display:flex;flex-wrap:wrap;gap:14px}
 .hero .badge{background:var(--c)!important;color:var(--fg)!important}
-.hdial{position:relative;flex-shrink:0;width:116px;height:116px;padding:0;border:0;background:transparent;border-radius:0;box-shadow:none;align-self:flex-start;line-height:0;display:block}
+.hdial{position:relative;flex-shrink:0;width:132px;height:132px;padding:0;border:0;background:transparent;border-radius:0;box-shadow:none;align-self:flex-start;line-height:0;display:block}
 .hdial .info{position:absolute;left:auto;right:0;bottom:0;width:22px;height:22px;border-radius:50%;background:#E6E8E4;color:var(--lightink);box-shadow:none;display:grid;place-items:center;font:700 12px var(--grot);line-height:1}
 .hmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
 .hrow1{display:flex;align-items:center;gap:10px}
@@ -745,8 +745,7 @@ nav.tabs button svg{flex-shrink:0}
 /* sicurezza in alto: il testo non passa sotto l'orologio */
 body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:3500;pointer-events:none}
 /* preferito con gli strumenti */
-.fside{position:relative;flex-shrink:0;width:96px;height:96px}
-.fside .badge{position:absolute;right:-8px;bottom:-8px;box-shadow:0 0 0 3px var(--light)}
+.fside{position:relative;flex-shrink:0;width:108px;height:108px}
 .fav .meas{margin:14px 0 0}
 .fk{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin:4px 0 0;font-size:11px;color:var(--lightmuted)}
 .fk i{display:block;width:8px;height:8px;border-radius:4px;flex-shrink:0}
@@ -843,6 +842,25 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .pcard .srow{border-bottom-color:#3F3F3F}
 .srow{border-bottom-color:#3F3F3F}
 .card .srow{background:transparent}
+
+/* cerchio unico */
+.gw{position:relative;flex-shrink:0}
+.gw svg{position:absolute;left:0;top:0;display:block}
+.gw .badge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);box-shadow:none}
+.hero{align-items:center;flex-wrap:nowrap}
+.hero .hdial{align-self:center}
+.hmain{gap:9px}
+.hkey{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;margin:0}
+.hkey b{font:700 10.5px var(--grot);padding:2px 8px;border-radius:10px}
+.hkey b.g{background:#E3EEDB;color:#2F5F1A}.hkey b.a{background:#FBEFD9;color:#8A5A24}
+.hmeas{margin:0}
+.dirc2{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 16px;margin-top:12px;border-radius:28px;background:var(--light);color:var(--lightink)}
+.dleg{width:100%;display:flex;flex-direction:column;gap:12px}
+.drow{display:flex;gap:12px;align-items:flex-start}
+.drow .dg{flex-shrink:0;width:26px;height:26px;margin-top:1px}
+.drow b{font:700 13px/1.3 var(--grot)}
+.drow p{margin:3px 0 0;font-size:11.5px;line-height:1.5;color:var(--lightmuted)}
+.drow .st{display:inline-block;margin-right:6px;padding:2px 8px;border-radius:10px;font:700 10.5px var(--grot)}
 </style>
 </head>
 <body>
@@ -1340,10 +1358,10 @@ function renderSpot(){
     <p class="k">${ICON.star(true)}Il tuo spot</p>
     <p class="name">${esc(fav.name)}</p>
     <p class="area">${esc(metaLine(fav))}</p></div>
-    <div class="fside">${swellGauge(fav, ev, 96)}${badge(ev?.score,'lg')}</div></div>
+    <div class="fside">${gaugeWithScore(fav, ev, 108)}</div></div>
    ${ev ? `<p class="meas">${ev.face.toFixed(1)} m a riva · ${Math.round(ev.T)} s</p>
    <p class="fk"><i style="background:var(--g-swell)"></i>swell da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}° <b class="${inWin ? 'g' : 'a'}">${inWin ? 'dentro la finestra' : 'fuori finestra'}</b></p>
-   <div class="fwind">${windGauge(fav, ev, 44)}<div><p class="fws">${Math.round(ev.ws)} <span>km/h</span></p><p class="fk"><i style="background:var(--g-wind)"></i>${ev.ws < 3 ? 'vento quasi assente' : `da ${cardinal(ev.wd)}`} <b class="${ev.windType === 'offshore' || ev.windType === 'debole' ? 'g' : 'a'}">${ev.windType}</b></p></div></div>` : '<p class="meas">Nessun dato</p>'}
+   <p class="fk"><i style="background:var(--g-wind)"></i>${ev.ws < 3 ? 'vento quasi assente' : `${Math.round(ev.ws)} km/h da ${cardinal(ev.wd)}`} <b class="${ev.windType === 'offshore' || ev.windType === 'debole' ? 'g' : 'a'}">${ev.windType}</b></p>` : '<p class="meas">Nessun dato</p>'}
    <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
   </button>`;
  } else {
@@ -2093,6 +2111,24 @@ function gauge(size, rng, arcCol, bearing, arrowCol, trackCol, nCol, showN){
 }
 const swellGauge = (sp, ev, size, th='light') => { const g = GC[th]; return gauge(size, [sp.facing-sp.window, sp.facing+sp.window], g.win, ev ? ev.dir : null, g.swell, g.track, g.n, size >= 100); };
 const windGauge = (sp, ev, size, th='light', showN=false) => { const g = GC[th]; return gauge(size, [sp.offshore-45, sp.offshore+45], g.off, ev && ev.ws >= 3 ? ev.wd : null, g.wind, g.track, g.n, showN); };
+
+// triangolino morbido: punta verso il centro (verso lo spot), angoli arrotondati e bordo bianco
+function softTri(c, R, deg, col, k){
+ const h = 11*k, w = 6.5*k, [cx,cy] = pt(c,R,deg), ux = (c-cx)/R, uy = (c-cy)/R, qx = -uy, qy = ux;
+ const tx = cx+ux*h/2, ty = cy+uy*h/2, bx = cx-ux*h/2, by = cy-uy*h/2;
+ const pts = `${tx.toFixed(2)},${ty.toFixed(2)} ${(bx+qx*w).toFixed(2)},${(by+qy*w).toFixed(2)} ${(bx-qx*w).toFixed(2)},${(by-qy*w).toFixed(2)}`;
+ return `<polygon points="${pts}" fill="#fff" stroke="#fff" stroke-width="${(9*k).toFixed(1)}" stroke-linejoin="round"/><polygon points="${pts}" fill="${col}" stroke="${col}" stroke-width="${(5*k).toFixed(1)}" stroke-linejoin="round"/>`;
+}
+// un solo anello: arco marrone = finestra dello spot, arco verde = zona offshore, triangolino blu = swell, ambra = vento
+function comboGauge(sp, ev, size){
+ const g = GC.light, c = size/2, R = size*0.303, w = size*0.076, k = Math.max(.8, size/132);
+ const arcP = (d1, d2) => { const [x1,y1] = pt(c,R,d1), [x2,y2] = pt(c,R,d2); return `M${x1},${y1} A${R.toFixed(1)},${R.toFixed(1)} 0 ${(((d2-d1)%360)+360)%360 > 180 ? 1 : 0} 1 ${x2},${y2}`; };
+ const n = size >= 100 ? `<text x="${c}" y="${(size*0.083).toFixed(1)}" fill="${g.n}" font-size="${(size*0.072).toFixed(1)}" font-weight="700" text-anchor="middle" font-family="Space Mono,monospace">N</text>` : '';
+ return `<svg class="gauge" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${R.toFixed(1)}" fill="none" stroke="${g.track}" stroke-width="${w.toFixed(1)}"/><path d="${arcP(sp.facing-sp.window, sp.facing+sp.window)}" fill="none" stroke="${g.win}" stroke-width="${w.toFixed(1)}" stroke-linecap="round"/><path d="${arcP(sp.offshore-45, sp.offshore+45)}" fill="none" stroke="${g.off}" stroke-width="${w.toFixed(1)}" stroke-linecap="round"/>${n}${ev ? softTri(c,R,ev.dir,g.swell,k) : ''}${ev && ev.ws >= 3 ? softTri(c,R,ev.wd,g.wind,k) : ''}</svg>`;
+}
+// il cerchio con il pallino del punteggio al centro
+const gaugeWithScore = (sp, ev, size) => `<div class="gw" style="width:${size}px;height:${size}px">${comboGauge(sp, ev, size)}${badge(ev?.score, size >= 120 ? 'lg' : '')}</div>`;
+
 // anello del punteggio (arco = punteggio su 5)
 function ringHtml(size, pct, track, arc, sw, inner){
  const r = (size-sw)/2, c = 2*Math.PI*r;
@@ -2107,13 +2143,14 @@ function detailTop(sp, ev, backTo, fol, isFav){
   <div class="hacts"><button class="hstar" id="followBtn" aria-pressed="${fol}" aria-label="${fol?'Alert attivi: tocca per disattivarli':'Avvisami quando questo spot entra in condizione'}">${bell}</button>
   <button class="hstar" id="favBtn" aria-pressed="${isFav}" aria-label="${isFav?'Togli dai preferiti':'Metti tra i preferiti'}">${ICON.star(isFav).replace('width="16" height="16"','width="20" height="20"')}</button></div></div>`;
  const head = `<div class="dhead"><p class="harea">${esc(sp.area||'Spot')}</p><h1 class="dname">${esc(sp.name)}</h1></div>`;
- const wlab = ev ? (ev.ws < 3 ? 'vento quasi assente' : `da ${cardinal(ev.wd)} · ${ev.windType}`) : '';
+ const inWin = ev && angDiff(ev.dir, sp.facing) <= sp.window, goodW = ev && (ev.windType === 'offshore' || ev.windType === 'debole');
  const hero = `<section class="hero">
-  <button class="hdial" id="dialBtn" aria-label="Come leggere i cerchi">${swellGauge(sp, ev, 116)}<span class="info" aria-hidden="true">i</span></button>
+  <button class="hdial" id="dialBtn" aria-label="Come leggere il cerchio">${gaugeWithScore(sp, ev, 132)}<span class="info" aria-hidden="true">i</span></button>
   <div class="hmain">
-   <div class="hrow1">${badge(ev?.score,'lg')}<div><p class="hlab">${scoreLabel(ev?.score)}</p><p class="hsub">adesso</p></div></div>
-   ${ev ? `<div><p class="hmeas">${ev.face.toFixed(1)} m a riva · ${Math.round(ev.T)} s</p><p class="hkey"><i style="background:var(--g-swell)"></i>swell da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°</p></div>
-   <div class="hwind">${windGauge(sp, ev, 52)}<div><p class="hws">${Math.round(ev.ws)} <span>km/h</span></p><p class="hkey"><i style="background:var(--g-wind)"></i>${wlab}</p></div></div>` : '<p class="small" style="color:var(--lightmuted)">Nessun dato per ora.</p>'}
+   <div><p class="hlab">${scoreLabel(ev?.score)}</p><p class="hsub">adesso</p></div>
+   ${ev ? `<p class="hmeas">${ev.face.toFixed(1)} m a riva · ${Math.round(ev.T)} s</p>
+   <p class="hkey"><i style="background:var(--g-swell)"></i>swell da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}° <b class="${inWin ? 'g' : 'a'}">${inWin ? 'dentro la finestra' : 'fuori finestra'}</b></p>
+   <p class="hkey"><i style="background:var(--g-wind)"></i>${ev.ws < 3 ? 'vento quasi assente' : `${Math.round(ev.ws)} km/h da ${cardinal(ev.wd)}`} <b class="${goodW ? 'g' : 'a'}">${ev.windType}</b></p>` : '<p class="small" style="color:var(--lightmuted)">Nessun dato per ora.</p>'}
   </div></section>`;
  return top + head + hero + (ev ? factorsHtml(sp, ev) : '');
 }
@@ -2167,22 +2204,24 @@ function windowHtml(sp){
 }
 const ICON_WIND = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg>';
 
-// come leggere i cerchi: due strumenti, ognuno con il suo arco "buono" e la sua freccia
+// come leggere il cerchio: un anello, due archi "buoni" e due triangolini che dicono dove sono adesso onde e vento
 function dirSheetHtml(sp, ev){
  const a0 = ((sp.facing - sp.window) % 360 + 360) % 360, a1 = (sp.facing + sp.window) % 360;
- const inWin = ev && angDiff(ev.dir, sp.facing) <= sp.window;
- const calm = ev && ev.ws < 3, wt = ev ? ev.windType : '';
+ const inWin = ev && angDiff(ev.dir, sp.facing) <= sp.window, calm = ev && ev.ws < 3, wt = ev ? ev.windType : '';
  const goodWind = wt === 'offshore' || wt === 'debole';
  const chip = (t, ok) => `<span class="st" style="background:${ok ? '#E3EEDB' : '#FBEFD9'};color:${ok ? '#2F5F1A' : '#8A5A24'}">${t}</span>`;
- const key = (c, t) => `<span><i style="background:${c}"></i>${t}</span>`;
- const c1 = `<section class="dirc">${swellGauge(sp, ev, 132)}<div style="flex:1;min-width:0"><h3>Le onde</h3>${ev ? chip(inWin ? 'dentro la finestra' : 'fuori dalla finestra', inWin) : ''}
-  <p>L'arco è la finestra dello spot: le direzioni da cui lo swell entra bene. La freccia è lo swell di adesso. Se è dentro l'arco, le onde arrivano piene.</p>
-  <div class="keys">${key('#B07840', `Finestra: da ${cardinal(a0)} a ${cardinal(a1)}`)}${ev ? key('#1F8FE0', `Swell: da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°`) : ''}</div></div></section>`;
- const c2 = `<section class="dirc">${windGauge(sp, ev, 132, 'light', true)}<div style="flex:1;min-width:0"><h3>Il vento</h3>${ev ? chip(calm ? 'quasi assente' : wt, goodWind) : ''}
-  <p>L'arco verde è il vento offshore di questo spot: viene da ${cardinal(sp.offshore)} e pulisce l'onda. La freccia è il vento di adesso: dentro l'arco è offshore, fuori è laterale o onshore.</p>
-  <div class="keys">${key('#6AA53F', `Offshore: da ${cardinal(sp.offshore)}`)}${ev && !calm ? key('#C77F12', `Vento: da ${cardinal(ev.wd)}, ${Math.round(ev.ws)} km/h`) : ''}</div></div></section>`;
+ const arcG = col => `<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M4 21 A12 12 0 0 1 21 4" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round"/></svg>`;
+ const triG = col => `<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><g transform="translate(13 13)"><polygon points="0,6 -6.5,-5 6.5,-5" fill="#fff" stroke="#fff" stroke-width="9" stroke-linejoin="round"/><polygon points="0,6 -6.5,-5 6.5,-5" fill="${col}" stroke="${col}" stroke-width="5" stroke-linejoin="round"/></g></svg>`;
+ const row = (g, t, d) => `<div class="drow"><span class="dg">${g}</span><div><b>${t}</b><p>${d}</p></div></div>`;
+ const card = `<section class="dirc2"><div class="gw" style="width:190px;height:190px">${comboGauge(sp, ev, 190)}${badge(ev?.score, 'lg')}</div>
+  <div class="dleg">
+   ${row(arcG('#B07840'), `Finestra dello spot: da ${cardinal(a0)} a ${cardinal(a1)}`, 'Le direzioni da cui lo swell entra bene.')}
+   ${ev ? row(triG('#1F8FE0'), `Swell: da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°`, `${chip(inWin ? 'dentro la finestra' : 'fuori finestra', inWin)} Dentro l'arco marrone le onde arrivano piene.`) : ''}
+   ${row(arcG('#6AA53F'), `Zona offshore: da ${cardinal(sp.offshore)}`, 'Il vento che pulisce l\'onda.')}
+   ${ev ? row(triG('#C77F12'), calm ? 'Vento: quasi assente' : `Vento: da ${cardinal(ev.wd)}, ${Math.round(ev.ws)} km/h`, `${chip(calm ? 'debole' : wt, goodWind)} Dentro l'arco verde è offshore, fuori è laterale o onshore.`) : ''}
+  </div></section>`;
  const eff = `<div class="dire"><div><b class="g">Swell nell'arco</b><span>le onde arrivano piene</span></div><div><b class="g">Vento nell'arco</b><span>onda pulita</span></div><div><b class="a">Vento fuori dall'arco</b><span>onda sporca, punteggio più basso</span></div></div>`;
- return `${c1}${c2}<h2 style="margin:22px 0 0;font-size:16px">Che effetto ha</h2>${eff}`;
+ return `${card}<h2 style="margin:22px 0 0;font-size:16px">Che effetto ha</h2>${eff}`;
 }
 
 // carte interne: etichetta colorata + icona su tinta + note a tinta
@@ -2213,8 +2252,8 @@ function openDetail(id){
   ${idStrip(sp, custom)}
   <div class="sheet" id="dialSheet" hidden><div class="sheet-bg" data-close></div>
    <div class="sheet-p" role="dialog" aria-modal="true" aria-labelledby="sheetT">
-    <div class="sheet-h"><h2 id="sheetT">Come leggere i cerchi</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
-    <p class="small muted" style="margin-top:6px">Due strumenti: ognuno ha un arco dove va bene e una freccia che dice dov'è adesso. Il nord è in alto.</p>
+    <div class="sheet-h"><h2 id="sheetT">Come leggere il cerchio</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
+    <p class="small muted" style="margin-top:6px">Un solo anello: gli archi dicono dove va bene, i triangolini dove sono adesso onde e vento. Il nord è in alto.</p>
     ${dirSheetHtml(sp, ev)}
    </div></div>
   <nav class="dnav" id="dnav" aria-label="Sezioni della pagina">
