@@ -633,18 +633,11 @@ a{color:var(--amber)}
 /* dettaglio: Adesso */
 #sec-now{background:transparent;padding:0;margin-top:0;overflow:visible;--panel:#2B2B2B;--line:#404040;--bg:#171717;--sea:#101C22}
 #sec-now > .shead,#sec-now > .motif{display:none}
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
-.tiles > div{padding:12px;border-radius:20px;background:var(--light);color:var(--lightink);min-width:0}
-.tiles .l{display:block;font-size:10.5px;color:var(--lightmuted)}
-.tiles b{display:block;margin-top:4px;font:700 20px/1.1 var(--grot);white-space:nowrap}
-.tiles .u{display:block;font-size:10px;color:var(--lightmuted)}
-.card2{margin-top:12px;padding:16px;border-radius:24px;background:var(--panel)}
 .card2 .cval{font-size:28px}
 .card2 .pbar{top:5px}
 .card2 .pmark{border-color:#171717;background:#fff;box-shadow:none}
 .card2 .xs.muted,.card2 .small{color:var(--muted)}
 .ppill{font-family:var(--grot);font-weight:700}
-#sec-now .crowd,#sec-now .board,#sec-now .buoy,#sec-now .cams{margin-top:12px;padding:16px;border:0;border-radius:24px;background:var(--panel)}
 #sec-now .board .bn{font:700 17px/1.25 var(--grot)}
 .board .bwarn{background:rgba(224,98,79,.16);color:#F2A99F}
 .crowd b{font:700 18px/1.2 var(--grot)}
@@ -779,6 +772,77 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .ctile svg{width:22px;height:22px;margin:0}
 .cnote svg{width:16px;height:16px}
 .buoy .lg{margin-top:8px}
+
+/* ===== Adesso: una sola carta con sezioni separate ===== */
+.adesso{margin-top:12px;border-radius:24px;background:var(--panel);overflow:hidden}
+.adesso .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:14px 6px}
+.adesso .tiles > div{min-width:0;padding:2px 10px;border-left:1px solid #3F3F3F}
+.adesso .tiles > div:first-child{border-left:0}
+.tiles .l{display:block;font-size:10.5px;color:var(--muted)}
+.tiles b{display:block;margin-top:4px;font:700 21px/1.1 var(--grot);color:var(--ink);white-space:nowrap}
+.tiles .u{display:block;font-size:10px;color:var(--muted)}
+.adesso .tiles > div:nth-child(3) b{color:#3DA5F5}
+.adesso .tiles > div:nth-child(4) b{color:#F0A22E}
+.adesso .ablock,.adesso .crowd,.adesso .board,.adesso .buoy{margin:0;padding:16px;border:0;border-top:1px solid #3F3F3F;border-radius:0;background:transparent}
+.adesso .buoy:empty{display:none}
+.adesso .cnote{margin-top:10px;padding:8px 10px;font-size:11.5px}
+.cval.sm{font-size:16px;color:var(--muted);font-weight:600}
+.adesso .wide .ppill{align-self:flex-start}
+#sec-now .cams{margin-top:12px;padding:16px;border:0;border-radius:24px;background:var(--panel)}
+/* finestra migliore, compatta */
+.wbar{position:relative;height:30px;margin-top:14px;border-radius:12px;overflow:hidden;background:var(--tan)}
+.wbar .win{position:absolute;top:0;bottom:0;background:#FBF3E8;border-left:2px solid var(--brown);border-right:2px solid var(--brown);box-sizing:border-box}
+.wbar svg{position:absolute;left:0;top:0;width:100%;height:30px}
+.wbar .now{position:absolute;top:5px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--green);border:3px solid #fff;box-sizing:border-box}
+.wlab{position:relative;height:14px;margin-top:5px}
+.wlab span{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--muted)}
+.wwhy,.adesso .wwhy{display:flex;align-items:flex-start;gap:8px;margin:10px 0 0;padding:0;border:0;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.wwhy svg{color:#F0A22E;margin-top:1px;flex-shrink:0}
+/* ===== Mappa ===== */
+.chips{display:flex;gap:4px;overflow-x:auto;padding:4px;margin-top:12px;background:var(--panel2);border:1px solid var(--line);border-radius:26px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:0 0 auto;min-height:44px;padding:0 16px;border:0;border-radius:20px;background:transparent;color:var(--ink);font:600 15px var(--grot)}
+.chips button[aria-pressed="true"]{background:var(--amber);color:#171717;font-weight:700}
+.mapwrap{border:0;border-radius:24px;margin-top:12px;height:calc(100vh - 360px)}
+.mapwrap .pillbtn{background:rgba(23,23,23,.9);border:1px solid #4A4A4A;color:var(--ink);min-height:40px;padding:0 16px;font:600 13px var(--grot)}
+.mapwrap .pillbtn[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#171717}
+.mapcard{left:12px;right:12px;bottom:12px;padding:14px 16px;background:var(--light);color:var(--lightink);border:0;border-radius:26px;gap:14px}
+.mapcard .muted,.mapcard .xs{color:var(--lightmuted)}
+.mapcard .cond{font:700 20px/1.15 var(--mono)!important;color:var(--lightink)}
+.mapcard > svg{color:var(--lightink);flex-shrink:0}
+.mapcard .badge{background:var(--c);color:var(--fg)}
+.leaflet-control-attribution{background:rgba(23,23,23,.78)!important;color:#B9B9B3!important;font-family:var(--mono)}
+.leaflet-control-attribution a{color:#F0A22E!important}
+.clu{border-color:#171717}
+.pin{border-color:#171717;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+/* ===== Profilo ===== */
+.st-me-acc{--tbg:#243442}
+.opts.two button{background:#343434;border:2px solid transparent;color:var(--ink)}
+.opts.two button b{color:var(--ink)}
+.opts button span{color:var(--muted)}
+.dsec .opts.two button[aria-pressed="true"],.opts.two button[aria-pressed="true"]{background:#1F2A1D;border-color:var(--green);box-shadow:none;color:var(--ink)}
+.opts.two button[aria-pressed="true"] span{color:#C9D9BE}
+.opts.two button[aria-pressed="true"] .lvi{color:#9FD18B}
+.opts.two button:not([aria-pressed="true"]) .lvi{color:#8C8C86}
+.lvi i{background:#4A4A4A}
+.bchip{background:#3A3A3A;border:0;color:var(--ink)}
+.bchip.l{background:#3E3224;border:0;color:#F0A22E}
+.refbox{background:rgba(255,255,255,.04);border-radius:16px}
+.refbox .bchip.l{background:#3E3224}
+.dsec .addspot{background:transparent;border-color:#4A4A4A;color:var(--ink)}
+.dsec .field,.field{border-color:#444;background:#343434;color:var(--ink)}
+.inunit .field{font:700 22px var(--grot)}
+.dsec .opts.two button:active{background:#3A3A3A}
+.bcard{border-color:#3F3F3F}
+.bname{font:700 15px var(--mono)}
+.who .mail{color:var(--ink)}
+.stat{color:var(--muted)}
+.admbar{background:#3A3A3A}
+.admcol i.g{background:#8C8C86}
+.admleg{color:var(--muted)}
+.pcard .srow{border-bottom-color:#3F3F3F}
+.srow{border-bottom-color:#3F3F3F}
+.card .srow{background:transparent}
 </style>
 </head>
 <body>
@@ -854,57 +918,47 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 
  <section class="dsec t-now" id="sec-me-acc">
   <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><circle cx="100" cy="74" r="34" fill="currentColor"/><path d="M44 160C44 126 68 108 100 108C132 108 156 126 156 160Z" fill="currentColor"/></svg>
-  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-acc" data-toggle="me-acc">
-   <div style="grid-column:1;grid-row:1"><h2>Account</h2></div>
-   <p class="xs muted sub" style="margin-top:2px">Per ritrovare tutto su ogni dispositivo</p>
-   <span class="ssum" id="sum-me-acc"></span>
-   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
-   <p class="sinfo" id="info-me-acc"></p></button>
+  <button class="shead sbtn withtile" aria-expanded="false" aria-controls="body-me-acc" data-toggle="me-acc">
+   <span class="stile" style="--tbg:#243442;--tfg:#3DA5F5"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></span>
+   <div class="stext"><div class="stitle"><h2>Account</h2></div><p class="xs muted sub">Per ritrovare tutto su ogni dispositivo</p><span class="ssum" id="sum-me-acc"></span><p class="sinfo" id="info-me-acc"></p></div>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span></button>
   <div id="body-me-acc" hidden><div class="pcard" id="acctBox"><div class="srow"><p class="small muted">Carico…</p></div></div></div>
  </section>
 
  <section class="dsec t-tide" id="sec-me-surf">
   <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><defs><clipPath id="mclip"><circle cx="100" cy="100" r="80"/></clipPath></defs><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g clip-path="url(#mclip)"><path d="M0 112C32 74 66 74 100 108C134 142 168 142 200 106L200 200L0 200Z" fill="currentColor" opacity=".5"/><path d="M0 146C32 108 66 108 100 142C134 176 168 176 200 140L200 200L0 200Z" fill="currentColor"/></g></svg>
-  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-surf" data-toggle="me-surf">
-   <div style="grid-column:1;grid-row:1"><h2>Il tuo surf</h2></div>
-   <p class="xs muted sub" style="margin-top:2px">Livello e peso, per i litri giusti</p>
-   <span class="ssum" id="sum-me-surf"></span>
-   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
-   <p class="sinfo" id="info-me-surf"></p></button>
+  <button class="shead sbtn withtile" aria-expanded="false" aria-controls="body-me-surf" data-toggle="me-surf">
+   <span class="stile" style="--tbg:#243442;--tfg:#3DA5F5"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/></svg></span>
+   <div class="stext"><div class="stitle"><h2>Il tuo surf</h2></div><p class="xs muted sub">Livello e peso, per i litri giusti</p><span class="ssum" id="sum-me-surf"></span><p class="sinfo" id="info-me-surf"></p></div>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span></button>
   <div id="body-me-surf" hidden><div class="pcard" id="meSurf"></div></div>
  </section>
 
  <section class="dsec t-wx" id="sec-me-boards">
   <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g transform="translate(100 100) rotate(38) scale(1.9 1.5) translate(-20 -50)"><path d="M20 2C29 20 31 48 28 74C26.5 88 23.5 96 20 96C16.5 96 13.5 88 12 74C9 48 11 20 20 2Z" fill="currentColor"/><path d="M20 10L20 80" stroke="var(--sbg)" stroke-width="2.4" stroke-linecap="round"/></g></svg>
-  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-boards" data-toggle="me-boards">
-   <div style="grid-column:1;grid-row:1"><h2>Le tue tavole</h2></div>
-   <p class="xs muted sub" style="margin-top:2px">Quelle che porti in acqua</p>
-   <span class="ssum" id="sum-me-boards"></span>
-   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
-   <p class="sinfo" id="info-me-boards"></p></button>
+  <button class="shead sbtn withtile" aria-expanded="false" aria-controls="body-me-boards" data-toggle="me-boards">
+   <span class="stile" style="--tbg:#3E3224;--tfg:#F0A22E"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c3.6 3 4.8 9 4.4 14.2C16.1 19.6 14.4 22 12 22s-4.1-2.4-4.4-5.8C7.2 11 8.4 5 12 2z"/><path d="M12 6v11"/></svg></span>
+   <div class="stext"><div class="stitle"><h2>Le tue tavole</h2></div><p class="xs muted sub">Quelle che porti in acqua</p><span class="ssum" id="sum-me-boards"></span><p class="sinfo" id="info-me-boards"></p></div>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span></button>
   <div id="body-me-boards" hidden><div id="quiver"></div></div>
  </section>
 
  <section class="dsec t-cal" id="sec-me-data">
   <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g transform="translate(-6 -6)"><path d="M58 152C28 152 20 108 54 100C50 62 100 48 116 80C146 60 184 84 162 112C192 116 188 152 156 152Z" fill="currentColor"/><path d="M104 140L104 104" stroke="var(--sbg)" stroke-width="9" stroke-linecap="round"/><path d="M86 120L104 102L122 120" stroke="var(--sbg)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g></svg>
-  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-data" data-toggle="me-data">
-   <div style="grid-column:1;grid-row:1"><h2>I tuoi dati</h2></div>
-   <p class="xs muted sub" style="margin-top:2px">Una copia di sicurezza, quando serve</p>
-   <span class="ssum" id="sum-me-data"></span>
-   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
-   <p class="sinfo" id="info-me-data"></p></button>
+  <button class="shead sbtn withtile" aria-expanded="false" aria-controls="body-me-data" data-toggle="me-data">
+   <span class="stile" style="--tbg:#2B2640;--tfg:#A99BFF"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 11a3.5 3.5 0 0 0 1 7z"/></svg></span>
+   <div class="stext"><div class="stitle"><h2>I tuoi dati</h2></div><p class="xs muted sub">Una copia di sicurezza, quando serve</p><span class="ssum" id="sum-me-data"></span><p class="sinfo" id="info-me-data"></p></div>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span></button>
   <div id="body-me-data" hidden><div class="pcard"><div class="srow"><div><p style="font-weight:600">Backup</p><p class="xs muted" id="bkState">Una copia completa di sessioni, spot personali e impostazioni. Con l'account i dati sono già salvati anche online; senza account stanno solo su questo telefono.</p></div><button class="pillbtn" id="bkBtn">Copia</button></div>
    <p class="xs muted" style="margin-top:8px">Conteggio anonimo: al massimo una volta al giorno l'app registra di essere stata aperta, con un codice casuale e nessun dato personale, solo per capire quanto viene usata.</p></div></div>
  </section>
 
  <section class="dsec t-wx" id="sec-me-admin" hidden>
   <svg class="motif" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="92" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="3 7" stroke-linecap="round"/><g fill="currentColor"><rect x="52" y="112" width="20" height="40" rx="4"/><rect x="86" y="82" width="20" height="70" rx="4"/><rect x="120" y="56" width="20" height="96" rx="4"/></g></svg>
-  <button class="shead sbtn" aria-expanded="false" aria-controls="body-me-admin" data-toggle="me-admin">
-   <div style="grid-column:1;grid-row:1"><h2>Statistiche</h2></div>
-   <p class="xs muted sub" style="margin-top:2px">Solo per l'amministratore</p>
-   <span class="ssum" id="sum-me-admin"></span>
-   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span>
-   <p class="sinfo" id="info-me-admin"></p></button>
+  <button class="shead sbtn withtile" aria-expanded="false" aria-controls="body-me-admin" data-toggle="me-admin">
+   <span class="stile" style="--tbg:#26331F;--tfg:#9FD18B"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></span>
+   <div class="stext"><div class="stitle"><h2>Statistiche</h2></div><p class="xs muted sub">Solo per l'amministratore</p><span class="ssum" id="sum-me-admin"></span><p class="sinfo" id="info-me-admin"></p></div>
+   <span class="tog" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/><path class="v" d="M12 5v14"/></svg></span></button>
   <div id="body-me-admin" hidden><div class="pcard" id="adminBox"></div></div>
  </section>
 </section>
@@ -2101,19 +2155,15 @@ function bestWindow(sp){
 function windowHtml(sp){
  const w = bestWindow(sp); if (!w) return '';
  const pad = n => String(n).padStart(2,'0'), pc = h => (h/24*100).toFixed(3) + '%';
- const ticks = Array.from({length:25}, (_, h) => `<line x1="${h*10}" y1="${h%3 === 0 ? 50 : 56}" x2="${h*10}" y2="64" stroke="#A27C54" stroke-width="1.2" opacity=".7" vector-effect="non-scaling-stroke"/>`).join('');
+ if (w.none) return `<div class="ablock">${chd('amber','clock','Finestra migliore',`<b class="cval sm">Nessuna finestra buona</b>`)}<p class="xs muted" style="margin-top:8px">Oggi e domani il punteggio resta basso.</p></div>`;
+ const ticks = Array.from({length:25}, (_, h) => `<line x1="${h*10}" y1="${h%3 === 0 ? 20 : 25}" x2="${h*10}" y2="30" stroke="#A27C54" stroke-width="1.2" opacity=".7" vector-effect="non-scaling-stroke"/>`).join('');
  const labs = [3,6,9,12,15,18,21].map(h => `<span style="left:${pc(h)}">${h}</span>`).join('');
- const k = w.isToday ? 'OGGI' : 'DOMANI';
- const win = w.none ? '' : `<div class="win" style="left:${pc(w.from)};width:${((w.to-w.from)/24*100).toFixed(3)}%"></div>`;
+ const win = `<div class="win" style="left:${pc(w.from)};width:${((w.to-w.from)/24*100).toFixed(3)}%"></div>`;
  const now = w.isToday ? `<div class="now" style="left:${pc(w.nowH)}"></div>` : '';
- return `<div class="sechd" style="margin-top:22px"><h2 style="margin:0">Finestra migliore</h2><p class="small muted" style="margin-top:8px">Le ore in cui onda, periodo e vento vanno meglio.</p></div>
-  <section class="wcard"><div class="wk">${w.none ? 'OGGI' : k}</div>
-   <div class="wt">${w.none ? 'Nessuna finestra buona' : `${pad(w.from)}:00 – ${pad(w.to)}:00`}</div>
-   <div class="ws">${w.none ? 'Oggi e domani il punteggio resta basso.' : 'finestra migliore: ' + w.head}</div>
-   <div class="wbar">${win}<svg viewBox="0 0 240 64" preserveAspectRatio="none" aria-hidden="true">${ticks}</svg>${now}</div>
-   <div class="wlab">${labs}</div>
-   <div class="wkeys"><span><i style="background:var(--tan)"></i>Meno adatto</span><span><i style="background:#FBF3E8;border:1px solid var(--brown);box-sizing:border-box"></i>Finestra migliore</span>${w.isToday ? '<span><i style="background:var(--green)"></i>Adesso</span>' : ''}</div>
-   ${w.none ? '' : `<div class="wwhy"><span>${ICON_WIND}</span><span>${w.why}</span></div>`}</section>`;
+ return `<div class="ablock">${chd('amber','clock','Finestra migliore',`<b class="cval">${pad(w.from)}:00 – ${pad(w.to)}:00</b>`,`<span class="ppill" style="--c:#3E3224;--fg:#F0A22E">${w.isToday ? 'oggi' : 'domani'}</span>`)}
+  <div class="wbar">${win}<svg viewBox="0 0 240 30" preserveAspectRatio="none" aria-hidden="true">${ticks}</svg>${now}</div>
+  <div class="wlab">${labs}</div>
+  <p class="wwhy"><span>${ICON_WIND}</span><span>${w.head.charAt(0).toUpperCase() + w.head.slice(1)}. ${w.why}</span></p></div>`;
 }
 const ICON_WIND = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg>';
 
@@ -2143,7 +2193,8 @@ const CIC = {
  board:'<path d="M12 2c3.6 3 4.8 9 4.4 14.2C16.1 19.6 14.4 22 12 22s-4.1-2.4-4.4-5.8C7.2 11 8.4 5 12 2z"/><path d="M12 6v11"/>',
  buoy:'<circle cx="12" cy="7" r="3"/><path d="M12 10v6"/><path d="M3 19c2.5-2 5-2 9 0s6.5 2 9 0"/>',
  warn:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
- ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+ ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
 };
 const cicon = (k, s=22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CIC[k]}</svg>`;
 const chd = (tone, ic, label, val='', right='') => `<div class="chd"><span class="ctile" style="--tbg:${TONES[tone][0]};--tfg:${TONES[tone][1]}">${cicon(ic)}</span><div class="grow"><span class="ck" style="color:${TONES[tone][1]}">${label}</span>${val}</div>${right}</div>`;
@@ -2172,16 +2223,16 @@ function openDetail(id){
   <section class="dsec t-now" id="sec-now">
    ${MOTIF.now}
    ${secHead(SEC_ICONS.now, 'Adesso', 'Onde, swell e vento in questo momento')}
-   <div class="tiles">
+   <div class="adesso"><div class="tiles">
     <div><span class="l">A riva</span><b>${ev ? ev.face.toFixed(1) : '–'}</b><span class="u">metri</span></div>
     <div><span class="l">Al largo</span><b>${ev ? ev.hs.toFixed(1) : '–'}</b><span class="u">metri</span></div>
     <div><span class="l">Swell</span><b>${ev ? cardinal(ev.dir) : '–'}</b><span class="u">${ev ? Math.round(ev.dir)+'°' : ''}</span></div>
     <div><span class="l">Vento</span><b>${ev ? Math.round(ev.ws) : '–'}</b><span class="u">km/h</span></div></div>
+   ${ev ? `<div class="ablock">${periodCell(sp, ev.T)}</div>` : ''}
    ${windowHtml(sp)}
-   ${ev ? `<div class="card2">${periodCell(sp, ev.T)}</div>` : ''}
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
    ${ev ? boardHtml(sp, ev) : ''}
-   <div id="buoyBox" data-spot="${sp.id}"></div>
+   <div id="buoyBox" data-spot="${sp.id}"></div></div>
    ${camsHtml(sp)}
    <button class="pillbtn logbtn" id="logOpen"><span>Registra una sessione</span></button>
   </section>
@@ -3166,7 +3217,7 @@ function periodCell(sp, T){
  return `<div class="wide">${chd('blue','wave','Periodo dello swell',`<b class="cval">${Math.round(T)} s</b>`,`<span class="ppill" style="--c:${p.c};--fg:${p.fg}">${p.t}</span>`)}
   <div class="pwrap" role="img" aria-label="Periodo ${Math.round(T)} secondi, ${p.t.toLowerCase()}"><div class="pbar">${zones}</div><span class="pmark" style="left:${pos}%"></span></div>
   <div class="pscale">${[0,6,8,10,13].map(v=>`<span style="left:${v/MAX*100}%">${v}</span>`).join('')}<span style="left:100%">16+ s</span></div>
-  <p class="small" style="margin-top:10px;color:var(--ink)">${p.d}</p>${cnote(T < sp.minPeriod ? 'amber' : 'green', T < sp.minPeriod ? 'warn' : 'ok', `${note} Più il periodo è lungo, più l'onda ha energia a parità di altezza.`)}</div>`;
+  <p class="xs muted" style="margin-top:8px">${p.d}</p>${cnote(T < sp.minPeriod ? 'amber' : 'green', T < sp.minPeriod ? 'warn' : 'ok', note)}</div>`;
 }
 
 // ---------- Legenda del cerchio ----------
@@ -3336,8 +3387,8 @@ function renderMap(){
  if (!window.L){ document.getElementById('leaf').innerHTML = '<p class="muted" style="padding:16px">Mappa non disponibile: controlla la connessione.</p>'; return; }
  if (!leaf){
   leaf = L.map('leaf', {zoomControl:false, attributionControl:true}).setView(SINIS, 11);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri'}).addTo(leaf);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(leaf);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri'}).addTo(leaf);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(leaf);
   const all = spots.map(sp=>beach(sp)), home = all.filter(b => distanceKm(b, {lat:SINIS[0], lon:SINIS[1]}) < 100);
   const pts = (home.length > 1 ? home : all).map(b=>[b.lat, b.lon]);
   if (pts.length > 1) leaf.fitBounds(pts, {paddingTopLeft:[30,70], paddingBottomRight:[30,110], maxZoom:13});
@@ -3349,7 +3400,7 @@ function renderMap(){
   }).addTo(leaf);
   catLayer = cluster('cat', c => {
    const best = Math.max(...c.getAllChildMarkers().map(m => m.options.score ?? -1));
-   const [bg,fg] = best < 0 ? ['#fff','var(--accent)'] : tone(best);
+   const [bg,fg] = best < 0 ? ['#2B2B2B','#F0A22E'] : tone(best);
    return L.divIcon({className:'', iconSize:[40,40], iconAnchor:[20,20], html:`<div class="clu cat" style="--c:${bg};--fg:${fg}" aria-label="${c.getChildCount()} spot noti${best < 0 ? '' : ', potenziale migliore ' + best + ' su 5'}">${c.getChildCount()}</div>`});
   });
   if (store.get('surf.showCat', true)) catLayer.addTo(leaf);
