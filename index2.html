@@ -516,7 +516,7 @@ nav.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 @media (prefers-reduced-motion:reduce){ .switch::after{transition:none} }
 
 /* =================== TEMA SCURO (index2) =================== */
-:root{--bg:#171717;--panel:#232323;--panel2:#2A2A2A;--ink:#F5F5F2;--muted:#B9B9B3;--line:#363636;--accent:#F0A22E;--wind:#C77F12;--sea:#101C22;
+:root{--bg:#171717;--panel:#2B2B2B;--panel2:#343434;--ink:#F5F5F2;--muted:#B9B9B3;--line:#404040;--accent:#F0A22E;--wind:#C77F12;--sea:#101C22;
  --s0:#3A3D3A;--s1:#E6B84A;--s2:#9FD18B;--s3:#6AA53F;--s4:#A99BFF;
  --light:#F3F4F3;--lightink:#171717;--lightmuted:#5E625E;--amber:#F0A22E;--green:#6AA53F;--greenl:#9FD18B;--blue:#3DA5F5;--purple:#A99BFF;--tan:#DDB892;--brown:#B07840;
  --mono:"Space Mono",ui-monospace,Menlo,Consolas,monospace;--grot:"Space Grotesk",system-ui,-apple-system,sans-serif;--g-swell:#1F8FE0;--g-wind:#C77F12}
@@ -524,8 +524,8 @@ html{color-scheme:dark}
 body{font:400 13px/1.55 var(--mono);background:var(--bg);color:var(--ink)}
 main{max-width:560px;padding:20px 20px calc(116px + env(safe-area-inset-bottom,0px))}
 h1,h2,.cond{font-family:var(--mono)}
-h1{font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
-h1.sub{font-size:30px;line-height:1.15}
+h1{font-size:24px;line-height:1.2;font-weight:700;letter-spacing:-.01em}
+h1.sub{font-size:24px;line-height:1.2}
 h2{margin:22px 0 10px;font-weight:700;font-size:18px;line-height:1.2}
 .small{font-size:12.5px}.xs{font-size:11.5px}
 a{color:var(--amber)}
@@ -535,9 +535,9 @@ a{color:var(--amber)}
 .brand2{display:flex;align-items:center;gap:12px;min-width:0}
 .brandtile{width:44px;height:44px;border-radius:14px;background:var(--light);display:grid;place-items:center;flex-shrink:0}
 .bname{font:700 18px/1.1 var(--grot)}
-#updated{margin:4px 0 0!important;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
-#updated::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
-.pagetitle{margin-top:22px}
+#updated{margin:12px 0 0!important;font-size:11px;line-height:1.5;color:var(--muted)}
+#updated::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:8px;vertical-align:middle}
+.pagetitle{margin-top:16px}
 .locbtn{width:44px;height:44px;border-radius:50%;border:0;background:var(--panel2);color:var(--ink)}
 .locbtn[aria-pressed="true"]{background:var(--amber);color:#171717}
 /* bottoni */
@@ -559,7 +559,7 @@ a{color:var(--amber)}
 .fav .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .fav .k{display:flex;align-items:center;gap:6px;font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8A5A24}
 .fav .k svg{color:var(--brown)}
-.fav .name{margin-top:8px;font:700 30px/1.1 var(--mono);overflow-wrap:anywhere;color:var(--lightink)}
+.fav .name{margin-top:8px;font:700 26px/1.15 var(--mono);overflow-wrap:anywhere;color:var(--lightink)}
 .fav .area{margin-top:4px;font-size:12px;color:var(--lightmuted)}
 .fav .meas{margin-top:10px;font:600 15px var(--grot);color:var(--lightink)}
 .fav .meas span{font:600 15px var(--grot);color:var(--lightink)}
@@ -601,7 +601,7 @@ a{color:var(--amber)}
 .hstar[aria-pressed="true"],#followBtn[aria-pressed="true"]{background:var(--amber);color:#171717}
 .dhead{margin-top:22px}
 .harea{margin:0;font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
-.dname{margin:8px 0 0;font:700 40px/1.05 var(--mono);letter-spacing:-.02em;overflow-wrap:anywhere}
+.dname{margin:8px 0 0;font:700 32px/1.1 var(--mono);letter-spacing:-.02em;overflow-wrap:anywhere}
 .hero{margin-top:14px;padding:16px;border-radius:28px;background:var(--light);color:var(--lightink);display:flex;flex-wrap:wrap;gap:14px}
 .hero .badge{background:var(--c)!important;color:var(--fg)!important}
 .hdial{position:relative;flex-shrink:0;width:116px;height:116px;padding:0;border:0;background:transparent;border-radius:0;box-shadow:none;align-self:flex-start;line-height:0;display:block}
@@ -619,7 +619,7 @@ a{color:var(--amber)}
 .hero .htoast{width:100%;margin:0;color:var(--lightink);font-weight:600}
 .gauge{display:block;flex-shrink:0}
 .hfac{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.hfac span{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:20px;background:var(--panel2);color:var(--ink);font:600 12px var(--grot);white-space:nowrap}
+.hfac span{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:20px;background:var(--panel);color:var(--ink);font:600 12px var(--grot);white-space:nowrap}
 .hfac i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;color:#171717;flex-shrink:0}
 .hfac .ok i{background:#6AA53F}.hfac .mid i{background:#F0A22E}.hfac .ko i{background:#E0624F}
 .idstrip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
@@ -631,7 +631,7 @@ a{color:var(--amber)}
 .idchip.add{border-color:#4A4A4A;color:var(--amber)}
 .dnav{display:none}
 /* dettaglio: Adesso */
-#sec-now{background:transparent;padding:0;margin-top:0;overflow:visible;--panel:#232323;--line:#363636;--bg:#171717;--sea:#101C22}
+#sec-now{background:transparent;padding:0;margin-top:0;overflow:visible;--panel:#2B2B2B;--line:#404040;--bg:#171717;--sea:#101C22}
 #sec-now > .shead,#sec-now > .motif{display:none}
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
 .tiles > div{padding:12px;border-radius:20px;background:var(--light);color:var(--lightink);min-width:0}
@@ -639,7 +639,7 @@ a{color:var(--amber)}
 .tiles b{display:block;margin-top:4px;font:700 20px/1.1 var(--grot);white-space:nowrap}
 .tiles .u{display:block;font-size:10px;color:var(--lightmuted)}
 .card2{margin-top:12px;padding:16px;border-radius:24px;background:var(--panel)}
-.card2 b{font:700 34px/1.2 var(--grot);display:block}
+.card2 .cval{font-size:28px}
 .card2 .pbar{top:5px}
 .card2 .pmark{border-color:#171717;background:#fff;box-shadow:none}
 .card2 .xs.muted,.card2 .small{color:var(--muted)}
@@ -670,12 +670,12 @@ a{color:var(--amber)}
 .wwhy svg{color:#C77F12;margin-top:1px}
 .sechd p{margin:0}
 /* sezioni a fisarmonica */
-.dsec{margin-top:10px;padding:14px;border-radius:22px;background:#232323;color:var(--ink);overflow:hidden;--panel:rgba(255,255,255,.04);--line:rgba(255,255,255,.1);--bg:rgba(255,255,255,.04);--sea:rgba(255,255,255,.06);--tacc:var(--blue)}
+.dsec{margin-top:10px;padding:14px;border-radius:22px;background:#2B2B2B;color:var(--ink);overflow:hidden;--panel:rgba(255,255,255,.04);--line:rgba(255,255,255,.1);--bg:rgba(255,255,255,.04);--sea:rgba(255,255,255,.06);--tacc:var(--blue)}
 .dsec .motif{display:none}
 .t-now{--tacc:#3DA5F5}.t-wx{--tacc:#F0A22E}.t-tide{--tacc:#3DA5F5}.t-week{--tacc:#9FD18B}.t-season{--tacc:#9FD18B}.t-cal{--tacc:#A99BFF}
 .dsec:has(.sbtn){padding-top:14px}
 .dsec:not(.open){padding-bottom:14px;border-radius:22px}
-.dsec.t-week.good:not(.open){background:#232323}
+.dsec.t-week.good:not(.open){background:#2B2B2B}
 .sbtn .tog{background:#333;color:var(--ink);box-shadow:none}
 .shead h2{margin:0;font:700 15px/1.3 var(--mono);color:var(--ink)}
 .shead p{color:var(--muted)!important;font-weight:400}
@@ -748,6 +748,37 @@ nav.tabs button svg{flex-shrink:0}
 
 .ssum b{font:700 15px/1.1 var(--grot)}
 .ssum .snum{font:700 26px/1 var(--grot)}
+
+/* sicurezza in alto: il testo non passa sotto l'orologio */
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:3500;pointer-events:none}
+/* preferito con gli strumenti */
+.fside{position:relative;flex-shrink:0;width:96px;height:96px}
+.fside .badge{position:absolute;right:-8px;bottom:-8px;box-shadow:0 0 0 3px var(--light)}
+.fav .meas{margin:14px 0 0}
+.fk{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin:4px 0 0;font-size:11px;color:var(--lightmuted)}
+.fk i{display:block;width:8px;height:8px;border-radius:4px;flex-shrink:0}
+.fk b{font:700 10.5px var(--grot);padding:2px 8px;border-radius:10px}
+.fk b.g{background:#E3EEDB;color:#2F5F1A}.fk b.a{background:#FBEFD9;color:#8A5A24}
+.fwind{display:flex;align-items:center;gap:10px;margin-top:10px}
+.fws{margin:0;font:700 18px/1.1 var(--grot);color:var(--lightink)}
+.fws span{font:400 11px var(--mono);color:var(--lightmuted)}
+/* carte interne: etichetta colorata, icona su tinta, note a tinta */
+.chd{display:flex;align-items:center;gap:12px}
+.chd .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ctile{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--tbg);color:var(--tfg)}
+.ck{font:700 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.cval{display:block;font:700 22px/1.1 var(--grot);color:var(--ink)}
+.cnote{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:10px 12px;border-radius:14px;background:var(--nbg);font-size:12px;line-height:1.5;color:#EDEDE8}
+.cnote svg{flex-shrink:0;margin-top:2px;color:var(--nfg)}
+.cnote b{color:var(--nfg);font-weight:700}
+#sec-now .board .bhead{margin-top:14px}
+#sec-now .crowd .ppl{display:flex;gap:3px;flex-shrink:0}
+#sec-now .buoy .big{display:none}
+.buoy svg{width:auto;height:auto;margin:0;display:block}
+.buoy > svg{width:100%;height:auto;margin-top:12px}
+.ctile svg{width:22px;height:22px;margin:0}
+.cnote svg{width:16px;height:16px}
+.buoy .lg{margin-top:8px}
 </style>
 </head>
 <body>
@@ -756,9 +787,10 @@ nav.tabs button svg{flex-shrink:0}
 <!-- SPOT -->
 <section id="v-spot">
  <div class="head">
-  <div class="brand2" aria-label="Sinis Waves"><span class="brandtile"><svg width="24" height="22" viewBox="0 6 600 546" aria-hidden="true" style="display:block"><path fill="#171717" fill-rule="evenodd" d="M7 488 L7 551 L596 550 L595 505 L352 505 L272 492 L241 490 L231 488Z M6 420 L6 457 L8 459 L238 459 L271 463 L288 467 L353 477 L596 476 L595 438 L350 438 L309 432 L258 422 L221 418 L7 418Z M6 351 L7 389 L223 389 L257 393 L294 401 L345 409 L596 408 L595 373 L347 373 L304 366 L273 358 L222 350Z M7 7 L7 323 L100 323 L120 319 L130 315 L150 304 L160 296 L180 255 L185 249 L192 245 L271 229 L293 223 L322 219 L334 214 L352 184 L363 161 L370 153 L374 151 L508 150 L518 156 L523 167 L559 305 L565 315 L572 321 L588 329 L596 330 L596 7Z"/></svg></span><div style="min-width:0"><div class="bname">Sinis Waves</div><p class="muted" id="updated">Scarico le previsioni…</p></div></div>
+  <div class="brand2" aria-label="Sinis Waves"><span class="brandtile"><svg width="24" height="22" viewBox="0 6 600 546" aria-hidden="true" style="display:block"><path fill="#171717" fill-rule="evenodd" d="M7 488 L7 551 L596 550 L595 505 L352 505 L272 492 L241 490 L231 488Z M6 420 L6 457 L8 459 L238 459 L271 463 L288 467 L353 477 L596 476 L595 438 L350 438 L309 432 L258 422 L221 418 L7 418Z M6 351 L7 389 L223 389 L257 393 L294 401 L345 409 L596 408 L595 373 L347 373 L304 366 L273 358 L222 350Z M7 7 L7 323 L100 323 L120 319 L130 315 L150 304 L160 296 L180 255 L185 249 L192 245 L271 229 L293 223 L322 219 L334 214 L352 184 L363 161 L370 153 L374 151 L508 150 L518 156 L523 167 L559 305 L565 315 L572 321 L588 329 L596 330 L596 7Z"/></svg></span><div class="bname">Sinis Waves</div></div>
   <button class="locbtn" id="nearBtn" aria-pressed="false" aria-label="Spot vicino a me" title="Spot vicino a me"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg></button>
  </div>
+ <p class="muted" id="updated">Scarico le previsioni…</p>
  <h1 class="pagetitle">Onde di oggi.</h1>
  <div class="err" id="status" hidden></div>
  <div id="fav"></div>
@@ -1248,13 +1280,16 @@ function renderSpot(){
  const fav = spots.find(s=>s.id===favorite), favEl = document.getElementById('fav');
  if (fav && data[fav.id]){
   const ev = nowEval(fav), days = forecastDays(fav).slice(0,5);
+  const inWin = ev && angDiff(ev.dir, fav.facing) <= fav.window;
   favEl.innerHTML = `<button class="fav" data-open="${fav.id}">
    <div class="top"><div class="grow">
     <p class="k">${ICON.star(true)}Il tuo spot</p>
     <p class="name">${esc(fav.name)}</p>
-    <p class="area">${esc(metaLine(fav))}</p>
-    <p class="meas">${ev ? ev.face.toFixed(1) : '–'} m a riva${ev ? ` · ${Math.round(ev.T)} s` : ''}</p></div>
-    ${ringHtml(84, (ev?.score ?? 0)/5, '#E3D5C3', '#B07840', 9, `<b style="font:700 26px/1 var(--grot);color:#171717">${ev?.score ?? '–'}</b><span style="margin-top:2px;font-size:9px;color:#5E625E">su 5</span>`)}</div>
+    <p class="area">${esc(metaLine(fav))}</p></div>
+    <div class="fside">${swellGauge(fav, ev, 96)}${badge(ev?.score,'lg')}</div></div>
+   ${ev ? `<p class="meas">${ev.face.toFixed(1)} m a riva · ${Math.round(ev.T)} s</p>
+   <p class="fk"><i style="background:var(--g-swell)"></i>swell da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}° <b class="${inWin ? 'g' : 'a'}">${inWin ? 'dentro la finestra' : 'fuori finestra'}</b></p>
+   <div class="fwind">${windGauge(fav, ev, 44)}<div><p class="fws">${Math.round(ev.ws)} <span>km/h</span></p><p class="fk"><i style="background:var(--g-wind)"></i>${ev.ws < 3 ? 'vento quasi assente' : `da ${cardinal(ev.wd)}`} <b class="${ev.windType === 'offshore' || ev.windType === 'debole' ? 'g' : 'a'}">${ev.windType}</b></p></div></div>` : '<p class="meas">Nessun dato</p>'}
    <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
   </button>`;
  } else {
@@ -1771,13 +1806,13 @@ function boardHtml(sp, ev){
   name = cat;
   sub = a.mine ? 'Nessuna delle tue tavole è adatta a queste condizioni.' : '';
  }
- const why = a.tooBig ? '' : `<p class="xs muted" style="margin-top:2px">${a.why}.${a.vol ? ` Volume indicativo per i tuoi ${a.c.weight} kg: ${a.vol[0]}–${a.vol[1]} L.` : ''}</p>`;
+ const why = a.tooBig ? '' : `<p class="xs muted" style="margin-top:8px">${a.why}.</p>${a.vol ? cnote('blue','wave', `Volume indicativo per i tuoi ${a.c.weight} kg: <b>${a.vol[0]}–${a.vol[1]} L</b>`) : ''}`;
  const hints = [];
  if (a.c.generic || !a.c.weight) hints.push(`<button class="linkbtn" data-goto="me" style="min-height:36px">Imposta ${a.c.generic ? 'livello' : ''}${a.c.generic && !a.c.weight ? ' e ' : ''}${a.c.weight ? '' : 'peso'} per un consiglio su misura</button>`);
  if (!a.mine && !a.tooBig) hints.push(`<button class="linkbtn" data-goto="me" style="min-height:36px">Aggiungi le tue tavole per sapere quale portare</button>`);
- return `<div class="board"><div class="ctop"><span class="xs muted">Che tavola portare</span>${top}</div>
+ return `<div class="board">${chd('amber','board','Che tavola portare','',top)}
   <div class="bhead">${a.tooBig ? '' : boardTile(m ? m.b.type : a.best.id, m ? parseLen(m.b.length).ft : null)}<div style="min-width:0"><b class="bn">${name}</b>${sub ? `<p class="small" style="margin-top:2px">${sub}</p>` : ''}</div></div>${why}${extra}
-  ${a.warn ? `<p class="bwarn" role="note">${a.warn}</p>` : ''}${hints.length ? `<div>${hints.join('<br>')}</div>` : ''}
+  ${a.warn ? cnote('red','warn', a.warn) : ''}${hints.length ? `<div>${hints.join('<br>')}</div>` : ''}
   <p class="xs muted" style="margin-top:6px">Indicazione di massima: conta anche come ti senti tu e come sono le onde davvero.</p></div>`;
 }
 
@@ -2100,6 +2135,20 @@ function dirSheetHtml(sp, ev){
  return `${c1}${c2}<h2 style="margin:22px 0 0;font-size:16px">Che effetto ha</h2>${eff}`;
 }
 
+// carte interne: etichetta colorata + icona su tinta + note a tinta
+const TONES = {blue:['#243442','#3DA5F5'], amber:['#3E3224','#F0A22E'], green:['#26331F','#9FD18B'], purple:['#2B2640','#A99BFF'], red:['#3A2523','#E8A094']};
+const CIC = {
+ wave:'<path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/>',
+ ppl:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16.5 14.2c2.9 0 4.9 1.9 4.9 4.8"/>',
+ board:'<path d="M12 2c3.6 3 4.8 9 4.4 14.2C16.1 19.6 14.4 22 12 22s-4.1-2.4-4.4-5.8C7.2 11 8.4 5 12 2z"/><path d="M12 6v11"/>',
+ buoy:'<circle cx="12" cy="7" r="3"/><path d="M12 10v6"/><path d="M3 19c2.5-2 5-2 9 0s6.5 2 9 0"/>',
+ warn:'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+ ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+};
+const cicon = (k, s=22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CIC[k]}</svg>`;
+const chd = (tone, ic, label, val='', right='') => `<div class="chd"><span class="ctile" style="--tbg:${TONES[tone][0]};--tfg:${TONES[tone][1]}">${cicon(ic)}</span><div class="grow"><span class="ck" style="color:${TONES[tone][1]}">${label}</span>${val}</div>${right}</div>`;
+const cnote = (tone, ic, html) => `<p class="cnote" style="--nbg:${TONES[tone][0]};--nfg:${TONES[tone][1]}">${cicon(ic, 16)}<span>${html}</span></p>`;
+
 function openDetail(id){
  const sp = spots.find(s=>s.id===id), s = data[id];
  if (!sp || !s) return;
@@ -2317,9 +2366,10 @@ function crowdCalcRaw(sp, score, day, hour){
 const crowdNow = (sp, ev) => crowdCalc(sp, ev.score, todayIso(), +nowKey().slice(11,13));
 const crowdDay = (sp, d) => crowdCalc(sp, d.best.score, d.day, d.bestHour);
 function crowdHtml(sp, c){
+ const col = ['#9FD18B','#E6B84A','#F0A22E','#E0624F'][c.lvl] || '#9FD18B';
  const person = on => `<svg class="${on?'':'off'}" width="18" height="22" viewBox="0 0 18 22" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="4"/><path d="M1 21c0-5 3.6-8 8-8s8 3 8 8z"/></svg>`;
- return `<div class="crowd"><div class="ctop"><span class="xs muted">Affollamento stimato</span><span class="ppl" role="img" aria-label="${c.lvl+1} su 4">${[0,1,2,3].map(i=>person(i<=c.lvl)).join('')}</span></div>
-  <b>${c.label}</b><p class="xs muted" style="margin-top:2px">${c.why.length ? 'Perché: '+c.why.join(', ')+'. ' : ''}È una stima fatta da onde, giorno e ora, non un conteggio reale.</p></div>`;
+ return `<div class="crowd">${chd('purple','ppl','Affollamento stimato',`<b class="cval">${c.label}</b>`,`<span class="ppl" role="img" aria-label="${c.lvl+1} su 4" style="color:${col}">${[0,1,2,3].map(i=>person(i<=c.lvl)).join('')}</span>`)}
+  <p class="xs muted" style="margin-top:10px">${c.why.length ? 'Perché: '+c.why.join(', ')+'. ' : ''}È una stima fatta da onde, giorno e ora, non un conteggio reale.</p></div>`;
 }
 
 // ---------- Sezioni della pagina spot ----------
@@ -2868,8 +2918,8 @@ async function renderBuoy(sp){
  const newer = fresh.find(b => b !== bu && new Date(b.last.time) - new Date(bu.last.time) > 3*3600000);
  const name = bu.name ? bu.name : (bu.km != null && Math.abs(bu.lat - 40.55) < 0.6 && bu.lon < 8.6 ? 'Boa di Alghero' : 'Boa ondametrica ' + bu.id);
  const L = bu.last;
- box.innerHTML = `<div class="buoy"><div class="bt"><span class="xs muted">Misurato in mare: ${esc(name)}, a ${Math.round(bu.d)} km verso ${cardinal(bearing(beach(sp), bu))}</span><span class="xs muted" style="white-space:nowrap">${ago(L.time)}</span></div>
-  <b class="big">${(+L.hs).toFixed(1)} m${L.tp ? `, ${Math.round(L.tp)} s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}</b>
+ box.innerHTML = `<div class="buoy">${chd('green','buoy','Misurato in mare',`<b class="cval">${(+L.hs).toFixed(1)} m${L.tp ? `, ${Math.round(L.tp)} s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}</b>`,`<span class="xs muted" style="white-space:nowrap;align-self:flex-start">${ago(L.time)}</span>`)}
+  <p class="xs muted" style="margin-top:8px">${esc(name)}, a ${Math.round(bu.d)} km verso ${cardinal(bearing(beach(sp), bu))}</p>
   ${newer ? `<p class="xs muted" style="margin-top:2px">Più recente: ${esc(newer.name || 'boa ' + newer.id)}, a ${Math.round(newer.d)} km: ${(+newer.last.hs).toFixed(1)} m, ${ago(newer.last.time)}</p>` : ''}
   <div id="buoyCmp" class="xs muted">Confronto con il modello…</div></div>`;
  // confronto con il modello nello stesso punto e nelle stesse ore
@@ -2890,8 +2940,8 @@ async function renderBuoy(sp){
   const W = 300, Hh = 70, mx = Math.max(.5, ...pts.map(x=>Math.max(x.obs, x.mod)))*1.1;
   const X = i => (i/(pts.length-1 || 1))*W, Y = v => Hh - v/mx*Hh;
   const line = k => pts.map((x,i)=>`${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(x[k]).toFixed(1)}`).join(' ');
-  cmp.outerHTML = `<p class="small" style="margin-top:4px">Il modello qui dava ${nowMod.toFixed(1)} m: ${Math.abs(diff) < 10 ? 'ci ha preso' : diff > 0 ? `il mare è più grosso del ${diff}%` : `il mare è più piccolo del ${-diff}%`}.
-    ${pts.length >= 12 ? `Nelle ultime ${pts.length} ore in media ${Math.abs(md) < 10 ? 'modello e boa coincidono' : md > 0 ? `la boa misura il ${md}% in più` : `la boa misura il ${-md}% in meno`}.` : ''}</p>
+  cmp.outerHTML = `<p class="cnote" style="--nbg:${Math.abs(diff) < 10 ? '#26331F' : '#3E3224'};--nfg:${Math.abs(diff) < 10 ? '#9FD18B' : '#F0A22E'}"><span>Il modello qui dava ${nowMod.toFixed(1)} m: ${Math.abs(diff) < 10 ? 'ci ha preso' : diff > 0 ? `il mare è più grosso del ${diff}%` : `il mare è più piccolo del ${-diff}%`}.
+    ${pts.length >= 12 ? `Nelle ultime ${pts.length} ore in media ${Math.abs(md) < 10 ? 'modello e boa coincidono' : md > 0 ? `la boa misura il ${md}% in più` : `la boa misura il ${-md}% in meno`}.` : ''}</span></p>
    <svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Onda misurata dalla boa e prevista dal modello nelle ultime ore">
     <path d="${line('mod')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
     <path d="${line('obs')}" fill="none" stroke="var(--tacc)" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
@@ -2943,10 +2993,10 @@ async function applyBuoyFix(){
 function buoyFixNote(sp){
  if (!buoyFix) return '';
  const pct = Math.round((buoyFix.ratio - 1) * 100), on = buoyFix.applied && data[sp.id]?.hsRaw;
- return `<p class="small" style="margin-top:8px"><b>${on ? 'Previsioni corrette' : 'Nessuna correzione'}</b>: ${on
-  ? `nelle ultime ${buoyFix.n} ore di misure il modello ha ${pct > 0 ? 'sottostimato' : 'sovrastimato'} l'onda del ${Math.abs(pct)}%, quindi l'onda prevista qui è ${pct > 0 ? 'alzata' : 'abbassata'} di conseguenza, con la correzione che sfuma nell'arco di 2 giorni.`
-  : 'il modello è in linea con le misure della boa.'}
-  <button class="linkbtn" id="fixToggle" style="min-height:auto;font-size:13px">${store.get('surf.buoyfix', true) ? 'Disattiva' : 'Attiva'}</button></p>`;
+ const body = on
+  ? `<b>Previsioni corrette</b>: nelle ultime ${buoyFix.n} ore di misure il modello ha ${pct > 0 ? 'sottostimato' : 'sovrastimato'} l'onda del <b>${Math.abs(pct)}%</b>, quindi l'onda prevista qui è ${pct > 0 ? 'alzata' : 'abbassata'} di conseguenza, con la correzione che sfuma nell'arco di 2 giorni.`
+  : '<b>Nessuna correzione</b>: il modello è in linea con le misure della boa.';
+ return `${cnote(on ? 'amber' : 'green', on ? 'warn' : 'ok', body)}<button class="pillbtn" id="fixToggle" style="margin-top:10px;min-height:40px;font-size:13px">${store.get('surf.buoyfix', true) ? 'Disattiva la correzione' : 'Attiva la correzione'}</button>`;
 }
 
 // ---------- Accordo tra i modelli d'onda ----------
@@ -3113,11 +3163,10 @@ function periodCell(sp, T){
  const zones = PERIODS.map(x=>{ const w = (Math.min(x.to, MAX) - from)/MAX*100; from = Math.min(x.to, MAX); return `<i style="width:${w}%;background:${x.c}"></i>`; }).join('');
  const pos = Math.min(T, MAX)/MAX*100;
  const note = T < sp.minPeriod ? `Sotto il minimo di questo spot (${sp.minPeriod} s): il punteggio ne risente.` : `Sopra il minimo di questo spot (${sp.minPeriod} s).`;
- return `<div class="wide"><div class="ptop"><span class="xs muted">Periodo dello swell</span><span class="ppill" style="--c:${p.c};--fg:${p.fg}">${p.t}</span></div>
-  <b>${Math.round(T)} s</b>
+ return `<div class="wide">${chd('blue','wave','Periodo dello swell',`<b class="cval">${Math.round(T)} s</b>`,`<span class="ppill" style="--c:${p.c};--fg:${p.fg}">${p.t}</span>`)}
   <div class="pwrap" role="img" aria-label="Periodo ${Math.round(T)} secondi, ${p.t.toLowerCase()}"><div class="pbar">${zones}</div><span class="pmark" style="left:${pos}%"></span></div>
   <div class="pscale">${[0,6,8,10,13].map(v=>`<span style="left:${v/MAX*100}%">${v}</span>`).join('')}<span style="left:100%">16+ s</span></div>
-  <p class="small" style="margin-top:6px">${p.d}</p><p class="xs muted" style="margin-top:2px">${note} Più il periodo è lungo, più l'onda ha energia a parità di altezza.</p></div>`;
+  <p class="small" style="margin-top:10px;color:var(--ink)">${p.d}</p>${cnote(T < sp.minPeriod ? 'amber' : 'green', T < sp.minPeriod ? 'warn' : 'ok', `${note} Più il periodo è lungo, più l'onda ha energia a parità di altezza.`)}</div>`;
 }
 
 // ---------- Legenda del cerchio ----------
