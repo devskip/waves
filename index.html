@@ -938,6 +938,10 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .wticks svg{display:block}
 .wticks span{position:absolute;top:50px;transform:translateX(-50%);font:12px var(--mono);color:var(--muted)}
 .wmark{position:absolute;left:50%;top:0;width:3px;height:46px;margin-left:-1.5px;border-radius:2px;background:var(--amber);pointer-events:none}
+
+/* Settimana: la riga evidenziata occupa tutta la larghezza della carta, il testo resta allineato alle altre righe */
+.dlist div.best{margin:0 -14px;padding:9px 14px;border-radius:0;background:rgba(255,255,255,.06);border-top:1px dashed var(--amber);border-bottom:1px dashed var(--amber)}
+.dlist div:has(+ .best){border-bottom-color:transparent}
 </style>
 </head>
 <body>
@@ -2773,11 +2777,11 @@ function bindCal(sp){
 const SUPA_URL = 'https://djicqanyclbrfzhxlsxm.supabase.co';
 const SUPA_KEY = 'sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf';
 const Cloud = (() => {
- let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null, partialErr = null;
+ let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null, partialErr = null, partialDetail = null;
  // errore "a metà": spot e sessioni si sincronizzano, ma profilo e tavole no (di solito manca l'aggiornamento del database)
- const friendly = m => /schema cache|does not exist|relation|column|permission denied/i.test(m || '') ? 'il database non è ancora aggiornato (serve aggiorna_tavole.sql)' : (m || 'errore sconosciuto');
+ const friendly = m => /schema cache|could not find|does not exist|undefined (table|column)/i.test(m || '') ? 'il database non è ancora aggiornato (serve aggiorna_tavole.sql)' : /permission denied|row-level security|not allowed/i.test(m || '') ? 'permessi mancanti sul database (rilancia aggiorna_tavole.sql)' : (m || 'errore sconosciuto');
  let admin = false;
- const api = {ready:false, get busy(){ return busy; }, get partialErr(){ return partialErr; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
+ const api = {ready:false, get busy(){ return busy; }, get partialErr(){ return partialErr; }, get partialDetail(){ return partialDetail; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
  const SYNC_KEYS = ['surf.sessions','surf.customSpots','surf.favorite','surf.followed','surf.order','surf.gain','surf.threshold','surf.profile','surf.boards'];
  let tg = {linked:false, link:null}, tgTimer = null;
  // vale la soglia di questo dispositivo solo se l'ha scelta la persona (o se c'era già prima che la soglia viaggiasse sull'account)
@@ -2945,7 +2949,7 @@ const Cloud = (() => {
     if (r.error) console.warn('Soglia non salvata', r.error); else store.set('surf.thresholdDirty', false);
    }
    // profilo surfista e tavole: se questa parte non è ancora pronta sul database non deve bloccare il resto
-   partialErr = null;
+   partialErr = null; partialDetail = null;
    try{
     const pf = store.get('surf.profile', null);
     if (pf && store.get('surf.profileDirty', false)){
@@ -2957,7 +2961,7 @@ const Cloud = (() => {
     const bmine = Data.boards.all().filter(x => { const r = bmap.get(x.id); return !r || (x.updated && stamp(x.updated) > stamp(r.updated_at)); });
     if (bmine.length){ const {error} = await sb.from('boards').upsert(bmine.map(boardOut)); if (error) throw error; bmine.forEach(x => bmap.set(x.id, {id: x.id, updated_at: x.updated})); }
     store.set('surf.syncedBoards', [...bmap.keys()]);
-   }catch(e){ partialErr = friendly(e.message || String(e)); console.warn('Profilo e tavole non sincronizzati', e); }
+   }catch(e){ partialErr = friendly(e.message || String(e)); partialDetail = [e.code, e.message || String(e)].filter(Boolean).join(' – '); console.warn('Profilo e tavole non sincronizzati', e); }
    lastSync = new Date();
   }catch(e){ lastErr = e.message || String(e); console.warn('Sincronizzazione', e); }
   busy = false; status();
@@ -3125,7 +3129,7 @@ function renderAccountBox(){
   const ini = esc((Cloud.user.email || '?').trim().charAt(0).toUpperCase());
   const st = Cloud.lastErr ? ['err', 'Sincronizzazione non riuscita: ' + Cloud.lastErr] : (Cloud.busy || !Cloud.lastSync) ? ['busy', 'Sincronizzo…'] : Cloud.partialErr ? ['warn', 'Spot e sessioni sì, ma profilo e tavole no: ' + Cloud.partialErr] : ['ok', `Sincronizzato alle ${hm2(Cloud.lastSync)}`];
   box.innerHTML = `<div class="acct"><div class="mehero"><span class="ava" aria-hidden="true">${ini}</span><div class="who"><p class="mail">${esc(Cloud.user.email || 'Account')}</p>
-   <p class="stat" role="status"><i class="dot ${st[0]}"></i>${esc(st[1])}</p></div></div>
+   <p class="stat" role="status"><i class="dot ${st[0]}"></i>${esc(st[1])}</p>${st[0] === 'warn' && Cloud.partialDetail ? `<p class="xs muted" style="margin:6px 0 0;overflow-wrap:anywhere">Dettaglio tecnico: ${esc(Cloud.partialDetail)}</p>` : ''}</div></div>
    <div class="row2"><button class="pillbtn" id="acSync"${Cloud.busy ? ' disabled' : ''}>${Cloud.busy ? '<i class="spin"></i>Sincronizzo…' : ICON_SYNC + 'Sincronizza ora'}</button>
    <button class="pillbtn" id="acOut">${ICON_OUT}Esci</button></div></div>`;
   document.getElementById('acSync').onclick = async () => { await Cloud.sync(); if (Cloud.lastErr) toast('Sincronizzazione non riuscita', 'err'); else if (Cloud.partialErr) toast('Profilo e tavole non sincronizzati', 'err'); else toast('Tutto sincronizzato'); };
