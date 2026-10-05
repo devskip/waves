@@ -950,6 +950,44 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .legend b{display:block;font-weight:400}
 .legend em{display:block;margin-top:1px;font-size:12px}
 .legend span:last-child:nth-child(odd){grid-column:1 / -1}
+
+/* ===== Settimana: righe complete (A) o compatte (B) ===== */
+.wlisthd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:18px 0 6px}
+.wlisthd h3{margin:0;font:600 19px var(--grot)}
+.wlist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.wday{padding:12px 0;border-bottom:1px solid var(--line)}
+.wday:last-child{border-bottom:0}
+.wday.best{margin:0 -14px;padding:12px 14px;background:rgba(255,255,255,.06);border-top:1px dashed var(--amber);border-bottom:1px dashed var(--amber)}
+.wday:has(+ .best){border-bottom-color:transparent}
+.whead{-webkit-appearance:none;appearance:none;display:flex;align-items:center;gap:8px;width:100%;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.whead:focus-visible{outline:2px solid var(--amber);outline-offset:4px;border-radius:8px}
+.wdn{flex:1;min-width:0}
+.wdn b{font:700 15px var(--mono);color:var(--ink)}
+.wday .wshort,.wday .wmid,.wday .wwc{display:none}
+.wchev{flex-shrink:0;color:#8C8C86;transition:transform .2s;transform:rotate(180deg)}
+.wday.compact .wchev{transform:none}
+.wday.compact .wfull,.wday.compact .wbody{display:none}
+.wday.compact .wshort{display:inline}
+.wday.compact .wdn{flex:0 0 38px}
+.wday.compact .wdn b{font-size:14px}
+.wday.compact .wmid{display:block;flex:1;min-width:0}
+.wday.compact .wwc{display:flex;width:84px;flex-shrink:0;align-items:center;gap:6px;font-size:12px;line-height:1.25;color:var(--muted)}
+.wwc > span{display:block}.wwc b{display:block;color:var(--ink);font-weight:700}
+.wmid .wr{display:flex;align-items:center;gap:6px}
+.wmid .wr b{font:700 16px/1.2 var(--grot);color:var(--ink)}
+.wmid small{display:block;font-size:11px;color:var(--muted)}
+.adot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--c);flex-shrink:0}
+.adot[hidden]{display:none}
+.wbody p{margin:0}
+.wrng{display:flex;align-items:baseline;gap:10px;margin-top:2px!important}
+.wrng b{font:700 22px/1.2 var(--grot);color:var(--ink)}
+.wrng span{font-size:12px;color:var(--muted)}
+.wwind{display:flex;align-items:center;gap:8px;margin-top:6px!important;font-size:12px;color:var(--muted)}
+.wwind b{color:var(--ink);font-weight:700}
+.wchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px!important}
+.wchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:#343434;font-size:11.5px;color:var(--ink)}
+.wday .agree{margin-top:8px!important;align-items:flex-start;font-size:11.5px;line-height:1.45}
+.wday .agree i{margin-top:5px}
 </style>
 </head>
 <body>
@@ -2425,6 +2463,41 @@ function initRuler(sBox, pr){
  sc.addEventListener('pointerup', end); sc.addEventListener('pointercancel', end);
 }
 
+// ---------- Settimana: righe dei giorni, complete (A) o compatte (B) ----------
+const WK = {
+ wind:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97B35" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg>`,
+ people:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A99BFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.4c.5-.2 1-.3 1.5-.3 2.5 0 4 2 4 4.9"/></svg>`,
+ board:`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F0A22E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c3.6 3 4.8 9 4.4 14.2C16.1 19.6 14.4 22 12 22s-4.1-2.4-4.4-5.8C7.2 11 8.4 5 12 2z"/><path d="M12 6v11"/></svg>`,
+ chev:`<svg class="wchev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`
+};
+function weekRow(sp, d, isBest){
+ const compact = true, w = d.best, ws = Math.round(w.ws);      // di partenza le righe sono compatte: un tocco apre il giorno
+ const rng = `${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)}m`, lbl = dayLabel(d.day);
+ return `<div class="wday${isBest ? ' best' : ''}${compact ? ' compact' : ''}" data-lbl="${lbl}">
+  <button type="button" class="whead" aria-expanded="${!compact}" aria-label="${lbl}: ${compact ? 'espandi' : 'compatta'}">
+   <span class="wdn"><b class="wfull">${lbl}</b><b class="wshort">${dayShort(d.day)}</b></span>
+   <span class="wmid"><span class="wr"><b>${rng}</b><i class="adot" data-agdot="${d.day}" hidden></i></span><small>meglio alle ${d.bestHour}</small></span>
+   <span class="wwc">${WK.wind}<span>${w.windType}<b>${ws}km/h</b></span></span>
+   ${badge(w.score, 'sm')}${WK.chev}
+  </button>
+  <div class="wbody">
+   <p class="wrng"><b>${rng}</b><span>meglio alle ${d.bestHour}</span></p>
+   <p class="wwind">${WK.wind}<span>vento ${w.windType} <b>${ws}km/h</b></span></p>
+   <p class="wchips"><span class="wchip">${WK.people}${crowdDay(sp, d).label.toLowerCase()}</span><span class="wchip">${WK.board}${esc(boardShort(sp, w))}</span></p>
+   <p class="agree" data-agree="${d.day}"></p>
+  </div>
+ </div>`;
+}
+document.addEventListener('click', e => {
+ const t = e.target; if (!t.closest) return;
+ const hd = t.closest('.whead');
+ if (hd){
+  const row = hd.closest('.wday'), c = row.classList.toggle('compact');
+  hd.setAttribute('aria-expanded', String(!c)); hd.setAttribute('aria-label', `${row.dataset.lbl}: ${c ? 'espandi' : 'compatta'}`);
+  return;
+ }
+});
+
 function openDetail(id){
  const sp = spots.find(s=>s.id===id), s = data[id];
  if (!sp || !s) return;
@@ -2481,9 +2554,8 @@ function openDetail(id){
    <div id="body-week" hidden>
    <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max}m).</p>
    ${chartHtml(sp)}
-   <h3 style="margin:18px 0 6px;font:600 19px var(--grot)">Giorno per giorno</h3>
-   <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
-    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)}m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)}km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()} · Tavola: ${esc(boardShort(sp, d.best))}</span></span><span class="agree" data-agree="${d.day}"></span></div>`).join('')}</div>
+   <div class="wlisthd"><h3>Giorno per giorno</h3></div>
+   <div class="wlist">${days.map(d => weekRow(sp, d, best && best === d && d.best.score >= ACTIVE_FROM)).join('')}</div>
    </div>
   </section>
 
@@ -3292,6 +3364,7 @@ async function loadAgreement(sp){
    const [txt, col] = (gap <= .3 || rel <= .25) ? ['Modelli d\'accordo','var(--s3)'] : (gap <= .6 || rel <= .5) ? ['Modelli abbastanza d\'accordo','var(--s1)'] : ['Modelli discordi','#C0504D'];
    el.innerHTML = `<i style="--c:${col}"></i><span><b>${txt}</b>: al largo tra ${lo.toFixed(1)}m e ${hi.toFixed(1)}m (${maxes.length} modelli)</span>`;
    el.title = `Onda al largo secondo ${maxes.length} modelli: da ${lo.toFixed(1)}m a ${hi.toFixed(1)}m`;
+   const ad = document.querySelector(`#v-detail [data-agdot="${day}"]`); if (ad){ ad.style.setProperty('--c', col); ad.title = txt; ad.hidden = false; }
   });
  };
  if (c && Date.now() - c.at < 3600000){ draw(c.res); return; }
