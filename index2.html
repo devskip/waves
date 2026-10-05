@@ -869,6 +869,50 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .hrd .hl i{display:block;width:9px;height:9px;border-radius:5px;flex-shrink:0}
 .hrd .hv{margin:3px 0 0;font:700 16px/1.15 var(--grot);color:var(--lightink)}
 .hrd .hs{margin:0;font-size:11px;line-height:1.3;color:var(--lightmuted)}
+
+/* moduli: nessun campo deve uscire dal contenitore (su iPhone i campi data hanno una larghezza minima propria) */
+.sheet-p{overflow-x:hidden}
+.form label{min-width:0}
+.form input,.form select,.form textarea{min-width:0;max-width:100%;box-sizing:border-box}
+.form input[type="datetime-local"],.form input[type="date"],.form input[type="time"]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;max-width:100%;margin-left:0;margin-right:0;text-align:left;line-height:1.3;overflow:hidden}
+.form input[type="datetime-local"]::-webkit-date-and-time-value,.form input[type="date"]::-webkit-date-and-time-value,.form input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0;min-height:1.3em}
+.form input[type="datetime-local"]::-webkit-datetime-edit,.form input[type="date"]::-webkit-datetime-edit{padding:0}
+.form input[type="datetime-local"]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.7}
+
+/* ===== Adesso: valori neutri (swell e vento sono nel cerchio) ===== */
+.adesso .tiles > div:nth-child(3) b,.adesso .tiles > div:nth-child(4) b{color:var(--ink)}
+/* ===== Che tavola portare ===== */
+.board .cval.bn{font-size:17px;line-height:1.2;margin-top:3px}
+.board .chd .btile{width:48px;height:48px}
+.bchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.bchips .bchip{font:600 11px var(--grot);padding:3px 10px;border-radius:12px}
+.board .bmore{margin:8px 0 0;font-size:11.5px;line-height:1.5}
+.board > p.xs{margin-top:10px}
+.bbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pillbtn.add{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;min-height:44px;padding:0 18px;border:1px solid #4A4A4A;border-radius:22px;background:transparent;color:var(--ink);font:600 14px var(--grot)}
+.pillbtn.add svg{flex-shrink:0}
+.cams .pillbtn.add{margin-top:12px}
+/* ===== Meteo ===== */
+.wx{background:transparent;border:0;padding:0}
+.wxnow{display:flex;align-items:center;gap:16px;margin-top:16px}
+.wxi{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;flex-shrink:0;font-size:0;line-height:0}
+.wxt{margin:0;font:700 42px/1 var(--grot)}
+.wxl{margin:4px 0 0;font:600 14px var(--grot);color:var(--ink)}
+.wxgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:16px}
+.wxgrid > div{background:#343434;border-radius:16px;padding:12px}
+.wxgrid .wl{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.wxgrid b{display:block;margin-top:6px;font:700 20px/1.1 var(--grot);color:var(--ink)}
+.hours{gap:6px;margin-top:16px}
+.hr,.dsec .hr{flex:0 0 68px;display:flex;flex-direction:column;align-items:center;gap:7px;padding:8px 2px;border:2px solid transparent;border-radius:16px;background:#343434;color:var(--muted);font-size:10px;line-height:1.3;text-align:center}
+.hr > span:first-child{font-size:11px;line-height:20px;color:var(--muted)}
+.hr .i{line-height:0;font-size:0}
+.hr b{font:700 15px/1.1 var(--grot);color:var(--ink)}
+.hr.now,.dsec .hr.now{background:#3A3A3A;border-color:var(--amber);color:var(--muted)}
+.hr.now > span:first-child{padding:0 8px;border-radius:10px;background:var(--amber);color:#171717;font:700 11px var(--grot);line-height:20px}
+.hr.now b,.dsec .hr.now b{color:var(--ink)}
+
+.wxgrid b{white-space:nowrap}
+.wxgrid > div:nth-child(4) b{font-size:16px}
 </style>
 </head>
 <body>
@@ -1871,29 +1915,34 @@ function boardHtml(sp, ev){
  const a = boardAdvice(sp, ev), m = a.mine && a.mine.best.fit >= .3 ? a.mine.best : null;
  const cat = a.best.t + (a.alt ? ' o ' + a.alt.t.toLowerCase() : '');
  const chip = t => `<span class="ppill" style="--c:var(--s3);--fg:#171717">${t}</span>`;
- let top = '', name, sub = '', extra = '';
+ let top = '', name, chips = '', extra = '';
  if (a.tooBig){
-  name = 'Meglio aspettare'; sub = `Onde troppo grosse per il livello «${SURF_LEVELS.find(l => l.id === a.c.level).t.toLowerCase()}»: aspetta una giornata più tranquilla o scegli uno spot più riparato.`;
+  name = 'Meglio aspettare';
+  extra = cnote('red', 'warn', `Onde troppo grosse per il livello «${SURF_LEVELS.find(l => l.id === a.c.level).t.toLowerCase()}»: aspetta una giornata più tranquilla o scegli uno spot più riparato.`);
  } else if (m){
   const t = boardType(m.b.type);
   const sure = m.b.litres && a.c.weight;      // senza litri o peso il giudizio guarda solo il tipo: meglio non esagerare
   top = m.fit >= .8 && sure ? chip('Ottima scelta') : m.fit >= .55 ? chip('Va bene') : chip('Meglio di niente');
-  name = `La tua «${esc(m.b.name)}»`;
-  sub = `${t ? t.t : ''}${m.b.litres ? ', ' + m.b.litres + ' L' : ''}${m.b.length ? ', ' + esc(m.b.length) : ''}${m.note ? ': ' + m.note : ''}.`;
+  name = esc(m.b.name);
+  chips = `<div class="bchips"><span class="bchip l">${t ? t.t : 'Tavola'}</span>${m.b.litres ? `<span class="bchip">${m.b.litres} L</span>` : ''}${m.b.length ? `<span class="bchip">${esc(m.b.length)}</span>` : ''}</div>`;
+  if (m.note) extra += `<p class="xs muted">${m.note.charAt(0).toUpperCase() + m.note.slice(1)}.</p>`;
   if (m.s < .5) extra += `<p class="bmore muted">Non è la più adatta a queste condizioni: l'ideale sarebbe ${cat.toLowerCase()}.</p>`;
   if (a.mine.alt) extra += `<p class="bmore muted">In alternativa: «${esc(a.mine.alt.b.name)}».</p>`;
  } else {
   name = cat;
-  sub = a.mine ? 'Nessuna delle tue tavole è adatta a queste condizioni.' : '';
+  if (a.mine) extra += '<p class="xs muted">Nessuna delle tue tavole è adatta a queste condizioni.</p>';
  }
- const why = a.tooBig ? '' : `<p class="xs muted" style="margin-top:8px">${a.why}.</p>${a.vol ? cnote('blue','wave', `Volume indicativo per i tuoi ${a.c.weight} kg: <b>${a.vol[0]}–${a.vol[1]} L</b>`) : ''}`;
+ const why = a.tooBig ? '' : `<p class="xs muted">${a.why}.</p>${a.vol ? cnote('blue', 'wave', `Volume indicativo per i tuoi ${a.c.weight} kg: <b>${a.vol[0]}–${a.vol[1]} L</b>`) : ''}`;
  const hints = [];
- if (a.c.generic || !a.c.weight) hints.push(`<button class="linkbtn" data-goto="me" style="min-height:36px">Imposta ${a.c.generic ? 'livello' : ''}${a.c.generic && !a.c.weight ? ' e ' : ''}${a.c.weight ? '' : 'peso'} per un consiglio su misura</button>`);
- if (!a.mine && !a.tooBig) hints.push(`<button class="linkbtn" data-goto="me" style="min-height:36px">Aggiungi le tue tavole per sapere quale portare</button>`);
- return `<div class="board">${chd('amber','board','Che tavola portare','',top)}
-  <div class="bhead">${a.tooBig ? '' : boardTile(m ? m.b.type : a.best.id, m ? parseLen(m.b.length).ft : null)}<div style="min-width:0"><b class="bn">${name}</b>${sub ? `<p class="small" style="margin-top:2px">${sub}</p>` : ''}</div></div>${why}${extra}
-  ${a.warn ? cnote('red','warn', a.warn) : ''}${hints.length ? `<div>${hints.join('<br>')}</div>` : ''}
-  <p class="xs muted" style="margin-top:6px">Indicazione di massima: conta anche come ti senti tu e come sono le onde davvero.</p></div>`;
+ if (a.c.generic || !a.c.weight){
+  const need = a.c.generic && !a.c.weight ? 'livello e peso' : a.c.generic ? 'il tuo livello' : 'il tuo peso';
+  hints.push(`<button class="pillbtn add" data-goto="me">${ICON_PLUS}Imposta ${need}</button>`);
+ }
+ if (!a.mine && !a.tooBig) hints.push(`<button class="pillbtn add" data-goto="me">${ICON_PLUS}Aggiungi le tue tavole</button>`);
+ const icon_ = a.tooBig ? `<span class="ctile" style="--tbg:#3A2523;--tfg:#E8A094">${cicon('warn')}</span>` : boardTile(m ? m.b.type : a.best.id, m ? parseLen(m.b.length).ft : null);
+ return `<div class="board"><div class="chd">${icon_}<div class="grow"><span class="ck" style="color:#F0A22E">Che tavola portare</span><b class="cval bn">${name}</b></div>${top}</div>
+  ${chips}${extra}${why}${a.warn ? cnote('red', 'warn', a.warn) : ''}${hints.length ? `<div class="bbtns">${hints.join('')}</div>` : ''}
+  <p class="xs muted" style="margin-top:12px">Indicazione di massima: conta anche come ti senti tu e come sono le onde davvero.</p></div>`;
 }
 
 // ---------- Avvisi a comparsa ----------
@@ -2257,6 +2306,32 @@ const cicon = (k, s=22) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" 
 const chd = (tone, ic, label, val='', right='') => `<div class="chd"><span class="ctile" style="--tbg:${TONES[tone][0]};--tfg:${TONES[tone][1]}">${cicon(ic)}</span><div class="grow"><span class="ck" style="color:${TONES[tone][1]}">${label}</span>${val}</div>${right}</div>`;
 const cnote = (tone, ic, html) => `<p class="cnote" style="--nbg:${TONES[tone][0]};--nfg:${TONES[tone][1]}">${cicon(ic, 16)}<span>${html}</span></p>`;
 
+// ---------- Meteo: icone piatte nei colori dell'app, al posto delle emoji ----------
+const WXC = {sun:'#F0A22E', moon:'#B9AEFF', cloud:'#C4C9D1', rain:'#3DA5F5', snow:'#E8EEF3', bolt:'#F0A22E'};
+function wxSvg(c, day, s = 26){
+ c = c ?? 0;
+ const SUN = `<circle cx="12" cy="12" r="4.8" fill="${WXC.sun}"/><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M5.2 18.8l1.7-1.7M17.1 6.9l1.7-1.7" stroke="${WXC.sun}" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+ const MOON = `<path d="M20 14.6A8.2 8.2 0 1 1 9.4 4a6.6 6.6 0 0 0 10.6 10.6z" fill="${WXC.moon}"/>`;
+ const CLOUD = dy => `<path transform="translate(0 ${dy})" d="M7.5 19h9.2a3.9 3.9 0 0 0 .5-7.77A5.8 5.8 0 0 0 6 12.3 3.4 3.4 0 0 0 7.5 19z" fill="${WXC.cloud}"/>`;
+ let g;
+ if (c === 0) g = day ? SUN : MOON;
+ else if (c <= 2) g = `<g transform="translate(-1.6 -1.8) scale(.72)">${day ? SUN : MOON}</g>${CLOUD(.8)}`;
+ else if (c === 3) g = CLOUD(0);
+ else if (c <= 48) g = `${CLOUD(-2.2)}<path d="M6 20.2h12M8 22.6h8" stroke="${WXC.cloud}" stroke-width="1.8" stroke-linecap="round"/>`;
+ else if (c <= 67) g = `${CLOUD(-2.8)}<path d="M8.5 19.5l-1 2.6M12.5 19.5l-1 2.6M16.5 19.5l-1 2.6" stroke="${WXC.rain}" stroke-width="1.9" stroke-linecap="round"/>`;
+ else if (c <= 77) g = `${CLOUD(-2.8)}<circle cx="8" cy="20.5" r="1.3" fill="${WXC.snow}"/><circle cx="12" cy="22" r="1.3" fill="${WXC.snow}"/><circle cx="16" cy="20.5" r="1.3" fill="${WXC.snow}"/>`;
+ else if (c <= 82) g = `${CLOUD(-2.8)}<path d="M8.5 19.5l-1 2.6M12.5 19.5l-1 2.6M16.5 19.5l-1 2.6" stroke="${WXC.rain}" stroke-width="1.9" stroke-linecap="round"/>`;
+ else g = `${CLOUD(-3.2)}<path d="M12.8 15.4l-2.6 3.6h2.5l-1.3 3.2 4-4.6h-2.7z" fill="${WXC.bolt}"/>`;
+ return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true" style="display:block">${g}</svg>`;
+}
+const wxBg = (c, day) => (c ?? 0) === 0 && day ? '#3E3224' : (c ?? 0) <= 2 && !day ? '#2B2640' : '#343434';
+const WXI = {
+ water:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3DA5F5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/></svg>`,
+ gust:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B9B9B3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg>`,
+ rain:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3DA5F5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/></svg>`,
+ sunr:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F0A22E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 4v3M5 10l2 2M19 10l-2 2"/></svg>`
+};
+
 function openDetail(id){
  const sp = spots.find(s=>s.id===id), s = data[id];
  if (!sp || !s) return;
@@ -2283,8 +2358,8 @@ function openDetail(id){
    <div class="adesso"><div class="tiles">
     <div><span class="l">A riva</span><b>${ev ? ev.face.toFixed(1) : '–'}</b><span class="u">metri</span></div>
     <div><span class="l">Al largo</span><b>${ev ? ev.hs.toFixed(1) : '–'}</b><span class="u">metri</span></div>
-    <div><span class="l">Swell</span><b>${ev ? cardinal(ev.dir) : '–'}</b><span class="u">${ev ? Math.round(ev.dir)+'°' : ''}</span></div>
-    <div><span class="l">Vento</span><b>${ev ? Math.round(ev.ws) : '–'}</b><span class="u">km/h</span></div></div>
+    <div><span class="l">Acqua</span><b id="adAcqua">–</b><span class="u">gradi</span></div>
+    <div><span class="l">Raffiche</span><b id="adRaff">–</b><span class="u">km/h</span></div></div>
    ${ev ? `<div class="ablock">${periodCell(sp, ev.T)}</div>` : ''}
    ${windowHtml(sp)}
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
@@ -2410,7 +2485,7 @@ function camsHtml(sp){
  if (!list.length && !custom) return '';
  return `<div class="cams"><p class="xs muted">${list.length ? 'Webcam live nella zona: guarda onde e gente con i tuoi occhi' : 'Nessuna webcam conosciuta in zona'}</p><div class="list">${list.map(c=>
   `<a href="${esc(c.url)}" target="_blank" rel="noopener"><i class="live" aria-hidden="true"></i><span>${esc(c.name)}</span><span class="xs muted" style="flex:0 0 auto;font-weight:500">${esc(c.src)} ↗</span></a>`).join('')}</div>
-  ${custom ? `<button class="pillbtn" id="camAdd" style="margin-top:8px;min-height:40px;font-size:13px">+ Aggiungi una webcam</button>` : ''}</div>`;
+  ${custom ? `<button class="pillbtn add" id="camAdd">${ICON_PLUS}Aggiungi una webcam</button>` : ''}</div>`;
 }
 
 // ---------- Affollamento stimato (una previsione, non una misura) ----------
@@ -3366,20 +3441,20 @@ function renderExtra(sp, {fc, mr}){
  for (let i = i0 + 3 - (+H.time[i0].slice(11,13) % 3); i < H.time.length && slots.length < 8; i += 3) slots.push(i);
  const hours = slots.map((i,k)=>{
   const si = s ? s.time.indexOf(H.time[i]) : -1, ev = si >= 0 ? evaluate(sp, s, si) : null;
-  return `<div class="hr${k===0?' now':''}"><span>${k===0 ? 'Ora' : H.time[i].slice(11,16)}</span><div class="i">${wxIcon(H.weather_code[i], H.is_day[i])}</div>
-   <b>${Math.round(H.temperature_2m[i])}°</b><span>${cardinal(H.wind_direction_10m[i])} ${Math.round(H.wind_speed_10m[i])}</span><br><span>${ev ? ev.face.toFixed(1)+' m' : ''}</span></div>`;
+  return `<div class="hr${k===0?' now':''}"><span>${k===0 ? 'Ora' : H.time[i].slice(11,16)}</span><div class="i">${wxSvg(H.weather_code[i], H.is_day[i], 26)}</div>
+   <b>${Math.round(H.temperature_2m[i])}°</b><span>${cardinal(H.wind_direction_10m[i])} ${Math.round(H.wind_speed_10m[i])}</span><span>${ev ? ev.face.toFixed(1)+' m' : ''}</span></div>`;
  }).join('');
  const sr = D.sunrise?.[di]?.slice(11,16), ss = D.sunset?.[di]?.slice(11,16);
  const wx = `<div class="wx">
-  <div class="wxnow"><span class="wxi" aria-hidden="true">${ic}</span>
-   <div><p class="wxt">${Math.round(H.temperature_2m[i0])}°</p><p class="small muted">${label}, max ${Math.round(D.temperature_2m_max[di])}° min ${Math.round(D.temperature_2m_min[di])}°</p></div></div>
+  <div class="wxnow"><span class="wxi" style="background:${wxBg(H.weather_code[i0], H.is_day[i0])}" aria-hidden="true">${wxSvg(H.weather_code[i0], H.is_day[i0], 44)}</span>
+   <div><p class="wxt">${Math.round(H.temperature_2m[i0])}°</p><p class="wxl">${label}</p><p class="xs muted">max ${Math.round(D.temperature_2m_max[di])}° · min ${Math.round(D.temperature_2m_min[di])}°</p></div></div>
   <div class="wxgrid">
-   <div><span class="xs muted">Acqua</span><b>${sst != null ? sst.toFixed(1)+'°' : '–'}</b></div>
-   <div><span class="xs muted">Raffiche</span><b>${Math.round(H.wind_gusts_10m[i0])} km/h</b></div>
-   <div><span class="xs muted">Pioggia oggi</span><b>${(D.precipitation_sum[di] ?? 0).toFixed(1)} mm</b></div>
-   <div><span class="xs muted">Alba e tramonto</span><b>${sr || '–'} / ${ss || '–'}</b></div></div>
+   <div><span class="wl">${WXI.water}Acqua</span><b>${sst != null ? sst.toFixed(1)+'°' : '–'}</b></div>
+   <div><span class="wl">${WXI.gust}Raffiche</span><b>${Math.round(H.wind_gusts_10m[i0])} km/h</b></div>
+   <div><span class="wl">${WXI.rain}Pioggia oggi</span><b>${(D.precipitation_sum[di] ?? 0).toFixed(1)} mm</b></div>
+   <div><span class="wl">${WXI.sunr}Alba e tramonto</span><b>${sr || '–'} / ${ss || '–'}</b></div></div>
   <div class="hours" aria-label="Prossime ore: meteo, vento in km/h e onda a riva">${hours}</div>
-  <p class="xs muted" style="margin-top:6px">Ogni casella: ora, cielo, temperatura, vento (da, km/h) e onda a riva.</p></div>`;
+  <p class="xs muted" style="margin-top:10px">Ogni casella: ora, cielo, temperatura, vento (da, km/h) e onda a riva.</p></div>`;
 
  // marea
  const T = mr.hourly.time, L = mr.hourly.sea_level_height_msl || [];
@@ -3409,11 +3484,16 @@ function renderExtra(sp, {fc, mr}){
    <p class="xs muted" style="margin-top:8px">${cm < 40 ? 'Nel Mediterraneo la marea sposta il mare di pochi centimetri: conta poco sulle onde, ma sui reef bassi può fare la differenza.' : 'La linea tratteggiata è adesso.'} Dato modellistico, indicativo.</p></div>`;
  }
  elW.innerHTML = wx; elT.innerHTML = tide;
+ const aA = document.getElementById('adAcqua'), aR = document.getElementById('adRaff');
+ if (aA) aA.textContent = sst != null ? sst.toFixed(1) : '–';
+ if (aR) aR.textContent = Math.round(H.wind_gusts_10m[i0]);
+ const stl = document.querySelector('#sec-wx .stile');
+ if (stl){ stl.innerHTML = wxSvg(H.weather_code[i0], H.is_day[i0], 26); stl.style.setProperty('--tbg', wxBg(H.weather_code[i0], H.is_day[i0])); }
  paintSky(H.weather_code[i0], H.is_day[i0]);
  const sw = document.getElementById('sum-wx');
- if (sw) sw.innerHTML = `<span><b>${Math.round(H.temperature_2m[i0])}°</b>${label}</span><span class="si" aria-hidden="true">${ic}</span>`;
+ if (sw) sw.innerHTML = `<span><b>${Math.round(H.temperature_2m[i0])}° ${label.toLowerCase()}</b>${sst != null ? '· acqua ' + sst.toFixed(1) + '°' : ''}</span>`;
  const iw = document.getElementById('info-wx');
- if (iw) iw.textContent = `${sst != null ? 'Acqua ' + sst.toFixed(1) + '°, ' : ''}vento ${cardinal(H.wind_direction_10m[i0])} ${Math.round(H.wind_speed_10m[i0])} km/h`;
+ if (iw) iw.textContent = `Vento ${cardinal(H.wind_direction_10m[i0])} ${Math.round(H.wind_speed_10m[i0])} km/h`;
  const it = document.getElementById('info-tide');
  if (it){ const v = idx.map(i=>L[i]); it.textContent = idx.length >= 12 ? `Escursione di oggi ${Math.round((Math.max(...v)-Math.min(...v))*100)} cm` : 'Dato non disponibile qui'; }
  const st = document.getElementById('sum-tide');
