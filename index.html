@@ -988,6 +988,28 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .wchip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:#343434;font-size:11.5px;color:var(--ink)}
 .wday .agree{margin-top:8px!important;align-items:flex-start;font-size:11.5px;line-height:1.45}
 .wday .agree i{margin-top:5px}
+
+/* Stagioni: le barre non si comprimono mai (lo spazio dell'etichetta è già riservato nel calcolo dell'altezza) */
+.mbars i{flex:none}
+
+/* ===== Stagioni: tocca un mese ===== */
+.mbars button{-webkit-appearance:none;appearance:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;margin:0;padding:0;min-height:0;border:0;border-radius:8px;background:none;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mbars button.sel{background:rgba(240,162,46,.14)}
+.mbars button.sel .v{color:var(--amber)}
+.mbars button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+.mlab span{cursor:pointer}
+.mlab .top{color:var(--ink)}
+.mlab .sel{color:var(--amber)}
+.sdet{margin-top:12px;padding:12px 14px;border-radius:16px;background:#343434}
+.sdh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sdh b{font:700 16px var(--mono);color:var(--ink)}
+.sdchip{padding:3px 10px;border-radius:12px;background:#3E3224;color:var(--amber);font:700 11px var(--grot);white-space:nowrap}
+.sdet p{display:flex;align-items:flex-start;gap:8px;margin:8px 0 0;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.sdh + p{margin-top:10px}
+.sdet p b{color:var(--ink)}
+.sdet p i{display:block;width:12px;height:12px;border-radius:3px;background:var(--tacc);margin-top:3px;flex-shrink:0}
+.sdet p i.lo{opacity:.35}
+.sdet p svg{margin-top:2px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -3432,7 +3454,7 @@ function seasonSummary(sp){
 const MONTHS = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 const MONTHS_LONG = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
 const statKey = sp => 'surf.stats.' + sp.id + '.' + [sp.lat, sp.lon, sp.facing, sp.window, sp.offshore, sp.min, sp.max, sp.minPeriod].join('|');
-function seasonHtml(sp){
+function seasonHtml(sp, selIn){
  const st = store.get(statKey(sp), null);
  if (!st) return `<p class="small">Quanti giorni al mese questo spot è stato surfabile negli ultimi anni: utile per scegliere il periodo di un viaggio.</p>
   <button class="pillbtn primary" id="seasonGo" style="margin-top:12px">Calcola le statistiche</button>
@@ -3441,14 +3463,22 @@ function seasonHtml(sp){
  const maxP = Math.max(10, ...st.months.map(pctA));
  const order = st.months.map((m,i)=>({i, p:pct(m)})).sort((a,b)=>b.p-a.p);
  const top = order.filter(x=>x.p>0).slice(0,3).map(x=>x.i);
- const best = order[0], bm = st.months[best.i];
- const perMonth = bm.n ? Math.round(bm.good / bm.n * 30) : 0;
- return `<p class="xs muted">Percentuale di giorni surfabili in ogni mese</p><div class="mbars" role="img" aria-label="Percentuale di giorni surfabili per mese">${st.months.map(m=>`<div><span class="v">${pct(m)}</span>
-   <i style="height:${Math.max(2, pctA(m)/maxP*100 - pct(m)/maxP*100)}%" class="lo"></i><i style="height:${Math.max(2, pct(m)/maxP*100)}%;margin-top:-3px"></i></div>`).join('')}</div>
-  <div class="mlab">${MONTHS.map((n,i)=>`<span class="${top.includes(i)?'top':''}">${n}</span>`).join('')}</div>
-  <div class="legend" style="margin-top:10px"><span><i style="--c:var(--tacc)"></i>Giorni surfabili (punteggio 3 o più)</span><span><i style="--c:var(--tacc);opacity:.35"></i>Solo attivo (2–2.5)</span></div>
-  <div class="sbox">${best.p > 0 ? `<p><b>Mesi migliori:</b> ${top.map(i=>MONTHS_LONG[i]).join(', ')}.</p>
-   <p style="margin-top:4px">A ${MONTHS_LONG[best.i]} in media <b>${perMonth} giorni surfabili</b> su 30, con onda a riva media di ${bm.avg.toFixed(1)}m nei giorni buoni.</p>`
+ const best = order[0], sel = selIn != null ? selIn : best.i, m = st.months[sel];
+ const dim = [31,28,31,30,31,30,31,31,30,31,30,31][sel];
+ const gD = m.n ? m.good / m.n * dim : 0, lD = m.n ? (m.act - m.good) / m.n * dim : 0;
+ const gTxt = gD < .5 ? 'meno di un giorno' : `circa ${Math.round(gD)} su ${dim}`;
+ const lTxt = lD < .5 ? 'meno di un giorno' : `circa ${Math.round(lD)} ${Math.round(lD) === 1 ? 'giorno' : 'giorni'}`;
+ const name = MONTHS_LONG[sel].charAt(0).toUpperCase() + MONTHS_LONG[sel].slice(1);
+ const card = `<div class="sdet" aria-live="polite"><div class="sdh"><b>${name}</b>${top.includes(sel) ? '<span class="sdchip">tra i mesi migliori</span>' : ''}</div>
+   <p><i></i><span><b>${pct(m)}%</b> dei giorni surfabili, ${gTxt}</span></p>
+   <p><i class="lo"></i><span><b>${pctA(m) - pct(m)}%</b> al limite, ${lTxt}</span></p>
+   ${m.good ? `<p>${WXI.water}<span>Onda a riva media nei giorni buoni: <b>${m.avg.toFixed(1)}m</b></span></p>` : ''}</div>`;
+ return `<p class="xs muted">Ogni barra è un mese: tocca un mese per vedere i dettagli.</p><div class="mbars" role="group" aria-label="Giorni surfabili per mese">${st.months.map((mm,i)=>`<button type="button" class="mcol${i===sel?' sel':''}" data-m="${i}" aria-pressed="${i===sel}" aria-label="${MONTHS_LONG[i]}: ${pct(mm)}% di giorni surfabili"><span class="v">${pct(mm)}</span>
+   <i style="height:calc((100% - 22px) * ${(pctA(mm) - pct(mm)) / maxP})" class="lo"></i><i style="height:calc((100% - 22px) * ${pct(mm) / maxP});margin-top:-3px"></i></button>`).join('')}</div>
+  <div class="mlab">${MONTHS.map((n,i)=>`<span data-m="${i}" class="${top.includes(i)?'top':''}${i===sel?' sel':''}">${n}</span>`).join('')}</div>
+  <div class="legend" style="margin-top:10px"><span><i style="--c:var(--tacc)"></i><b>Surfabili<em>punteggio 3 o più</em></b></span><span><i style="--c:var(--tacc);opacity:.35"></i><b>Al limite<em>punteggio 2–2.5</em></b></span></div>
+  ${best.p > 0 ? card : ''}
+  <div class="sbox">${best.p > 0 ? `<p><b>Mesi migliori:</b> ${top.map(i=>MONTHS_LONG[i]).join(', ')}.</p>`
    : '<p>Negli anni analizzati lo spot non ha mai raggiunto un punteggio di 3: forse i parametri dello spot (direzione, range di onda) vanno rivisti.</p>'}
    <p class="xs muted" style="margin-top:6px">Dati ${st.years}, modello Open-Meteo: sono medie indicative, non una garanzia. Se cambi i parametri dello spot le statistiche si ricalcolano.</p>
    <button class="pillbtn" id="seasonRedo" style="margin-top:8px;min-height:36px;font-size:13px">Ricalcola</button></div>`;
@@ -3458,6 +3488,10 @@ function bindSeason(sp){
  const go = ()=>computeSeason(sp);
  const a = document.getElementById('seasonGo'), r = document.getElementById('seasonRedo');
  if (a) a.onclick = go; if (r) r.onclick = go;
+ box.querySelectorAll('[data-m]').forEach(el => el.onclick = () => {
+  const i = +el.dataset.m; box.innerHTML = seasonHtml(sp, i); bindSeason(sp);
+  const b = box.querySelector(`button[data-m="${i}"]`); if (b && el.tagName === 'BUTTON') b.focus({preventScroll:true});
+ });
 }
 async function computeSeason(sp){
  const box = document.getElementById('seasonBox');
