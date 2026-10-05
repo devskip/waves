@@ -919,6 +919,25 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .brandlogo{height:46px;width:auto;display:block;color:var(--amber)}
 /* tessera tavola come le altre icone delle carte */
 .btile.sm,.board .chd .btile{width:40px;height:40px;border-radius:12px}
+
+/* ===== righello del peso ===== */
+.wlabrow{display:flex;align-items:baseline;justify-content:space-between;margin-top:22px}
+.wlabrow .lab{margin:0}
+.wruler{margin-top:6px}
+.wbig{display:flex;align-items:baseline;justify-content:center;gap:8px}
+.wnum{-webkit-appearance:none;appearance:none;width:5.2ch;min-height:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;outline:0;text-align:right;font:700 52px/1.15 var(--grot);color:var(--ink);box-shadow:none}
+.wnum::placeholder{color:#5E5E5A;opacity:1}
+.wnum:focus{caret-color:var(--amber)}
+.wkg{font:700 26px var(--grot);color:var(--ink)}
+.wtrack{position:relative;margin-top:8px;border-radius:12px}
+.wtrack:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
+.wscroll{display:flex;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;cursor:grab;-webkit-mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent);mask-image:linear-gradient(90deg,transparent,#000 14%,#000 86%,transparent)}
+.wscroll::-webkit-scrollbar{display:none}
+.wscroll::before,.wscroll::after{content:"";flex:0 0 50%}
+.wticks{position:relative;flex:0 0 auto;height:68px}
+.wticks svg{display:block}
+.wticks span{position:absolute;top:50px;transform:translateX(-50%);font:12px var(--mono);color:var(--muted)}
+.wmark{position:absolute;left:50%;top:0;width:3px;height:46px;margin-left:-1.5px;border-radius:2px;background:var(--amber);pointer-events:none}
 </style>
 </head>
 <body>
@@ -2047,29 +2066,15 @@ function renderProfile(){
   `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])} L</span>`).join('')}</div></div>` : '';
  sBox.innerHTML = `<div class="acct"><p class="lab">Livello</p>
   <div class="opts two">${SURF_LEVELS.map((l, i) => `<button type="button" data-lvl="${l.id}" aria-pressed="${pr.level === l.id}">${lvIcon(i)}<b>${l.t}</b><span>${l.d}</span></button>`).join('')}</div>
-  <p class="lab" style="margin-top:18px">Peso</p>
-  <div class="wrow"><button type="button" class="wstep" id="wMinus" aria-label="Un chilo in meno">−</button>
-   <div class="inunit"><input class="field" id="meW" type="number" inputmode="decimal" min="30" max="200" step="1" placeholder="75" value="${pr.weight ?? ''}" aria-label="Peso in chili"><span class="unit">kg</span></div>
-   <button type="button" class="wstep" id="wPlus" aria-label="Un chilo in più">+</button></div>
+  <div class="wlabrow"><p class="lab">Peso</p><span class="xs muted">trascina il righello</span></div>
+  ${rulerHtml(pr.weight)}
   <p class="err" id="meErr" hidden></p>${ref}
   <p class="xs muted" style="margin-top:12px">Serve solo a calcolare i litri giusti per te. ${Cloud.user ? 'Si salva nel tuo account e lo vedi solo tu.' : 'Resta su questo telefono finché non entri con l\'account.'}</p></div>`;
  sBox.querySelectorAll('[data-lvl]').forEach(b => b.onclick = () => {
   const l = SURF_LEVELS.find(x => x.id === b.dataset.lvl);
   saveProfile({level:l.id}); renderProfile(); toast('Livello: ' + l.t);
  });
- const inp = sBox.querySelector('#meW'), err = sBox.querySelector('#meErr');
- const commit = (raw, viaStep) => {
-  raw = String(raw).trim().replace(',', '.');
-  if (!raw){ err.hidden = true; saveProfile({weight:null}); renderProfile(); toast('Peso rimosso'); return; }
-  const w = parseFloat(raw);
-  if (isNaN(w) || w < 30 || w > 200){ err.hidden = false; err.textContent = 'Scrivi un peso tra 30 e 200 kg.'; return; }
-  err.hidden = true; const v = Math.round(w * 10) / 10; saveProfile({weight:v});
-  clearTimeout(weightTimer); weightTimer = setTimeout(() => { renderProfile(); toast(`Peso salvato: ${v} kg`); }, viaStep ? 700 : 0);
- };
- inp.onchange = e => commit(e.target.value, false);
- const step = d => { const cur = parseFloat(String(inp.value).replace(',', '.')); const v = clamp(Math.round((isNaN(cur) ? (pr.weight || 70) : cur) + d), 30, 200); inp.value = v; commit(v, true); };
- sBox.querySelector('#wMinus').onclick = () => step(-1);
- sBox.querySelector('#wPlus').onclick = () => step(1);
+ initRuler(sBox, pr);
 
  const q = Data.boards.all();
  const rows = q.map(b => { const t = boardType(b.type), pl = parseLen(b.length);
@@ -2340,6 +2345,73 @@ const WXI = {
 
 // tessera della tavola: 40 px, come le altre icone delle carte
 function btileSm(type, ft){ return `<span class="btile sm">${boardIcon(type, ft, 65, .84, 1.7)}</span>`; }
+
+// ---------- Profilo: righello del peso (30-200 kg, tacche ogni 0,1 kg) ----------
+const W_MIN = 30, W_MAX = 200, W_PX = 70;   // 70 px per chilo = 7 px ogni 0,1 kg
+function refboxHtml(pr){
+ const hasLv = SURF_LEVELS.some(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200;
+ return hasLv && okW ? `<div class="refbox"><p class="xs muted">Litri di riferimento per te</p><div class="bmeta">${['shortboard', 'fish', 'midlength', 'longboard'].map(t =>
+  `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])} L</span>`).join('')}</div></div>` : '';
+}
+function rulerHtml(w){
+ const tw = (W_MAX - W_MIN) * W_PX;
+ let pat = `<line x1="1" y1="10" x2="1" y2="40" stroke="#6B5330" stroke-width="2"/>`;
+ for (let i = 1; i < 10; i++) pat += `<line x1="${i*7+.5}" y1="20" x2="${i*7+.5}" y2="40" stroke="#4A4A4A" stroke-width="1"/>`;
+ let labels = ''; for (let k = W_MIN; k <= W_MAX; k++) labels += `<span style="left:${(k - W_MIN) * W_PX}px">${k}</span>`;
+ return `<div class="wruler">
+  <div class="wbig"><input class="wnum" id="meW" type="text" inputmode="decimal" autocomplete="off" placeholder="75.0" value="${w != null ? Number(w).toFixed(1) : ''}" aria-label="Peso in chili: scrivilo oppure usa il righello"><span class="wkg">kg</span></div>
+  <div class="wtrack" id="wTrack" role="slider" tabindex="0" aria-label="Righello del peso" aria-valuemin="${W_MIN}" aria-valuemax="${W_MAX}" aria-valuenow="${w ?? 75}" aria-valuetext="${w != null ? Number(w).toFixed(1) + ' chili' : 'non impostato'}">
+   <div class="wscroll" id="wScroll"><div class="wticks" style="width:${tw + 2}px"><svg width="${tw + 2}" height="46" aria-hidden="true"><defs><pattern id="wpat" width="${W_PX}" height="46" patternUnits="userSpaceOnUse">${pat}</pattern></defs><rect width="${tw + 2}" height="46" fill="url(#wpat)"/></svg>${labels}</div></div>
+   <div class="wmark" aria-hidden="true"></div></div></div>`;
+}
+function initRuler(sBox, pr){
+ const sc = sBox.querySelector('#wScroll'), tr = sBox.querySelector('#wTrack'), num = sBox.querySelector('#meW'), err = sBox.querySelector('#meErr');
+ let cur = pr.weight != null && pr.weight >= W_MIN && pr.weight <= W_MAX ? pr.weight : null, saved = cur, lockUntil = 0, settle = 0;
+ const toX = v => (v - W_MIN) * W_PX, toV = x => Math.round((W_MIN + x / W_PX) * 10) / 10;
+ const setX = v => { lockUntil = performance.now() + 160; sc.scrollLeft = toX(v); };      // spostamento da codice: non conta come gesto
+ const aria = v => { tr.setAttribute('aria-valuenow', v); tr.setAttribute('aria-valuetext', v == null ? 'non impostato' : v.toFixed(1) + ' chili'); };
+ const refresh = () => {
+  const box = sBox.querySelector('.refbox'), html = refboxHtml(surfProfile());
+  if (box){ if (html) box.outerHTML = html; else box.remove(); } else if (html) err.insertAdjacentHTML('afterend', html);
+  updateMeSummaries();
+ };
+ const commit = v => {
+  v = Math.round(v * 10) / 10; if (v === saved) return;
+  saved = v; saveProfile({weight:v}); refresh(); toast(`Peso salvato: ${v.toFixed(1)} kg`);
+ };
+ // il righello si posiziona quando la sezione è visibile (da chiusa non ha larghezza) e a ogni cambio di misura
+ if (window.ResizeObserver) new ResizeObserver(() => { if (sc.clientWidth) setX(cur ?? 75); }).observe(sc);
+ else setX(cur ?? 75);
+ sc.addEventListener('scroll', () => {
+  if (performance.now() < lockUntil) return;
+  const v = clamp(toV(sc.scrollLeft), W_MIN, W_MAX);
+  cur = v; num.value = v.toFixed(1); aria(v); err.hidden = true;
+  clearTimeout(settle); settle = setTimeout(() => { setX(v); commit(v); }, 380);
+ }, {passive:true});
+ // numero scritto a mano
+ num.addEventListener('focus', () => num.select());
+ num.addEventListener('keydown', e => { if (e.key === 'Enter') num.blur(); });
+ num.addEventListener('change', () => {
+  const raw = num.value.trim().replace(',', '.');
+  if (!raw){ cur = null; saved = null; saveProfile({weight:null}); aria(null); refresh(); setX(75); toast('Peso rimosso'); return; }
+  const w = parseFloat(raw);
+  if (isNaN(w) || w < W_MIN || w > W_MAX){ err.hidden = false; err.textContent = 'Scrivi un peso tra 30 e 200 kg.'; return; }
+  err.hidden = true; cur = Math.round(w * 10) / 10; num.value = cur.toFixed(1); aria(cur); setX(cur); commit(cur);
+ });
+ // tastiera: frecce = 0,1 kg, Maiusc = 1 kg, Pag su/giù = 5 kg
+ tr.addEventListener('keydown', e => {
+  const d = {ArrowLeft:-.1, ArrowDown:-.1, ArrowRight:.1, ArrowUp:.1, PageDown:-5, PageUp:5}[e.key]; if (d == null) return;
+  e.preventDefault();
+  const v = clamp(Math.round(((cur ?? 75) + (e.shiftKey && Math.abs(d) < 1 ? d * 10 : d)) * 10) / 10, W_MIN, W_MAX);
+  cur = v; num.value = v.toFixed(1); aria(v); setX(v); clearTimeout(settle); settle = setTimeout(() => commit(v), 500);
+ });
+ // mouse: si trascina (il tocco usa lo scorrimento nativo)
+ let drag = null;
+ sc.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; drag = {x:e.clientX, s:sc.scrollLeft}; sc.setPointerCapture(e.pointerId); });
+ sc.addEventListener('pointermove', e => { if (drag) sc.scrollLeft = drag.s - (e.clientX - drag.x); });
+ const end = () => { drag = null; };
+ sc.addEventListener('pointerup', end); sc.addEventListener('pointercancel', end);
+}
 
 function openDetail(id){
  const sp = spots.find(s=>s.id===id), s = data[id];
