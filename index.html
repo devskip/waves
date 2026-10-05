@@ -1448,10 +1448,10 @@ function renderSpot(){
     <p class="name">${esc(fav.name)}</p>
     <p class="area">${esc(metaLine(fav))}</p></div>
     <div class="fside">${gaugeWithScore(fav, ev, 128)}</div></div>
-   ${ev ? `<p class="meas">${ev.face.toFixed(1)} m a riva · ${Math.round(ev.T)} s</p>
+   ${ev ? `<p class="meas">${ev.face.toFixed(1)}m a riva · ${Math.round(ev.T)}s</p>
    <p class="fk"><i style="background:${GC.light.swell}"></i>swell da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°</p>
-   <p class="fk"><i style="background:${GC.light.wind}"></i>${ev.ws < 3 ? 'vento quasi assente' : `${Math.round(ev.ws)} km/h da ${cardinal(ev.wd)}`}</p>` : '<p class="meas">Nessun dato</p>'}
-   <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)} m</span></div>`).join('')}</div>
+   <p class="fk"><i style="background:${GC.light.wind}"></i>${ev.ws < 3 ? 'vento quasi assente' : `${Math.round(ev.ws)}km/h da ${cardinal(ev.wd)}`}</p>` : '<p class="meas">Nessun dato</p>'}
+   <div class="days">${days.map(d=>`<div><span>${dayShort(d.day)}</span>${badge(d.best.score,'xs')}<span>${d.maxFace.toFixed(1)}m</span></div>`).join('')}</div>
   </button>`;
  } else {
   favEl.innerHTML = `<div class="favhint">${ICON.star(false)}<span>Apri uno spot e tocca "Preferito" per averlo sempre qui in cima.</span></div>`;
@@ -1462,13 +1462,13 @@ function renderSpot(){
  const pos = id => { const i = order ? order.indexOf(id) : -1; return i < 0 ? Infinity : i; };
  const byScore = (a,b)=>(b.ev?.score ?? -1)-(a.ev?.score ?? -1);
  rows.sort((a,b)=> order ? ((pos(a.sp.id)-pos(b.sp.id)) || byScore(a,b)) : byScore(a,b));
- const km = d => d == null ? '' : d < 1 ? `${Math.round(d*1000/50)*50} m` : `${d < 10 ? d.toFixed(1) : Math.round(d)} km`;
+ const km = d => d == null ? '' : d < 1 ? `${Math.round(d*1000/50)*50}m` : `${d < 10 ? d.toFixed(1) : Math.round(d)}km`;
  const gripHtml = sp => `<span class="grip" role="button" tabindex="0" aria-label="Sposta ${esc(sp.name)}: frecce su e giù">${GRIP}</span>`;
  const fullRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="row" data-open="${r.sp.id}"><span class="dtile">${comboGauge(r.sp, r.ev, 46)}</span>
    <div class="grow"><p class="name">${esc(r.sp.name)}</p>
     <p class="xs muted" style="margin-top:2px">${esc(metaLine(r.sp))}${r.dist!=null?`, ${km(r.dist)}`:''}</p>
-    <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)} km/h</p></div>
-   <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span> m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)} s, ${cardinal(r.ev.dir)}</p></div>
+    <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)}km/h</p></div>
+   <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span>m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)}s, ${cardinal(r.ev.dir)}</p></div>
    ${badge(r.ev.score)}</button></div>`;
  const miniRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="mini" data-open="${r.sp.id}"><span class="grow"><b>${esc(r.sp.name)}</b><small>${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${km(r.dist)}`:''}</small></span>${badge(r.ev?.score,'sm')}</button></div>`;
  const isOn = r => (r.ev?.score ?? 0) >= ACTIVE_FROM;
@@ -1479,11 +1479,11 @@ function renderSpot(){
  const nearIds = new Set(near.map(r=>r.sp.id));
  box.hidden = !userPos;
  if (userPos){
-  document.getElementById('kmChips').innerHTML = [5,15,30].map(k=>`<button data-km="${k}" aria-pressed="${k===nearKm}">${k} km</button>`).join('');
+  document.getElementById('kmChips').innerHTML = [5,15,30].map(k=>`<button data-km="${k}" aria-pressed="${k===nearKm}">${k}km</button>`).join('');
   const closest = [...rows].sort((a,b)=>a.dist-b.dist)[0];
   document.getElementById('nearList').innerHTML = near.length
    ? near.map(r => isOn(r) ? fullRow(r, false) : miniRow(r, false)).join('')
-   : `<p class="empty">Nessuno spot entro ${nearKm} km da te.${closest ? ` Il più vicino è ${esc(closest.sp.name)}, a ${km(closest.dist)}.` : ''}</p>`;
+   : `<p class="empty">Nessuno spot entro ${nearKm}km da te.${closest ? ` Il più vicino è ${esc(closest.sp.name)}, a ${km(closest.dist)}.` : ''}</p>`;
  }
  renderOsm();
  document.getElementById('activeTitle').textContent = userPos ? 'Gli altri spot attivi' : 'Attivi ora';
@@ -1502,7 +1502,7 @@ function renderSpot(){
  if (next){
   b.hidden = false;
   b.innerHTML = `<div><p class="k">Onde in arrivo</p><p class="t">${esc(next.sp.name)}, ${dayLabel(next.d.day).toLowerCase()} dalle ${next.d.firstHit}</p>
-   <p class="d">${next.d.maxFace.toFixed(1)} m, ${Math.round(next.d.best.T)} s da ${cardinal(next.d.best.dir)}, vento ${next.d.best.windType}</p></div>${badge(next.d.best.score,'lg')}`;
+   <p class="d">${next.d.maxFace.toFixed(1)}m, ${Math.round(next.d.best.T)}s da ${cardinal(next.d.best.dir)}, vento ${next.d.best.windType}</p></div>${badge(next.d.best.score,'lg')}`;
   b.dataset.open = next.sp.id;
  } else b.hidden = true;
 }
@@ -1530,7 +1530,7 @@ async function loadOsm(){
   return {osmId:`${el.type}/${el.id}`, lat:+lat.toFixed(5), lon:+lon.toFixed(5), name: t.name || t.loc_name || t['name:it'] || t['name:en'] || null,
    kind: t.natural === 'reef' || /reef|point/i.test(t.surfing || '') ? 'reef' : t.natural === 'beach' ? 'beach' : null};
  }).filter(Boolean)
-  // niente doppioni con gli spot che hai già (entro 400 m)
+  // niente doppioni con gli spot che hai già (entro 400m)
   .filter(o => !spots.some(sp => distanceKm(o, beach(sp)) < 0.4))
   .map(o => ({...o, dist: distanceKm(userPos, o)}))
   .sort((a,b)=>a.dist-b.dist);
@@ -1544,11 +1544,11 @@ function renderOsm(){
  const box = document.getElementById('osmBox'); if (!box || !userPos) return;
  const km = store.get('surf.nearKm', 5), attr = '<p class="attr">Dati © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Se conosci uno spot che manca, puoi aggiungerlo tu su OpenStreetMap.</p>';
  const kindLabel = k => k === 'reef' ? 'Reef o punta' : k === 'beach' ? 'Spiaggia' : 'Spot';
- const dist = d => d < 1 ? `${Math.round(d*1000/50)*50} m` : `${d < 10 ? d.toFixed(1) : Math.round(d)} km`;
+ const dist = d => d < 1 ? `${Math.round(d*1000/50)*50}m` : `${d < 10 ? d.toFixed(1) : Math.round(d)}km`;
  let body;
  if (osm.state === 'loading') body = '<p class="small muted">Cerco spot pubblici nella zona…</p>';
  else if (osm.state === 'error') body = `<p class="small muted">Elenco pubblico non raggiungibile adesso${osm.msg ? ` (${esc(osm.msg)})` : ''}.</p><button class="pillbtn" data-osmretry style="margin-top:6px">Riprova</button>`;
- else if (!osm.list.length) body = `<p class="small muted">Nessun altro spot segnato entro ${km} km.${km < 30 ? ' Prova ad allargare il raggio.' : ''}</p>`;
+ else if (!osm.list.length) body = `<p class="small muted">Nessun altro spot segnato entro ${km}km.${km < 30 ? ' Prova ad allargare il raggio.' : ''}</p>`;
  else body = osm.list.map((o,i)=>`<div class="osmrow"><div class="grow"><b>${esc(o.name || 'Spot senza nome')}</b><span class="xs muted">${kindLabel(o.kind)}, ${dist(o.dist)}</span></div>
    <button class="pillbtn" data-osmadd="${i}" aria-label="Aggiungi ${esc(o.name || 'questo spot')} ai tuoi spot">Aggiungi</button></div>`).join('');
  box.innerHTML = `<p class="k">Altri spot nella zona, dall'elenco pubblico</p>${body}${attr}`;
@@ -1637,7 +1637,7 @@ async function loadCatalog(){
   addCatPins(list);
  }
 }
-// griglia di celle da ~2 km per trovare i doppioni senza confrontare tutti con tutti
+// griglia di celle da ~2km per trovare i doppioni senza confrontare tutti con tutti
 const catGrid = {};
 const cellKey = (la, lo) => `${Math.floor(la*50)},${Math.floor(lo*50)}`;
 function nearbyPins(o){
@@ -1726,7 +1726,7 @@ function renderCatCard(){
  const kind = o.kind === 'reef' ? 'Reef o punta' : o.kind === 'beach' ? 'Spiaggia' : 'Spot di surf';
  el.hidden = false;
  el.innerHTML = `<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(o.name || 'Spot senza nome')}</p>
-  <p class="small muted">${(()=>{ const e = catEval(o); return e ? `Potenziale ${e.score}/5: ${e.face.toFixed(1)} m, ${Math.round(e.T)} s, vento ${Math.round(e.ws)} km/h. ` : ''; })()}${kind}${o.approx ? ', posizione indicativa' : ''}${near ? `, ${near} webcam in zona` : ''}</p>
+  <p class="small muted">${(()=>{ const e = catEval(o); return e ? `Potenziale ${e.score}/5: ${e.face.toFixed(1)}m, ${Math.round(e.T)}s, vento ${Math.round(e.ws)}km/h. ` : ''; })()}${kind}${o.approx ? ', posizione indicativa' : ''}${near ? `, ${near} webcam in zona` : ''}</p>
   <p class="xs muted" style="margin-top:2px">Aggiungilo per il punteggio vero, calcolato sul suo orientamento.</p></div>
   <button class="pillbtn primary" id="catAdd">+ Aggiungi</button>`;
  document.getElementById('catAdd').onclick = ()=>{ const x = catSel; catSel = null; addFromOsm(x); };
@@ -1836,7 +1836,7 @@ function idStrip(sp, custom){
 function factorsHtml(sp, ev){
  const wave = ev.face < sp.min ? (ev.face >= .7*sp.min ? ['mid','Onda al limite'] : ['ko','Onda troppo piccola'])
   : ev.face > sp.max ? (ev.face <= 1.3*sp.max ? ['mid','Onda grossa'] : ['ko','Onda troppo grossa']) : ['ok','Onda giusta'];
- const per = ev.periodF >= 1 ? ['ok', `Periodo ${Math.round(ev.T)} s`] : ev.periodF >= .6 ? ['mid','Periodo corto'] : ['ko','Periodo troppo corto'];
+ const per = ev.periodF >= 1 ? ['ok', `Periodo ${Math.round(ev.T)}s`] : ev.periodF >= .6 ? ['mid','Periodo corto'] : ['ko','Periodo troppo corto'];
  const wind = ev.windF >= .9 ? ['ok', ev.windType === 'offshore' ? 'Vento offshore' : 'Vento debole'] : ev.windF >= .6 ? ['mid', `Vento ${ev.windType}`] : ['ko', `Vento ${ev.windType} forte`];
  const g = {ok:'✓', mid:'!', ko:'✕'};
  return `<div class="hfac" role="list" aria-label="Cosa determina il punteggio">${[wave, per, wind].map(([c,t]) => `<span class="${c}" role="listitem"><i aria-hidden="true">${g[c]}</i>${t}</span>`).join('')}</div>`;
@@ -1961,7 +1961,7 @@ function boardHtml(sp, ev){
   const sure = m.b.litres && a.c.weight;      // senza litri o peso il giudizio guarda solo il tipo: meglio non esagerare
   top = m.fit >= .8 && sure ? chip('Ottima scelta') : m.fit >= .55 ? chip('Va bene') : chip('Meglio di niente');
   name = esc(m.b.name);
-  chips = `<div class="bchips"><span class="bchip l">${t ? t.t : 'Tavola'}</span>${m.b.litres ? `<span class="bchip">${m.b.litres} L</span>` : ''}${m.b.length ? `<span class="bchip">${esc(m.b.length)}</span>` : ''}</div>`;
+  chips = `<div class="bchips"><span class="bchip l">${t ? t.t : 'Tavola'}</span>${m.b.litres ? `<span class="bchip">${m.b.litres}L</span>` : ''}${m.b.length ? `<span class="bchip">${esc(m.b.length)}</span>` : ''}</div>`;
   if (m.note) extra += `<p class="xs muted">${m.note.charAt(0).toUpperCase() + m.note.slice(1)}.</p>`;
   if (m.s < .5) extra += `<p class="bmore muted">Non è la più adatta a queste condizioni: l'ideale sarebbe ${cat.toLowerCase()}.</p>`;
   if (a.mine.alt) extra += `<p class="bmore muted">In alternativa: «${esc(a.mine.alt.b.name)}».</p>`;
@@ -1969,7 +1969,7 @@ function boardHtml(sp, ev){
   name = cat;
   if (a.mine) extra += '<p class="xs muted">Nessuna delle tue tavole è adatta a queste condizioni.</p>';
  }
- const why = a.tooBig ? '' : `<p class="xs muted">${a.why}.</p>${a.vol ? cnote('blue', 'wave', `Volume indicativo per i tuoi ${a.c.weight} kg: <b>${a.vol[0]}–${a.vol[1]} L</b>`) : ''}`;
+ const why = a.tooBig ? '' : `<p class="xs muted">${a.why}.</p>${a.vol ? cnote('blue', 'wave', `Volume indicativo per i tuoi ${a.c.weight}kg: <b>${a.vol[0]}–${a.vol[1]}L</b>`) : ''}`;
  const hints = [];
  if (a.c.generic || !a.c.weight){
   const need = a.c.generic && !a.c.weight ? 'livello e peso' : a.c.generic ? 'il tuo livello' : 'il tuo peso';
@@ -2048,10 +2048,10 @@ function updateMeSummaries(){
  const pr = surfProfile(), lv = SURF_LEVELS.find(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200, q = Data.boards.all();
  if (!Cloud.ready || !Cloud.user) set('me-acc', '<span><b>Non collegato</b>tocca per entrare</span>', 'Entra per non perdere i tuoi dati');
  else set('me-acc', `<span><b>Collegato</b>${Cloud.lastErr ? 'errore' : (Cloud.busy || !Cloud.lastSync) ? 'sincronizzo…' : Cloud.partialErr ? 'da controllare' : 'sincronizzato'}</span>`, Cloud.user.email || '');
- set('me-surf', lv || okW ? `<span><b>${lv ? lv.t : 'Livello?'}</b>${okW ? pr.weight + ' kg' : 'peso?'}</span>` : '<span>Da impostare</span>',
-  lv && okW ? `Shortboard di riferimento: ~${Math.round(pr.weight * LKG[pr.level])} L` : 'Livello e peso servono a consigliarti la tavola');
+ set('me-surf', lv || okW ? `<span><b>${lv ? lv.t : 'Livello?'}</b>${okW ? pr.weight + 'kg' : 'peso?'}</span>` : '<span>Da impostare</span>',
+  lv && okW ? `Shortboard di riferimento: ~${Math.round(pr.weight * LKG[pr.level])}L` : 'Livello e peso servono a consigliarti la tavola');
  const L = q.map(b => b.litres).filter(x => x);
- set('me-boards', q.length ? `<span><b>${q.length} ${q.length === 1 ? 'tavola' : 'tavole'}</b>${L.length ? (Math.min(...L) === Math.max(...L) ? Math.min(...L) : Math.min(...L) + '–' + Math.max(...L)) + ' L' : ''}</span>` : '<span>Nessuna tavola</span>',
+ set('me-boards', q.length ? `<span><b>${q.length} ${q.length === 1 ? 'tavola' : 'tavole'}</b>${L.length ? (Math.min(...L) === Math.max(...L) ? Math.min(...L) : Math.min(...L) + '–' + Math.max(...L)) + 'L' : ''}</span>` : '<span>Nessuna tavola</span>',
   q.length ? q.map(b => b.name).join(', ') : 'Aggiungi le tue tavole per sapere quale portare');
  set('me-data', '<span><b>Backup</b>manuale</span>', 'Copia di sicurezza di sessioni, spot e impostazioni');
  const asec = document.getElementById('sec-me-admin');
@@ -2075,7 +2075,7 @@ function renderProfile(){
  initMeOpen(); updateMeSummaries();
  const hasLv = SURF_LEVELS.some(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200;
  const ref = hasLv && okW ? `<div class="refbox"><p class="xs muted">Litri di riferimento per te</p><div class="bmeta">${['shortboard', 'fish', 'midlength', 'longboard'].map(t =>
-  `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])} L</span>`).join('')}</div></div>` : '';
+  `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])}L</span>`).join('')}</div></div>` : '';
  sBox.innerHTML = `<div class="acct"><p class="lab">Livello</p>
   <div class="opts two">${SURF_LEVELS.map((l, i) => `<button type="button" data-lvl="${l.id}" aria-pressed="${pr.level === l.id}">${lvIcon(i)}<b>${l.t}</b><span>${l.d}</span></button>`).join('')}</div>
   <div class="wlabrow"><p class="lab">Peso</p><span class="xs muted">trascina il righello</span></div>
@@ -2091,7 +2091,7 @@ function renderProfile(){
  const q = Data.boards.all();
  const rows = q.map(b => { const t = boardType(b.type), pl = parseLen(b.length);
   return `<button type="button" class="bcard" data-bedit="${b.id}" style="--bc:${BOARD_COLOR[b.type] || BOARD_COLOR.shortboard}" aria-label="Modifica ${esc(b.name)}">${boardTile(b.type, pl.ft)}
-   <span style="flex:1;min-width:0"><b class="bname">${esc(b.name)}</b><span class="bmeta"><span class="bchip l">${esc(t ? t.s : b.type)}</span>${b.litres ? `<span class="bchip">${b.litres} L</span>` : ''}${pl.text ? `<span class="bchip">${esc(pl.text)}</span>` : ''}</span></span>
+   <span style="flex:1;min-width:0"><b class="bname">${esc(b.name)}</b><span class="bmeta"><span class="bchip l">${esc(t ? t.s : b.type)}</span>${b.litres ? `<span class="bchip">${b.litres}L</span>` : ''}${pl.text ? `<span class="bchip">${esc(pl.text)}</span>` : ''}</span></span>
    <span class="bchev">${ICON.chev}</span></button>`; }).join('');
  const empty = `<div class="bempty"><div class="bfan" aria-hidden="true">${['fish', 'shortboard', 'longboard'].map(t => `<span class="btile">${boardIcon(t, null)}</span>`).join('')}</div>
   <p class="small muted">Nessuna tavola. Aggiungi quelle che hai e l'app ti dice quale portare, spot per spot.</p></div>`;
@@ -2142,9 +2142,9 @@ function openBoard(id){
 }
 
 function offReason(sp, ev){
- if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)} m al largo, swell fuori finestra` : 'Piatto';
- if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)} m, onshore ${Math.round(ev.ws)} km/h`;
- return `${ev.face.toFixed(1)} m, ${ev.windType} ${Math.round(ev.ws)} km/h`;
+ if (ev.face < 0.3) return ev.hs >= 0.5 ? `${ev.hs.toFixed(1)}m al largo, swell fuori finestra` : 'Piatto';
+ if (ev.windType === 'onshore' && ev.ws >= 15) return `${ev.face.toFixed(1)}m, onshore ${Math.round(ev.ws)}km/h`;
+ return `${ev.face.toFixed(1)}m, ${ev.windType} ${Math.round(ev.ws)}km/h`;
 }
 
 // ---------- Dettaglio ----------
@@ -2161,10 +2161,10 @@ function chartHtml(sp){
  const best = forecastDays(sp).reduce((a,d)=> !a || d.best.score > a.best.score ? d : a, null);
  return `<div class="chart"><div class="bars">
   ${bandH ? `<div class="band" style="bottom:${bandB}px;height:${bandH}px"></div>` : ''}
-  <span class="scale">${maxF} m</span>
+  <span class="scale">${maxF}m</span>
   <div class="cols">${cols.map(g=>`<div class="g">${g.map(c=>{
    if (!c || !c.e) return '<span style="height:3px;--c:var(--line)"></span>';
-   return `<span class="${c.past?'past':''}" style="height:${Math.max(3, px(c.e.face)).toFixed(0)}px;--c:${tone(c.e.score)[0]}" title="${c.e.face.toFixed(1)} m, ${c.e.score}/5"></span>`;
+   return `<span class="${c.past?'past':''}" style="height:${Math.max(3, px(c.e.face)).toFixed(0)}px;--c:${tone(c.e.score)[0]}" title="${c.e.face.toFixed(1)}m, ${c.e.score}/5"></span>`;
   }).join('')}</div>`).join('')}</div></div>
   <div class="labels">${days.map(d=>`<span class="${best && best.day===d && best.best.score>=ACTIVE_FROM ? 'best':''}">${dayShort(d)}</span>`).join('')}</div>
   ${legendHtml('<span><i style="--c:var(--s2);opacity:.25"></i>Range surfabile</span><span><i style="--c:var(--s3);opacity:.3"></i>Ore già passate (barre sbiadite)</span>')}</div>`;
@@ -2239,8 +2239,8 @@ function detailTop(sp, ev, backTo, fol, isFav){
   <button class="hdial" id="dialBtn" aria-label="Come leggere il cerchio">${gaugeWithScore(sp, ev, 132)}<span class="info" aria-hidden="true">i</span></button>
   <div class="hmain">
    <div><p class="hlab">${scoreLabel(ev?.score)}</p><p class="hsub">adesso</p></div>
-   ${ev ? `<div class="hrd"><p class="hl" style="color:${G.swellT}"><i style="background:${G.swell}"></i>ONDE</p><p class="hv">${ev.face.toFixed(1)} m · ${Math.round(ev.T)} s</p><p class="hs">da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°</p></div>
-   <div class="hrd"><p class="hl" style="color:${G.windT}"><i style="background:${G.wind}"></i>VENTO</p><p class="hv">${ev.ws < 3 ? 'quasi assente' : `${Math.round(ev.ws)} km/h`}</p>${ev.ws < 3 ? '' : `<p class="hs">da ${cardinal(ev.wd)}</p>`}</div>` : '<p class="small" style="color:var(--lightmuted)">Nessun dato per ora.</p>'}
+   ${ev ? `<div class="hrd"><p class="hl" style="color:${G.swellT}"><i style="background:${G.swell}"></i>ONDE</p><p class="hv">${ev.face.toFixed(1)}m · ${Math.round(ev.T)}s</p><p class="hs">da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°</p></div>
+   <div class="hrd"><p class="hl" style="color:${G.windT}"><i style="background:${G.wind}"></i>VENTO</p><p class="hv">${ev.ws < 3 ? 'quasi assente' : `${Math.round(ev.ws)}km/h`}</p>${ev.ws < 3 ? '' : `<p class="hs">da ${cardinal(ev.wd)}</p>`}</div>` : '<p class="small" style="color:var(--lightmuted)">Nessun dato per ora.</p>'}
   </div></section>`;
  return top + head + hero + (ev ? factorsHtml(sp, ev) : '');
 }
@@ -2271,7 +2271,7 @@ function bestWindow(sp){
   const calm = w.items.every(x => x.e.windType === 'debole' || x.e.windType === 'offshore');
   w.head = calm ? 'vento debole o offshore, onda pulita' : 'la parte migliore del giorno';
   if (w.to > DAY_END || !nxt) w.why = 'Resta buona fino a sera.';
-  else if ((nxt.windType === 'onshore' || nxt.windType === 'laterale') && nxt.windType !== last.windType) w.why = `Dopo le ${w.to} il vento gira ${nxt.windType} e sale a ${Math.round(nxt.ws)} km/h.`;
+  else if ((nxt.windType === 'onshore' || nxt.windType === 'laterale') && nxt.windType !== last.windType) w.why = `Dopo le ${w.to} il vento gira ${nxt.windType} e sale a ${Math.round(nxt.ws)}km/h.`;
   else if (nxt.face < sp.min) w.why = `Dopo le ${w.to} l'onda cala.`;
   else if (nxt.face > sp.max) w.why = `Dopo le ${w.to} l'onda diventa troppo grossa.`;
   else w.why = `Dopo le ${w.to} il punteggio scende.`;
@@ -2308,7 +2308,7 @@ function dirSheetHtml(sp, ev){
    ${row(arcG(GC.light.win), `Finestra dello spot: da ${cardinal(a0)} a ${cardinal(a1)}`, 'Le direzioni da cui lo swell entra bene.')}
    ${ev ? row(triG(GC.light.swell), `Swell: da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°`, `${chip(inWin ? 'dentro la finestra' : 'fuori finestra', inWin)} Dentro l'arco azzurro le onde arrivano piene.`) : ''}
    ${row(arcG(GC.light.off), `Zona offshore: da ${cardinal(sp.offshore)}`, 'Il vento che pulisce l\'onda.')}
-   ${ev ? row(triG(GC.light.wind), calm ? 'Vento: quasi assente' : `Vento: da ${cardinal(ev.wd)}, ${Math.round(ev.ws)} km/h`, `${chip(calm ? 'debole' : wt, goodWind)} Dentro l'arco arancio è offshore, fuori è laterale o onshore.`) : ''}
+   ${ev ? row(triG(GC.light.wind), calm ? 'Vento: quasi assente' : `Vento: da ${cardinal(ev.wd)}, ${Math.round(ev.ws)}km/h`, `${chip(calm ? 'debole' : wt, goodWind)} Dentro l'arco arancio è offshore, fuori è laterale o onshore.`) : ''}
   </div></section>`;
  const eff = `<div class="dire"><div><b class="g">Swell nell'arco</b><span>le onde arrivano piene</span></div><div><b class="g">Vento nell'arco</b><span>onda pulita</span></div><div><b class="a">Vento fuori dall'arco</b><span>onda sporca, punteggio più basso</span></div></div>`;
  return `${card}<h2 style="margin:22px 0 0;font-size:16px">Che effetto ha</h2>${eff}`;
@@ -2358,12 +2358,12 @@ const WXI = {
 // tessera della tavola: 40 px, come le altre icone delle carte
 function btileSm(type, ft){ return `<span class="btile sm">${boardIcon(type, ft, 65, .84, 1.7)}</span>`; }
 
-// ---------- Profilo: righello del peso (30-200 kg, tacche ogni 0,1 kg) ----------
-const W_MIN = 30, W_MAX = 200, W_PX = 70;   // 70 px per chilo = 7 px ogni 0,1 kg
+// ---------- Profilo: righello del peso (30-200kg, tacche ogni 0,1kg) ----------
+const W_MIN = 30, W_MAX = 200, W_PX = 70;   // 70 px per chilo = 7 px ogni 0,1kg
 function refboxHtml(pr){
  const hasLv = SURF_LEVELS.some(l => l.id === pr.level), okW = pr.weight >= 30 && pr.weight <= 200;
  return hasLv && okW ? `<div class="refbox"><p class="xs muted">Litri di riferimento per te</p><div class="bmeta">${['shortboard', 'fish', 'midlength', 'longboard'].map(t =>
-  `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])} L</span>`).join('')}</div></div>` : '';
+  `<span class="bchip l" style="--bc:${BOARD_COLOR[t]}">${boardType(t).s} ~${Math.round(pr.weight * LKG[pr.level] * TYPE_F[t])}L</span>`).join('')}</div></div>` : '';
 }
 function rulerHtml(w){
  const tw = (W_MAX - W_MIN) * W_PX;
@@ -2389,7 +2389,7 @@ function initRuler(sBox, pr){
  };
  const commit = v => {
   v = Math.round(v * 10) / 10; if (v === saved) return;
-  saved = v; saveProfile({weight:v}); refresh(); toast(`Peso salvato: ${v.toFixed(1)} kg`);
+  saved = v; saveProfile({weight:v}); refresh(); toast(`Peso salvato: ${v.toFixed(1)}kg`);
  };
  // il righello si posiziona quando la sezione è visibile (da chiusa non ha larghezza) e a ogni cambio di misura
  if (window.ResizeObserver) new ResizeObserver(() => { if (sc.clientWidth) setX(cur ?? 75); }).observe(sc);
@@ -2407,10 +2407,10 @@ function initRuler(sBox, pr){
   const raw = num.value.trim().replace(',', '.');
   if (!raw){ cur = null; saved = null; saveProfile({weight:null}); aria(null); refresh(); setX(75); toast('Peso rimosso'); return; }
   const w = parseFloat(raw);
-  if (isNaN(w) || w < W_MIN || w > W_MAX){ err.hidden = false; err.textContent = 'Scrivi un peso tra 30 e 200 kg.'; return; }
+  if (isNaN(w) || w < W_MIN || w > W_MAX){ err.hidden = false; err.textContent = 'Scrivi un peso tra 30 e 200kg.'; return; }
   err.hidden = true; cur = Math.round(w * 10) / 10; num.value = cur.toFixed(1); aria(cur); setX(cur); commit(cur);
  });
- // tastiera: frecce = 0,1 kg, Maiusc = 1 kg, Pag su/giù = 5 kg
+ // tastiera: frecce = 0,1kg, Maiusc = 1kg, Pag su/giù = 5kg
  tr.addEventListener('keydown', e => {
   const d = {ArrowLeft:-.1, ArrowDown:-.1, ArrowRight:.1, ArrowUp:.1, PageDown:-5, PageUp:5}[e.key]; if (d == null) return;
   e.preventDefault();
@@ -2479,11 +2479,11 @@ function openDetail(id){
    ${MOTIF.week}
    ${secToggle('week', 'Settimana', 'Previsione dei prossimi 7 giorni: onda a riva alle 8, 11, 14 e 17', weekSummary(best), weekInfo(days))}
    <div id="body-week" hidden>
-   <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max} m).</p>
+   <p class="xs muted" style="margin-bottom:10px">L'altezza della barra è l'onda, il colore è il punteggio. La fascia chiara è il range surfabile dello spot (${sp.min}–${sp.max}m).</p>
    ${chartHtml(sp)}
    <h3 style="margin:18px 0 6px;font:600 19px var(--grot)">Giorno per giorno</h3>
    <div class="dlist">${days.map(d=>`<div class="${best && best===d && d.best.score>=ACTIVE_FROM ? 'best':''}"><span style="font-weight:600">${dayLabel(d.day)}</span>${badge(d.best.score,'sm')}
-    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)} m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)} km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()} · Tavola: ${esc(boardShort(sp, d.best))}</span></span><span class="agree" data-agree="${d.day}"></span></div>`).join('')}</div>
+    <span class="small">${d.minFace.toFixed(1)}–${d.maxFace.toFixed(1)}m, meglio alle ${d.bestHour}, vento ${d.best.windType} ${Math.round(d.best.ws)}km/h<br><span class="muted">Gente: ${crowdDay(sp, d).label.toLowerCase()} · Tavola: ${esc(boardShort(sp, d.best))}</span></span><span class="agree" data-agree="${d.day}"></span></div>`).join('')}</div>
    </div>
   </section>
 
@@ -2570,7 +2570,7 @@ const SPOT_CAMS = {
  'capo-mannu':['capo'], 'mini-capo':['capo'], 'godzilla':['capo'], 'la-punta':['capo'], 'lo-scivolo':['capo','arco'], 'putzu-idu':['capo','arco'],
  'sg-la-torre':['sg1','sg2','sg3'], 'sg-scalini':['sg1','sg2','sg3']
 };
-// webcam entro 4 km dalla spiaggia: così anche gli spot che aggiungi tu se le ritrovano
+// webcam entro 4km dalla spiaggia: così anche gli spot che aggiungi tu se le ritrovano
 const camsNear = p => Object.values(CAM).filter(c => distanceKm(p, c) <= 4);
 function camsHtml(sp){
  const list = [...(SPOT_CAMS[sp.id] ? SPOT_CAMS[sp.id].map(k=>CAM[k]) : camsNear(beach(sp))), ...(sp.cams || [])];
@@ -2760,7 +2760,7 @@ function calHtml(sp){
   tips += `<p style="margin-top:8px"><b>Punteggio:</b> in media il tuo voto è ${st.bias > 0 ? 'più alto' : 'più basso'} di ${Math.abs(st.bias).toFixed(1)} punti. ${st.bias > 0 ? 'Lo spot rende più di quanto pensi l\'app: forse la finestra di direzioni è troppo stretta.' : 'Lo spot rende meno: forse la finestra è troppo larga o il range di onda troppo basso.'}</p>`;
  if (st.windMiss >= 2)
   tips += `<p style="margin-top:8px"><b>Vento:</b> ${st.windMiss} volte l'app lo dava buono ma in acqua era onshore. Probabilmente la direzione offshore dello spot (ora da ${cardinal(sp.offshore)}) va corretta.</p>`;
- const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m} m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''}${x.affollamento_1_4 ? ', gente ' + x.affollamento_1_4 + '/4' : ''}${x.tavola ? ', ' + esc(x.tavola) : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
+ const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m}m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''}${x.affollamento_1_4 ? ', gente ' + x.affollamento_1_4 + '/4' : ''}${x.tavola ? ', ' + esc(x.tavola) : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
  return `${tips || ''}
   ${cur !== 1 ? `<p class="small" style="margin-top:10px">Correzione personale attiva: ×${cur.toFixed(2)}. Vale per le tue previsioni${Cloud.user ? ', su tutti i tuoi dispositivi e negli alert Telegram' : ' su questo telefono'}. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}
   ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px var(--grot)">Ultime sessioni</h3><div class="slist">${list}</div>` : ''}
@@ -3180,7 +3180,7 @@ async function loadBuoys(){
  try{ buoyData = await getJson('buoy.json', {cache:'no-cache'}, 1, 15000); }catch(e){ buoyData = null; }
 }
 const bearing = (a, b) => { const r = Math.PI/180, y = Math.sin((b.lon-a.lon)*r)*Math.cos(b.lat*r), x = Math.cos(a.lat*r)*Math.sin(b.lat*r) - Math.sin(a.lat*r)*Math.cos(b.lat*r)*Math.cos((b.lon-a.lon)*r); return (Math.atan2(y,x)/r + 360) % 360; };
-const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime())/60000); if (m < 60) return `${m} min fa`; if (m < 12*60) return `${Math.round(m/60)} h fa`; const d = new Date(iso); return `${d.toDateString() === new Date().toDateString() ? 'oggi' : 'ieri'} alle ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`; };
+const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime())/60000); if (m < 60) return `${m}min fa`; if (m < 12*60) return `${Math.round(m/60)}h fa`; const d = new Date(iso); return `${d.toDateString() === new Date().toDateString() ? 'oggi' : 'ieri'} alle ${d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}`; };
 const buoyModelCache = {};
 async function renderBuoy(sp){
  const box = document.getElementById('buoyBox'); if (!box) return;
@@ -3194,9 +3194,9 @@ async function renderBuoy(sp){
  const newer = fresh.find(b => b !== bu && new Date(b.last.time) - new Date(bu.last.time) > 3*3600000);
  const name = bu.name ? bu.name : (bu.km != null && Math.abs(bu.lat - 40.55) < 0.6 && bu.lon < 8.6 ? 'Boa di Alghero' : 'Boa ondametrica ' + bu.id);
  const L = bu.last;
- box.innerHTML = `<div class="buoy">${chd('green','buoy','Misurato in mare',`<b class="cval">${(+L.hs).toFixed(1)} m${L.tp ? `, ${Math.round(L.tp)} s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}</b>`,`<span class="xs muted" style="white-space:nowrap;align-self:flex-start">${ago(L.time)}</span>`)}
-  <p class="xs muted" style="margin-top:8px">${esc(name)}, a ${Math.round(bu.d)} km verso ${cardinal(bearing(beach(sp), bu))}</p>
-  ${newer ? `<p class="xs muted" style="margin-top:2px">Più recente: ${esc(newer.name || 'boa ' + newer.id)}, a ${Math.round(newer.d)} km: ${(+newer.last.hs).toFixed(1)} m, ${ago(newer.last.time)}</p>` : ''}
+ box.innerHTML = `<div class="buoy">${chd('green','buoy','Misurato in mare',`<b class="cval">${(+L.hs).toFixed(1)} m${L.tp ? `, ${Math.round(L.tp)}s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}</b>`,`<span class="xs muted" style="white-space:nowrap;align-self:flex-start">${ago(L.time)}</span>`)}
+  <p class="xs muted" style="margin-top:8px">${esc(name)}, a ${Math.round(bu.d)}km verso ${cardinal(bearing(beach(sp), bu))}</p>
+  ${newer ? `<p class="xs muted" style="margin-top:2px">Più recente: ${esc(newer.name || 'boa ' + newer.id)}, a ${Math.round(newer.d)}km: ${(+newer.last.hs).toFixed(1)}m, ${ago(newer.last.time)}</p>` : ''}
   <div id="buoyCmp" class="xs muted">Confronto con il modello…</div></div>`;
  // confronto con il modello nello stesso punto e nelle stesse ore
  try{
@@ -3216,7 +3216,7 @@ async function renderBuoy(sp){
   const W = 300, Hh = 70, mx = Math.max(.5, ...pts.map(x=>Math.max(x.obs, x.mod)))*1.1;
   const X = i => (i/(pts.length-1 || 1))*W, Y = v => Hh - v/mx*Hh;
   const line = k => pts.map((x,i)=>`${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(x[k]).toFixed(1)}`).join(' ');
-  cmp.outerHTML = `<p class="cnote" style="--nbg:${Math.abs(diff) < 10 ? '#26331F' : '#3E3224'};--nfg:${Math.abs(diff) < 10 ? '#9FD18B' : '#F0A22E'}"><span>Il modello qui dava ${nowMod.toFixed(1)} m: ${Math.abs(diff) < 10 ? 'ci ha preso' : diff > 0 ? `il mare è più grosso del ${diff}%` : `il mare è più piccolo del ${-diff}%`}.
+  cmp.outerHTML = `<p class="cnote" style="--nbg:${Math.abs(diff) < 10 ? '#26331F' : '#3E3224'};--nfg:${Math.abs(diff) < 10 ? '#9FD18B' : '#F0A22E'}"><span>Il modello qui dava ${nowMod.toFixed(1)}m: ${Math.abs(diff) < 10 ? 'ci ha preso' : diff > 0 ? `il mare è più grosso del ${diff}%` : `il mare è più piccolo del ${-diff}%`}.
     ${pts.length >= 12 ? `Nelle ultime ${pts.length} ore in media ${Math.abs(md) < 10 ? 'modello e boa coincidono' : md > 0 ? `la boa misura il ${md}% in più` : `la boa misura il ${-md}% in meno`}.` : ''}</span></p>
    <svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Onda misurata dalla boa e prevista dal modello nelle ultime ore">
     <path d="${line('mod')}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
@@ -3233,7 +3233,7 @@ async function renderBuoy(sp){
 // l'onda prevista degli spot vicini. Correzione piena fino all'ultima misura, poi sfuma a zero in 48 ore.
 let buoyFix = null;
 const FIX_FADE_H = 48;
-// boa di riferimento per uno spot: tra quelle entro 250 km con misure recenti, preferisco quelle sul lato ovest
+// boa di riferimento per uno spot: tra quelle entro 250km con misure recenti, preferisco quelle sul lato ovest
 // (da dove arrivano le mareggiate del Sinis), poi la più vicina
 function refBuoy(p){
  const now = Date.now();
@@ -3290,8 +3290,8 @@ async function loadAgreement(sp){
    const gap = hi - lo, rel = gap / Math.max(mean, 0.4);
    // d'accordo se differiscono di poco in assoluto o in proporzione
    const [txt, col] = (gap <= .3 || rel <= .25) ? ['Modelli d\'accordo','var(--s3)'] : (gap <= .6 || rel <= .5) ? ['Modelli abbastanza d\'accordo','var(--s1)'] : ['Modelli discordi','#C0504D'];
-   el.innerHTML = `<i style="--c:${col}"></i><span><b>${txt}</b>: al largo tra ${lo.toFixed(1)} e ${hi.toFixed(1)} m (${maxes.length} modelli)</span>`;
-   el.title = `Onda al largo secondo ${maxes.length} modelli: da ${lo.toFixed(1)} a ${hi.toFixed(1)} m`;
+   el.innerHTML = `<i style="--c:${col}"></i><span><b>${txt}</b>: al largo tra ${lo.toFixed(1)}m e ${hi.toFixed(1)}m (${maxes.length} modelli)</span>`;
+   el.title = `Onda al largo secondo ${maxes.length} modelli: da ${lo.toFixed(1)}m a ${hi.toFixed(1)}m`;
   });
  };
  if (c && Date.now() - c.at < 3600000){ draw(c.res); return; }
@@ -3338,7 +3338,7 @@ function weekSummary(best){
 function weekInfo(days){
  if (!days.length) return 'Nessun dato';
  const mx = days.reduce((a,d)=> d.maxFace > a.maxFace ? d : a, days[0]);
- return `Prossimi 7 giorni, onda fino a ${mx.maxFace.toFixed(1)} m ${dayLabel(mx.day).toLowerCase()}`;
+ return `Prossimi 7 giorni, onda fino a ${mx.maxFace.toFixed(1)}m ${dayLabel(mx.day).toLowerCase()}`;
 }
 function seasonInfo(sp){
  const st = store.get(statKey(sp), null);
@@ -3375,7 +3375,7 @@ function seasonHtml(sp){
   <div class="mlab">${MONTHS.map((n,i)=>`<span class="${top.includes(i)?'top':''}">${n}</span>`).join('')}</div>
   <div class="legend" style="margin-top:10px"><span><i style="--c:var(--tacc)"></i>Giorni surfabili (punteggio 3 o più)</span><span><i style="--c:var(--tacc);opacity:.35"></i>Solo attivo (2–2.5)</span></div>
   <div class="sbox">${best.p > 0 ? `<p><b>Mesi migliori:</b> ${top.map(i=>MONTHS_LONG[i]).join(', ')}.</p>
-   <p style="margin-top:4px">A ${MONTHS_LONG[best.i]} in media <b>${perMonth} giorni surfabili</b> su 30, con onda a riva media di ${bm.avg.toFixed(1)} m nei giorni buoni.</p>`
+   <p style="margin-top:4px">A ${MONTHS_LONG[best.i]} in media <b>${perMonth} giorni surfabili</b> su 30, con onda a riva media di ${bm.avg.toFixed(1)}m nei giorni buoni.</p>`
    : '<p>Negli anni analizzati lo spot non ha mai raggiunto un punteggio di 3: forse i parametri dello spot (direzione, range di onda) vanno rivisti.</p>'}
    <p class="xs muted" style="margin-top:6px">Dati ${st.years}, modello Open-Meteo: sono medie indicative, non una garanzia. Se cambi i parametri dello spot le statistiche si ricalcolano.</p>
    <button class="pillbtn" id="seasonRedo" style="margin-top:8px;min-height:36px;font-size:13px">Ricalcola</button></div>`;
@@ -3438,8 +3438,8 @@ function periodCell(sp, T){
  let from = 0;
  const zones = PERIODS.map(x=>{ const w = (Math.min(x.to, MAX) - from)/MAX*100; from = Math.min(x.to, MAX); return `<i style="width:${w}%;background:${x.c}"></i>`; }).join('');
  const pos = Math.min(T, MAX)/MAX*100;
- const note = T < sp.minPeriod ? `Sotto il minimo di questo spot (${sp.minPeriod} s): il punteggio ne risente.` : `Sopra il minimo di questo spot (${sp.minPeriod} s).`;
- return `<div class="wide">${chd('blue','wave','Periodo dello swell',`<b class="cval">${Math.round(T)} s</b>`,`<span class="ppill" style="--c:${p.c};--fg:${p.fg}">${p.t}</span>`)}
+ const note = T < sp.minPeriod ? `Sotto il minimo di questo spot (${sp.minPeriod}s): il punteggio ne risente.` : `Sopra il minimo di questo spot (${sp.minPeriod}s).`;
+ return `<div class="wide">${chd('blue','wave','Periodo dello swell',`<b class="cval">${Math.round(T)}s</b>`,`<span class="ppill" style="--c:${p.c};--fg:${p.fg}">${p.t}</span>`)}
   <div class="pwrap" role="img" aria-label="Periodo ${Math.round(T)} secondi, ${p.t.toLowerCase()}"><div class="pbar">${zones}</div><span class="pmark" style="left:${pos}%"></span></div>
   <div class="pscale">${[0,6,8,10,13].map(v=>`<span style="left:${v/MAX*100}%">${v}</span>`).join('')}<span style="left:100%">16+ s</span></div>
   <p class="xs muted" style="margin-top:8px">${p.d}</p>${cnote(T < sp.minPeriod ? 'amber' : 'green', T < sp.minPeriod ? 'warn' : 'ok', note)}</div>`;
@@ -3449,7 +3449,7 @@ function periodCell(sp, T){
 function dialLegend(sp, ev){
  const a0 = ((sp.facing - sp.window) % 360 + 360) % 360, a1 = (sp.facing + sp.window) % 360;
  const swell = ev ? ` Adesso arriva da ${cardinal(ev.dir)} (${Math.round(ev.dir)}°) con periodo di ${Math.round(ev.T)} s${angDiff(ev.dir, sp.facing) <= sp.window ? ', dentro la finestra' : ', fuori dalla finestra'}.` : '';
- const wind = ev ? (ev.ws < 3 ? ' Adesso è quasi assente, per questo non si vede.' : ` Adesso soffia da ${cardinal(ev.wd)} a ${Math.round(ev.ws)} km/h (${ev.windType}).`) : '';
+ const wind = ev ? (ev.ws < 3 ? ' Adesso è quasi assente, per questo non si vede.' : ` Adesso soffia da ${cardinal(ev.wd)} a ${Math.round(ev.ws)}km/h (${ev.windType}).`) : '';
  return `<div><p class="small muted" style="text-align:center">Il nord è in alto, come su una mappa.</p>
   <div class="lrow"><svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 5 L20 20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/><path d="M22 22 L14 20 L20 14Z" fill="var(--accent)"/></svg>
    <p><b>Freccia blu: lo swell.</b> Parte dal lato da cui arrivano le onde e punta verso lo spot.${swell}</p></div>
@@ -3535,7 +3535,7 @@ function renderExtra(sp, {fc, mr}){
  const hours = slots.map((i,k)=>{
   const si = s ? s.time.indexOf(H.time[i]) : -1, ev = si >= 0 ? evaluate(sp, s, si) : null;
   return `<div class="hr${k===0?' now':''}"><span>${k===0 ? 'Ora' : H.time[i].slice(11,16)}</span><div class="i">${wxSvg(H.weather_code[i], H.is_day[i], 26)}</div>
-   <b>${Math.round(H.temperature_2m[i])}°</b><span>${cardinal(H.wind_direction_10m[i])} ${Math.round(H.wind_speed_10m[i])}</span><span>${ev ? ev.face.toFixed(1)+' m' : ''}</span></div>`;
+   <b>${Math.round(H.temperature_2m[i])}°</b><span>${cardinal(H.wind_direction_10m[i])} ${Math.round(H.wind_speed_10m[i])}</span><span>${ev ? ev.face.toFixed(1)+'m' : ''}</span></div>`;
  }).join('');
  const sr = D.sunrise?.[di]?.slice(11,16), ss = D.sunset?.[di]?.slice(11,16);
  const wx = `<div class="wx">
@@ -3543,8 +3543,8 @@ function renderExtra(sp, {fc, mr}){
    <div><p class="wxt">${Math.round(H.temperature_2m[i0])}°</p><p class="wxl">${label}</p><p class="xs muted">max ${Math.round(D.temperature_2m_max[di])}° · min ${Math.round(D.temperature_2m_min[di])}°</p></div></div>
   <div class="wxgrid">
    <div><span class="wl">${WXI.water}Acqua</span><b>${sst != null ? sst.toFixed(1)+'°' : '–'}</b></div>
-   <div><span class="wl">${WXI.gust}Raffiche</span><b>${Math.round(H.wind_gusts_10m[i0])} km/h</b></div>
-   <div><span class="wl">${WXI.rain}Pioggia oggi</span><b>${(D.precipitation_sum[di] ?? 0).toFixed(1)} mm</b></div>
+   <div><span class="wl">${WXI.gust}Raffiche</span><b>${Math.round(H.wind_gusts_10m[i0])}km/h</b></div>
+   <div><span class="wl">${WXI.rain}Pioggia oggi</span><b>${(D.precipitation_sum[di] ?? 0).toFixed(1)}mm</b></div>
    <div><span class="wl">${WXI.sunr}Alba e tramonto</span><b>${sr || '–'} / ${ss || '–'}</b></div></div>
   <div class="hours" aria-label="Prossime ore: meteo, vento in km/h e onda a riva">${hours}</div>
   <p class="xs muted" style="margin-top:10px">Ogni casella: ora, cielo, temperatura, vento (da, km/h) e onda a riva.</p></div>`;
@@ -3565,7 +3565,7 @@ function renderExtra(sp, {fc, mr}){
    return `<circle cx="${X(hh).toFixed(1)}" cy="${Y(e.v).toFixed(1)}" r="3.5" fill="${e.hi ? 'var(--tacc, var(--accent))' : 'var(--muted)'}"/>`; }).join('');
   const hiT = ex.filter(e=>e.hi).map(e=>hm(e.t)).join(', ') || '–', loT = ex.filter(e=>!e.hi).map(e=>hm(e.t)).join(', ') || '–';
   const cm = Math.round((mx - mn)*100);
-  tide = `<div class="tide"><p class="small muted">Escursione di oggi: <b style="color:var(--ink)">${cm} cm</b></p>
+  tide = `<div class="tide"><p class="small muted">Escursione di oggi: <b style="color:var(--ink)">${cm}cm</b></p>
    <svg viewBox="0 0 300 92" role="img" aria-label="Andamento della marea oggi: alte alle ${hiT}, basse alle ${loT}">
     <path d="M${pts[0]} L${pts.join(' L')} L${X(+T[idx.at(-1)].slice(11,13)).toFixed(1)},72 L${X(+T[idx[0]].slice(11,13)).toFixed(1)},72Z" fill="var(--sea)"/>
     <path d="M${pts.join(' L')}" fill="none" stroke="var(--tacc, var(--accent))" stroke-width="2"/>
@@ -3586,9 +3586,9 @@ function renderExtra(sp, {fc, mr}){
  const sw = document.getElementById('sum-wx');
  if (sw) sw.innerHTML = `<span><b>${Math.round(H.temperature_2m[i0])}° ${label.toLowerCase()}</b>${sst != null ? '· acqua ' + sst.toFixed(1) + '°' : ''}</span>`;
  const iw = document.getElementById('info-wx');
- if (iw) iw.textContent = `Vento ${cardinal(H.wind_direction_10m[i0])} ${Math.round(H.wind_speed_10m[i0])} km/h`;
+ if (iw) iw.textContent = `Vento ${cardinal(H.wind_direction_10m[i0])} ${Math.round(H.wind_speed_10m[i0])}km/h`;
  const it = document.getElementById('info-tide');
- if (it){ const v = idx.map(i=>L[i]); it.textContent = idx.length >= 12 ? `Escursione di oggi ${Math.round((Math.max(...v)-Math.min(...v))*100)} cm` : 'Dato non disponibile qui'; }
+ if (it){ const v = idx.map(i=>L[i]); it.textContent = idx.length >= 12 ? `Escursione di oggi ${Math.round((Math.max(...v)-Math.min(...v))*100)}cm` : 'Dato non disponibile qui'; }
  const st = document.getElementById('sum-tide');
  if (st){
   const nowMs = new Date(key + ':00Z').getTime() + new Date().getMinutes()*60000;
@@ -3658,7 +3658,7 @@ function renderMap(){
   const e = mapScore(sel);
   card.hidden = false; card.dataset.open = sel.id;
   card.innerHTML = `${badge(e?.score)}<div style="flex:1;min-width:0"><p class="cond" style="font-weight:600;font-size:21px;line-height:1.1">${esc(sel.name)}</p>
-   <p class="small muted">${e ? `${e.face.toFixed(1)} m, ${Math.round(e.T)} s da ${cardinal(e.dir)}, ${e.windType} ${Math.round(e.ws)} km/h` : 'Nessun dato'}</p></div>${ICON.chev}`;
+   <p class="small muted">${e ? `${e.face.toFixed(1)}m, ${Math.round(e.T)}s da ${cardinal(e.dir)}, ${e.windType} ${Math.round(e.ws)}km/h` : 'Nessun dato'}</p></div>${ICON.chev}`;
  } else card.hidden = true;
  setTimeout(()=>leaf.invalidateSize(), 60);
 }
@@ -3682,7 +3682,7 @@ function renderAlert(){
  const hits = upcomingAlerts();
  document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>`
   <button data-open="${h.sp.id}">${badge(h.d.best.score)}<div><p style="font-weight:600">${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()} ${+h.d.day.slice(8,10)}</p>
-  <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m, vento ${h.d.best.windType}</p></div></button>`).join('')
+  <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)}m, vento ${h.d.best.windType}</p></div></button>`).join('')
   : `<p class="muted small" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
  document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold ? v+' / 5' : v}</button>`).join('');
  const ti = THR[threshold] || THR[3];
@@ -3702,7 +3702,7 @@ function notify(){
  upcomingAlerts().forEach(h=>{
   const key = `${h.sp.id}|${h.d.day}`;
   if ((sent[key] ?? -1) >= h.d.best.score) return;
-  try{ new Notification(`${h.sp.name}: ${h.d.best.score}/5`, {body:`${dayLabel(h.d.day)} dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)} m`}); }catch(e){}
+  try{ new Notification(`${h.sp.name}: ${h.d.best.score}/5`, {body:`${dayLabel(h.d.day)} dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)}m`}); }catch(e){}
   sent[key] = h.d.best.score;
  });
  store.set('surf.sent', sent);
