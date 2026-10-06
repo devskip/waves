@@ -1034,6 +1034,11 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 #v-alert .card,#v-alert .thrinfo{border-radius:22px;border-color:transparent;background:#232323}
 .flist .srow{height:56px;min-height:56px;padding:0 16px;border-radius:18px;background:#232323;border:0}
 .flist .srow span{font-weight:700;font-size:14px}
+/* quadrante grande: padding a destra coerente con la card, "i" in basso a sinistra della card */
+.fside{width:160px;height:160px;margin:-16px -24px -16px 0}
+.hero{position:relative}
+.hero .hdial{position:static}
+.hero .hdial .info{left:14px;right:auto;top:auto;bottom:14px}
 </style>
 </head>
 <body>
@@ -2391,7 +2396,7 @@ function dirSheetHtml(sp, ev){
  const inWin = ev && angDiff(ev.dir, sp.facing) <= sp.window, calm = ev && ev.ws < 3, wt = ev ? ev.windType : '';
  const goodWind = wt === 'offshore' || wt === 'debole';
  const chip = (t, ok) => `<span class="st" style="background:${ok ? '#E3EEDB' : '#FBEFD9'};color:${ok ? '#2F5F1A' : '#8A5A24'}">${t}</span>`;
- const arcG = col => `<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M4 21 A12 12 0 0 1 21 4" fill="none" stroke="${col}" stroke-width="6" stroke-linecap="round"/></svg>`;
+ const arcG = col => `<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="9.5" fill="none" stroke="#E6E8E4" stroke-width="4"/><path d="M4.6 17.2 A9.5 9.5 0 0 1 17.2 4.6" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round"/></svg>`;
  const triG = col => `<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">${hullSvg([13,8.8],[13,18.3],4.8,3.7,col)}</svg>`;
  const row = (g, t, d) => `<div class="drow"><span class="dg">${g}</span><div><b>${t}</b><p>${d}</p></div></div>`;
  const card = `<section class="dirc2">${gaugeWithScore(sp, ev, 190)}
