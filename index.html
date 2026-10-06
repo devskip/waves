@@ -10,8 +10,9 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Sinis Waves">
 <title>Sinis Waves</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-68%20-90%20738%20738%22%3E%3Crect%20x%3D%22-68%22%20y%3D%22-90%22%20width%3D%22738%22%20height%3D%22738%22%20rx%3D%22148%22%20fill%3D%22%23fff%22/%3E%3Cpath%20fill%3D%22%2313283B%22%20fill-rule%3D%22evenodd%22%20d%3D%22M7%20488%20L7%20551%20L596%20550%20L595%20505%20L352%20505%20L272%20492%20L241%20490%20L231%20488Z%20M6%20420%20L6%20457%20L8%20459%20L238%20459%20L271%20463%20L288%20467%20L353%20477%20L596%20476%20L595%20438%20L350%20438%20L309%20432%20L258%20422%20L221%20418%20L7%20418Z%20M6%20351%20L7%20389%20L223%20389%20L257%20393%20L294%20401%20L345%20409%20L596%20408%20L595%20373%20L347%20373%20L304%20366%20L273%20358%20L222%20350Z%20M7%207%20L7%20323%20L100%20323%20L120%20319%20L130%20315%20L150%20304%20L160%20296%20L180%20255%20L185%20249%20L192%20245%20L271%20229%20L293%20223%20L322%20219%20L334%20214%20L352%20184%20L363%20161%20L370%20153%20L374%20151%20L508%20150%20L518%20156%20L523%20167%20L559%20305%20L565%20315%20L572%20321%20L588%20329%20L596%20330%20L596%207Z%22/%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20512%20512'%3E%3Crect%20width='512'%20height='512'%20rx='115'%20fill='%23F0A22E'/%3E%3Cg%20transform='translate(104.50%20115.57)%20scale(0.5033)'%20fill='%23171717'%20fill-rule='evenodd'%3E%3Cpath%20d='M7%207%20L7%20323%20L100%20323%20L120%20319%20L130%20315%20L150%20304%20L160%20296%20L180%20255%20L185%20249%20L192%20245%20L271%20229%20L293%20223%20L322%20219%20L334%20214%20L352%20184%20L363%20161%20L370%20153%20L374%20151%20L508%20150%20L518%20156%20L523%20167%20L559%20305%20L565%20315%20L572%20321%20L588%20329%20L596%20330%20L596%207Z'/%3E%3Cpath%20d='M7%20488%20L7%20551%20L596%20550%20L595%20505%20L352%20505%20L272%20492%20L241%20490%20L231%20488Z%20M6%20420%20L6%20457%20L8%20459%20L238%20459%20L271%20463%20L288%20467%20L353%20477%20L596%20476%20L595%20438%20L350%20438%20L309%20432%20L258%20422%20L221%20418%20L7%20418Z%20M6%20351%20L7%20389%20L223%20389%20L257%20393%20L294%20401%20L345%20409%20L596%20408%20L595%20373%20L347%20373%20L304%20366%20L273%20358%20L222%20350Z'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=4">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -1010,6 +1011,29 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .sdet p i{display:block;width:12px;height:12px;border-radius:3px;background:var(--tacc);margin-top:3px;flex-shrink:0}
 .sdet p i.lo{opacity:.35}
 .sdet p svg{margin-top:2px;flex-shrink:0}
+/* pagina Alert, come in tavola */
+.alhero{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:18px;border-radius:26px;background:#2A2A2A;border:1px solid #4A3A28}
+.alhero ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;min-width:0}
+.alhero li{display:flex;align-items:center;gap:12px;color:var(--accent);font:700 13px/1.2 var(--mono)}
+.alhero li span{color:var(--ink)}
+.alhero li svg{flex-shrink:0}
+.albell{position:relative;width:104px;height:104px;flex-shrink:0}
+.albell>svg{position:absolute;left:0;top:0}
+.albell .disc{position:absolute;left:14px;top:14px;width:76px;height:76px;border-radius:50%;background:#4A3F2B;color:#E0624F;display:flex;align-items:center;justify-content:center}
+.albell .dot{position:absolute;right:16px;top:14px;width:14px;height:14px;border-radius:50%;background:var(--accent)}
+.albell.off .disc{background:#333;color:#8A8A85}.albell.off .dot{display:none}
+.alist2{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.alist2 button{display:flex;align-items:center;gap:12px;padding:14px;border:0;border-radius:22px;background:#232323;color:var(--ink);width:100%;text-align:left}
+.alist2 .tile{width:48px;height:48px;border-radius:14px;background:var(--c);color:var(--fg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alist2 .tx{flex:1;min-width:0}
+.alist2 .tx b{display:block;font-size:14px}
+.alist2 .tx span{display:block;margin-top:2px;font-size:11.5px;line-height:1.4;color:var(--muted)}
+.alist2 .sc{width:40px;height:40px;border-radius:50%;background:var(--c);color:var(--fg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font:700 17px var(--grot)}
+.alist2 .none{padding:14px;color:var(--muted);font-size:13px}
+.flist{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+#v-alert .card,#v-alert .thrinfo{border-radius:22px;border-color:transparent;background:#232323}
+.flist .srow{height:56px;min-height:56px;padding:0 16px;border-radius:18px;background:#232323;border:0}
+.flist .srow span{font-weight:700;font-size:14px}
 </style>
 </head>
 <body>
@@ -1062,8 +1086,9 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 <section id="v-alert" hidden>
  <h1 class="sub">Alert</h1>
  <p class="muted small" style="margin-top:4px">Ti avvisiamo quando uno spot che segui entra in condizione nei prossimi 7 giorni.</p>
+ <section class="alhero" id="alHero"></section>
  <h2>In arrivo</h2>
- <div class="card alist" id="alertList"></div>
+ <div class="alist2" id="alertList"></div>
  <h2>Avvisami da</h2>
  <p class="small muted" style="margin-bottom:10px">Ogni spot ha un punteggio da 0 a 5 che mette insieme tre cose: l'onda a riva rispetto al range surfabile dello spot, il periodo dello swell e il vento (offshore o debole aiuta, laterale e onshore tolgono punti). Scegli da che punteggio vuoi essere avvisato.</p>
  <div class="seg" id="seg"></div>
@@ -1075,7 +1100,7 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
   <div class="srow"><div><p style="font-weight:600">Solo ore di luce</p><p class="xs muted">Dalle 7 alle 19</p></div></div>
  </div>
  <h2>Spot seguiti</h2>
- <div class="card" id="followList"></div>
+ <div class="flist" id="followList"></div>
 </section>
 
 <!-- PROFILO -->
@@ -2267,18 +2292,19 @@ function capsule(c, R, deg, col, w, m = 1, b = .17*w*m){
  const O = ptf(c, ctr + L/2 - ro, deg), I = ptf(c, ctr - L/2 + ri, deg);
  return hullSvg(O, I, ro + b, ri + b, '#fff') + hullSvg(O, I, ro, ri, col);
 }
-// proporzioni del quadrante: D = diametro esterno della pista, fascia = 11,5% di D, pista = 14,8% di D
-const gaugeDims = size => { const D = .681*size, a = .115*D, margin = Math.max((.148*D - a)/2, .8), T = a + 2*margin;
- return {D, a, margin, T, R:D/2 - T/2, hub:Math.round(.48*D)}; };
+// proporzioni del quadrante: D = diametro esterno della pista, fascia = 11,5% di D, pista = 1,75 volte la fascia
+const gaugeDims = size => { const D = .681*size, a = .115*D, margin = Math.max((1.75*a - a)/2, .8), T = a + 2*margin,
+  border = Math.min(margin, Math.max(.25*a, .8)); // bordo bianco col tetto: sui quadranti grandi resta più sottile del grigio che sporge
+ return {D, a, margin, border, T, R:D/2 - T/2, hub:Math.round(.48*D)}; };
 // un solo anello: pista grigia con due fasce centrate (azzurro = finestra delle onde, arancio = zona offshore del vento) e due marker
 function comboGauge(sp, ev, size){
- const g = GC.light, c = size/2, {a, margin, T, R} = gaugeDims(size), m = size >= 90 ? 1 : 1.5;
+ const g = GC.light, c = size/2, {a, border, T, R} = gaugeDims(size), m = size >= 90 ? 1 : 1.5;
  // se onde e vento arrivano da direzioni quasi uguali i due marker si scostano di pochi gradi (la direzione esatta resta nel testo)
  let sd = ev ? ev.dir : null, wd = ev && ev.ws >= 3 ? ev.wd : null;
  if (sd != null && wd != null){ const diff = ((wd - sd + 180) % 360 + 360) % 360 - 180, SEP = 20; if (Math.abs(diff) < SEP){ const sh = (SEP - Math.abs(diff))/2, sg = diff >= 0 ? 1 : -1; sd -= sg*sh; wd += sg*sh; } }
  const arcP = (d1, d2) => { const [x1,y1] = ptf(c,R,d1), [x2,y2] = ptf(c,R,d2); return `M${x1.toFixed(2)},${y1.toFixed(2)} A${R.toFixed(2)},${R.toFixed(2)} 0 ${(((d2-d1)%360)+360)%360 > 180 ? 1 : 0} 1 ${x2.toFixed(2)},${y2.toFixed(2)}`; };
  const n = size >= 90 ? `<text x="${c}" y="${(size*0.066).toFixed(1)}" fill="${g.n}" font-size="${(size*0.07).toFixed(1)}" font-weight="700" text-anchor="middle" font-family="Space Mono,monospace">N</text>` : '';
- return `<svg class="gauge" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${R.toFixed(2)}" fill="none" stroke="${g.track}" stroke-width="${T.toFixed(2)}"/><path d="${arcP(sp.facing-sp.window, sp.facing+sp.window)}" fill="none" stroke="${g.win}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/><path d="${arcP(sp.offshore-45, sp.offshore+45)}" fill="none" stroke="${g.off}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/>${n}${sd != null ? capsule(c,R,sd,g.swell,a,m,margin) : ''}${wd != null ? capsule(c,R,wd,g.wind,a,m,margin) : ''}</svg>`;
+ return `<svg class="gauge" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${R.toFixed(2)}" fill="none" stroke="${g.track}" stroke-width="${T.toFixed(2)}"/><path d="${arcP(sp.facing-sp.window, sp.facing+sp.window)}" fill="none" stroke="${g.win}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/><path d="${arcP(sp.offshore-45, sp.offshore+45)}" fill="none" stroke="${g.off}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/>${n}${sd != null ? capsule(c,R,sd,g.swell,a,m,border) : ''}${wd != null ? capsule(c,R,wd,g.wind,a,m,border) : ''}</svg>`;
 }
 // il cerchio con il pallino del punteggio al centro
 const gaugeWithScore = (sp, ev, size) => { const hs = gaugeDims(size).hub, [bg, fg] = tone(ev?.score);
@@ -3791,15 +3817,21 @@ document.getElementById('windyBtn').onclick = e=>{
 // ---------- Alert ----------
 function renderAlert(){
  const hits = upcomingAlerts();
- document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>`
-  <button data-open="${h.sp.id}">${badge(h.d.best.score)}<div><p style="font-weight:600">${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()} ${+h.d.day.slice(8,10)}</p>
-  <p class="small muted">Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)}m, vento ${h.d.best.windType}</p></div></button>`).join('')
-  : `<p class="muted small" style="padding:14px">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
- document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v===threshold ? v+' / 5' : v}</button>`).join('');
+const SV = (d, f='none') => `<svg width="20" height="20" viewBox="0 0 24 24" fill="${f}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+ const nFol = spots.filter(isFollowed).length, tgOn = !!(Cloud.ready && Cloud.user && Cloud.tg().linked);
+ document.getElementById('alHero').innerHTML = `<ul>
+  <li>${SV('<path d="M2 12c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 17c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/><path d="M2 7c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1"/>')}<span>${nFol} ${nFol === 1 ? 'spot che segui' : 'spot che segui'}</span></li>
+  <li>${SV('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>')}<span>Soglia da ${threshold} / 5</span></li>
+  <li>${SV('<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>')}<span>Telegram ${tgOn ? 'collegato' : 'non collegato'}</span></li></ul>
+  <div class="albell${nFol ? '' : ' off'}"><svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="50" fill="none" stroke="#6B5330" stroke-width="1.5" stroke-dasharray="4 5"/></svg><div class="disc"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></div><span class="dot"></span></div>`;
+ document.getElementById('alertList').innerHTML = hits.length ? hits.slice(0,10).map(h=>{ const [bg,fg] = tone(h.d.best.score); return `
+  <button data-open="${h.sp.id}" style="--c:${bg};--fg:${fg}"><span class="tile">${SV('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>').replace('width="20" height="20"','width="22" height="22"')}</span><span class="tx"><b>${esc(h.sp.name)}, ${dayLabel(h.d.day).toLowerCase()} ${+h.d.day.slice(8,10)}</b><span>Dalle ${h.d.firstHit}, fino a ${h.d.maxFace.toFixed(1)}m, vento ${h.d.best.windType}</span></span><span class="sc" aria-label="Punteggio ${h.d.best.score} su 5">${h.d.best.score}</span></button>`; }).join('')
+  : `<p class="none">Nessuno spot seguito raggiunge ${threshold}/5 nei prossimi 7 giorni.</p>`;
+ document.getElementById('seg').innerHTML = [2.5,3,3.5,4].map(v=>`<button aria-pressed="${v===threshold}" data-thr="${v}">${v}</button>`).join('');
  const ti = THR[threshold] || THR[3];
  document.getElementById('thrInfo').innerHTML = `<p class="tt">Da ${threshold}: ${ti.t}</p><p class="small" style="margin-top:4px">${ti.d}</p><p class="xs muted" style="margin-top:4px">${ti.f} Vale per le notifiche dell'app, per l'elenco "In arrivo" e per gli alert su Telegram.</p>${legendHtml()}`;
  document.getElementById('followList').innerHTML = spots.map(sp=>`
-  <div class="srow"><span style="font-weight:600">${esc(sp.name)}</span>
+  <div class="srow"><span>${esc(sp.name)}</span>
   <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
  const ns = document.getElementById('notifState'), nb = document.getElementById('notifBtn');
  if (!('Notification' in window)){ ns.textContent = 'Non supportate: su iPhone aggiungi prima l\'app alla schermata Home.'; nb.hidden = true; }
