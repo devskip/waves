@@ -606,8 +606,8 @@ a{color:var(--amber)}
 .dname{margin:8px 0 0;font:700 32px/1.1 var(--mono);letter-spacing:-.02em;overflow-wrap:anywhere}
 .hero{margin-top:14px;padding:16px;border-radius:28px;background:var(--light);color:var(--lightink);display:flex;flex-wrap:wrap;gap:14px}
 .hero .badge{background:var(--c)!important;color:var(--fg)!important}
-.hdial{position:relative;flex-shrink:0;width:132px;height:132px;padding:0;border:0;background:transparent;border-radius:0;box-shadow:none;align-self:flex-start;line-height:0;display:block}
-.hdial .info{position:absolute;left:auto;right:0;bottom:0;width:22px;height:22px;border-radius:50%;background:#E6E8E4;color:var(--lightink);box-shadow:none;display:grid;place-items:center;font:700 12px var(--grot);line-height:1}
+.hdial{position:relative;flex-shrink:0;width:165px;height:165px;margin:0 -8px 0 -12px;padding:0;border:0;background:transparent;border-radius:0;box-shadow:none;align-self:flex-start;line-height:0;display:block}
+.hdial .info{position:absolute;left:auto;right:6px;top:2px;bottom:auto;width:22px;height:22px;border-radius:50%;background:#E6E8E4;color:var(--lightink);box-shadow:none;display:grid;place-items:center;font:700 12px var(--grot);line-height:1}
 .hmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
 .hrow1{display:flex;align-items:center;gap:10px}
 .hlab{margin:0;font:700 22px/1.1 var(--grot)}
@@ -2293,22 +2293,23 @@ function capsule(c, R, deg, col, w, m = 1, b = .17*w*m){
  return hullSvg(O, I, ro + b, ri + b, '#fff') + hullSvg(O, I, ro, ri, col);
 }
 // proporzioni del quadrante: D = diametro esterno della pista, fascia = 11,5% di D, pista = 1,75 volte la fascia
-const gaugeDims = size => { const D = .681*size, a = .115*D, margin = Math.max((1.75*a - a)/2, .8), T = a + 2*margin,
+const gaugeDims = size => { const D0 = .681*size, a = .115*D0, margin = Math.max((1.75*a - a)/2, .8), T = a + 2*margin,
+  k = size >= 90 ? 1.25 : 1, D = D0*k, S = Math.round(size*k),   // cerchio grigio più grande (1,25×) sui quadranti grandi: fasce, marker e tondo restano della stessa misura
   border = Math.min(margin, Math.max(.25*a, .8)); // bordo bianco col tetto: sui quadranti grandi resta più sottile del grigio che sporge
- return {D, a, margin, border, T, R:D/2 - T/2, hub:Math.round(.48*D)}; };
+ return {D, a, margin, border, T, S, R:D/2 - T/2, hub:Math.round(.48*D0)}; };
 // un solo anello: pista grigia con due fasce centrate (azzurro = finestra delle onde, arancio = zona offshore del vento) e due marker
 function comboGauge(sp, ev, size){
- const g = GC.light, c = size/2, {a, border, T, R} = gaugeDims(size), m = size >= 90 ? 1 : 1.5;
+ const g = GC.light, {a, border, T, R, S} = gaugeDims(size), c = S/2, m = size >= 90 ? 1 : 1.5;
  // se onde e vento arrivano da direzioni quasi uguali i due marker si scostano di pochi gradi (la direzione esatta resta nel testo)
  let sd = ev ? ev.dir : null, wd = ev && ev.ws >= 3 ? ev.wd : null;
  if (sd != null && wd != null){ const diff = ((wd - sd + 180) % 360 + 360) % 360 - 180, SEP = 20; if (Math.abs(diff) < SEP){ const sh = (SEP - Math.abs(diff))/2, sg = diff >= 0 ? 1 : -1; sd -= sg*sh; wd += sg*sh; } }
  const arcP = (d1, d2) => { const [x1,y1] = ptf(c,R,d1), [x2,y2] = ptf(c,R,d2); return `M${x1.toFixed(2)},${y1.toFixed(2)} A${R.toFixed(2)},${R.toFixed(2)} 0 ${(((d2-d1)%360)+360)%360 > 180 ? 1 : 0} 1 ${x2.toFixed(2)},${y2.toFixed(2)}`; };
  const n = size >= 90 ? `<text x="${c}" y="${(size*0.066).toFixed(1)}" fill="${g.n}" font-size="${(size*0.07).toFixed(1)}" font-weight="700" text-anchor="middle" font-family="Space Mono,monospace">N</text>` : '';
- return `<svg class="gauge" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${R.toFixed(2)}" fill="none" stroke="${g.track}" stroke-width="${T.toFixed(2)}"/><path d="${arcP(sp.facing-sp.window, sp.facing+sp.window)}" fill="none" stroke="${g.win}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/><path d="${arcP(sp.offshore-45, sp.offshore+45)}" fill="none" stroke="${g.off}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/>${n}${sd != null ? capsule(c,R,sd,g.swell,a,m,border) : ''}${wd != null ? capsule(c,R,wd,g.wind,a,m,border) : ''}</svg>`;
+ return `<svg class="gauge" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}" aria-hidden="true"><circle cx="${c}" cy="${c}" r="${R.toFixed(2)}" fill="none" stroke="${g.track}" stroke-width="${T.toFixed(2)}"/><path d="${arcP(sp.facing-sp.window, sp.facing+sp.window)}" fill="none" stroke="${g.win}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/><path d="${arcP(sp.offshore-45, sp.offshore+45)}" fill="none" stroke="${g.off}" stroke-width="${a.toFixed(2)}" stroke-linecap="round"/>${n}${sd != null ? capsule(c,R,sd,g.swell,a,m,border) : ''}${wd != null ? capsule(c,R,wd,g.wind,a,m,border) : ''}</svg>`;
 }
 // il cerchio con il pallino del punteggio al centro
-const gaugeWithScore = (sp, ev, size) => { const hs = gaugeDims(size).hub, [bg, fg] = tone(ev?.score);
- return `<div class="gw" style="width:${size}px;height:${size}px">${comboGauge(sp, ev, size)}<span class="badge" style="--c:${bg};--fg:${fg};width:${hs}px;height:${hs}px;font-size:${Math.round(hs*0.43)}px" aria-label="Punteggio ${ev?.score ?? 'non disponibile'} su 5">${ev?.score ?? '–'}</span></div>`; };
+const gaugeWithScore = (sp, ev, size) => { const {hub: hs, S} = gaugeDims(size), [bg, fg] = tone(ev?.score);
+ return `<div class="gw" style="width:${S}px;height:${S}px">${comboGauge(sp, ev, size)}<span class="badge" style="--c:${bg};--fg:${fg};width:${hs}px;height:${hs}px;font-size:${Math.round(hs*0.43)}px" aria-label="Punteggio ${ev?.score ?? 'non disponibile'} su 5">${ev?.score ?? '–'}</span></div>`; };
 
 // anello del punteggio (arco = punteggio su 5)
 function ringHtml(size, pct, track, arc, sw, inner){
