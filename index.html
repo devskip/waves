@@ -1037,7 +1037,7 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 /* quadrante grande: padding a destra coerente con la card, "i" in basso a sinistra della card */
 .fside{width:160px;height:160px;margin:4px -24px -36px 0}
 .hero{position:relative}
-.hero .hdial{position:static}
+.hero .hdial{position:relative}
 .hero .hdial .info{left:14px;right:auto;top:auto;bottom:14px}
 /* boa e modelli, come in tavola */
 .bxh{margin:22px 0 0;font:700 18px/1.2 var(--mono);color:var(--ink)}
@@ -1095,6 +1095,26 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .offhead[aria-expanded="true"] svg{transform:rotate(180deg)}
 .offacc .list{padding:0 10px 10px}
 .offacc .mini{background:#2E2E2E;border-color:#2E2E2E}
+
+/* dettaglio a schede */
+.dtabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:14px -20px 0;padding:8px 20px;background:var(--bg)}
+.dtabs button{min-height:40px;border:0;border-radius:20px;background:#2B2B2B;color:var(--muted);font:600 14px var(--grot)}
+.dtabs button[aria-selected="true"]{background:var(--amber);color:#171717}
+.tpanel[hidden]{display:none}
+.tpanel > .dsec:first-child{margin-top:10px}
+.hero{flex-wrap:wrap}
+.hero .htiles{flex:0 0 100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #DADCD8}
+.hero .htiles > div{min-width:0;padding:2px 10px;border-left:1px solid #DADCD8}
+.hero .htiles > div:first-child{border-left:0;padding-left:2px}
+.hero .htiles .l,.hero .htiles .u{color:var(--lightmuted)}
+.hero .htiles b{color:var(--lightink)}
+.hero .htiles > div:nth-child(3) b{color:#2B7BC4}.hero .htiles > div:nth-child(4) b{color:#C26A1E}
+.tpanel .cams,#sec-cams .cams{margin-top:10px;padding:16px;border:0;border-radius:24px;background:var(--panel)}
+#sec-boa{background:transparent;padding:0;margin-top:0;overflow:visible}
+#sec-boa .adesso{background:transparent;border-radius:0}
+#sec-boa .buoy{padding:0}
+#sec-boa .adesso{margin-top:6px}
+#sec-boa .bxh:first-child,#sec-boa .buoy .bxh:first-child{margin-top:12px}
 </style>
 </head>
 <body>
@@ -2402,7 +2422,7 @@ function detailTop(sp, ev, backTo, fol, isFav){
    ${ev ? `<div class="hrd"><p class="hl" style="color:${G.swellT}"><i style="background:${G.swell}"></i>ONDE</p><p class="hv">${ev.face.toFixed(1)}m · ${Math.round(ev.T)}s</p><p class="hs">da ${cardinal(ev.dir)}, ${Math.round(ev.dir)}°</p></div>
    <div class="hrd"><p class="hl" style="color:${G.windT}"><i style="background:${G.wind}"></i>VENTO</p><p class="hv">${ev.ws < 3 ? 'quasi assente' : `${Math.round(ev.ws)}km/h`}</p>${ev.ws < 3 ? '' : `<p class="hs">da ${cardinal(ev.wd)}</p>`}</div>` : '<p class="small" style="color:var(--lightmuted)">Nessun dato per ora.</p>'}
   </div></section>`;
- return top + head + hero + (ev ? factorsHtml(sp, ev) : '');
+ return top + head + hero;
 }
 
 // finestra migliore: le ore consecutive in cui il punteggio è vicino al massimo del giorno
@@ -2637,39 +2657,23 @@ function openDetail(id){
     <p class="small muted" style="margin-top:6px">Un solo anello: gli archi dicono dove va bene, i marker dove sono adesso onde e vento. Il nord è in alto.</p>
     ${dirSheetHtml(sp, ev)}
    </div></div>
-  <nav class="dnav" id="dnav" aria-label="Sezioni della pagina">
-   <button class="t-now" data-jump="sec-now" aria-current="true">Adesso</button><button class="t-wx" data-jump="sec-wx">Meteo</button><button class="t-tide" data-jump="sec-tide">Marea</button><button class="t-week" data-jump="sec-week">Settimana</button><button class="t-season" data-jump="sec-season">Stagioni</button></nav>
+  <nav class="dtabs" id="dtabs" role="tablist" aria-label="Sezioni dello spot">
+   <button role="tab" data-tab-d="now" aria-selected="true">Adesso</button><button role="tab" data-tab-d="boa" aria-selected="false">Boa</button><button role="tab" data-tab-d="week" aria-selected="false">Settimana</button><button role="tab" data-tab-d="info" aria-selected="false">Info</button></nav>
 
-  <section class="dsec t-now" id="sec-now">
-   ${MOTIF.now}
-   ${secHead(SEC_ICONS.now, 'Adesso', 'Onde, swell e vento in questo momento')}
-   <div class="adesso"><div class="tiles">
-    <div><span class="l">A riva</span><b>${ev ? ev.face.toFixed(1) : '–'}</b><span class="u">metri</span></div>
-    <div><span class="l">Al largo</span><b>${ev ? ev.hs.toFixed(1) : '–'}</b><span class="u">metri</span></div>
-    <div><span class="l">Acqua</span><b id="adAcqua">–</b><span class="u">gradi</span></div>
-    <div><span class="l">Raffiche</span><b id="adRaff">–</b><span class="u">km/h</span></div></div>
+  <section class="dsec t-now tpanel" id="sec-now" data-panel="now">
+   <div class="adesso">
    ${ev ? `<div class="ablock">${periodCell(sp, ev.T)}</div>` : ''}
    ${windowHtml(sp)}
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
-   ${ev ? boardHtml(sp, ev) : ''}
-   <div id="buoyBox" data-spot="${sp.id}"></div><div id="agreeBox"></div></div>
-   ${camsHtml(sp)}
+   ${ev ? boardHtml(sp, ev) : ''}</div>
    <button class="pillbtn logbtn" id="logOpen"><span>Registra una sessione</span></button>
   </section>
 
-  <h2 class="dettagli">Dettagli</h2>
-  <section class="dsec t-wx" id="sec-wx">
-   <span id="wxMotif">${MOTIF.wx}</span>
-   ${secToggle('wx', 'Meteo', 'Cielo, acqua e prossime ore sullo spot', '<span>…</span>', 'Carico…')}
-   <div id="body-wx" hidden><div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div></div>
+  <section class="dsec t-now tpanel" id="sec-boa" data-panel="boa" hidden>
+   <div class="adesso"><div id="buoyBox" data-spot="${sp.id}"></div><div id="agreeBox"></div></div>
   </section>
 
-  <section class="dsec t-tide" id="sec-tide">
-   ${MOTIF.tide}
-   ${secToggle('tide', 'Marea', 'Alte e basse di oggi', '<span>…</span>', 'Carico…')}
-   <div id="body-tide" hidden><div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div></div>
-  </section>
-
+  <div class="tpanel" data-panel="week" hidden>
   <section class="dsec t-week${best && best.best.score >= 2.5 ? ' good' : ''}" id="sec-week" style="--goodbg:color-mix(in srgb, ${tone(best?.best.score)[0]} 32%, #fff)">
    ${MOTIF.week}
    ${secToggle('week', 'Settimana', 'Previsione dei prossimi 7 giorni: onda a riva alle 8, 11, 14 e 17', weekSummary(best), weekInfo(days))}
@@ -2687,11 +2691,29 @@ function openDetail(id){
    <div id="body-season" hidden><div id="seasonBox" data-spot="${sp.id}">${seasonHtml(sp)}</div></div>
   </section>
 
+  </div>
+
+  <div class="tpanel" data-panel="info" hidden>
+  <section class="dsec t-wx" id="sec-wx">
+   <span id="wxMotif">${MOTIF.wx}</span>
+   ${secToggle('wx', 'Meteo', 'Cielo, acqua e prossime ore sullo spot', '<span>…</span>', 'Carico…')}
+   <div id="body-wx" hidden><div id="extraWx" data-spot="${sp.id}"><p class="small muted">Carico il meteo…</p></div></div>
+  </section>
+
+  <section class="dsec t-tide" id="sec-tide">
+   ${MOTIF.tide}
+   ${secToggle('tide', 'Marea', 'Alte e basse di oggi', '<span>…</span>', 'Carico…')}
+   <div id="body-tide" hidden><div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div></div>
+  </section>
+
+   <div id="sec-cams">${camsHtml(sp)}</div>
   <section class="dsec t-cal" id="sec-cal">
    ${MOTIF.cal}
    ${secToggle('cal', 'Taratura', 'Le tue sessioni confrontate con le previsioni', calSummary(sp), calInfo(sp))}
    <div id="body-cal" hidden><div id="calBox">${calHtml(sp)}</div></div>
   </section>
+
+  </div>
 
   <div class="dfoot"${custom ? '' : ' hidden'}>
   ${custom ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${!Cloud.user ? '' : Cloud.admin ? '<button class="pillbtn primary" id="pubSpot" style="width:auto">Pubblica come spot ufficiale</button>' : sp.visibility === 'proposed' ? '<span class="small muted" style="align-self:center">Proposto alla community: in attesa di approvazione</span>' : '<button class="pillbtn primary" id="propSpot" style="width:auto">Proponi alla community</button>'}<button class="pillbtn" id="editSpot">Modifica</button><button class="pillbtn" id="delSpot">Elimina spot</button>
@@ -2699,6 +2721,7 @@ function openDetail(id){
   <p class="xs muted" id="copyMsg" style="margin-top:8px">${Cloud.user ? 'Lo spot è personale: lo vedi solo tu, su tutti i tuoi dispositivi.' : 'Entra con l\'account (Profilo › Account) per salvarlo online e poterlo condividere.'}</p>` : ''}
   </div>`;
  showView('detail');
+ mountTiles(ev);
  initDetailNav();
  loadExtra(sp);
  bindSeason(sp);
@@ -3526,31 +3549,37 @@ async function loadAgreement(sp){
  }catch(e){}
 }
 
+const TAB_OF = {wx:'info', tide:'info', cal:'info', week:'week', season:'week'};
+let detailTab = 'now';
+function showDetailTab(name, keepScroll){
+ detailTab = name;
+ document.querySelectorAll('#v-detail .tpanel').forEach(p => p.hidden = p.dataset.panel !== name);
+ document.querySelectorAll('#dtabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tabD === name));
+ if (!keepScroll){ const t = document.getElementById('dtabs'); const top = t ? t.getBoundingClientRect().top + scrollY : 0; const hero = document.querySelector('#v-detail .hero'); if (scrollY > (hero ? hero.getBoundingClientRect().bottom + scrollY - 60 : 0)) scrollTo({top: Math.max(0, top - 4), behavior:'auto'}); }
+}
+function mountTiles(ev){
+ const hero = document.querySelector('#v-detail .hero'); if (!hero) return;
+ const d = document.createElement('div'); d.className = 'tiles htiles';
+ d.innerHTML = `<div><span class="l">A riva</span><b>${ev ? ev.face.toFixed(1) : '–'}</b><span class="u">metri</span></div>
+  <div><span class="l">Al largo</span><b>${ev ? ev.hs.toFixed(1) : '–'}</b><span class="u">metri</span></div>
+  <div><span class="l">Acqua</span><b id="adAcqua">–</b><span class="u">gradi</span></div>
+  <div><span class="l">Raffiche</span><b id="adRaff">–</b><span class="u">km/h</span></div>`;
+ hero.appendChild(d);
+}
 function openSection(key, open){
  const sec = document.getElementById('sec-' + key); if (!sec) return;
+ if (TAB_OF[key] && open !== false) showDetailTab(TAB_OF[key], true);
  const btn = sec.querySelector('[data-toggle]'), body = document.getElementById('body-' + key);
  if (!btn || !body) return;
  const on = open ?? btn.getAttribute('aria-expanded') !== 'true';
  btn.setAttribute('aria-expanded', on); body.hidden = !on; sec.classList.toggle('open', on);
 }
-let secObserver = null;
 function initDetailNav(){
- const nav = document.getElementById('dnav'); if (!nav) return;
- const mark = id => nav.querySelectorAll('button').forEach(b => b.setAttribute('aria-current', b.dataset.jump === id));
  document.querySelectorAll('#v-detail [data-toggle]').forEach(t => t.onclick = () => openSection(t.dataset.toggle));
- nav.onclick = e => {
-  const b = e.target.closest('[data-jump]'); if (!b) return;
-  mark(b.dataset.jump);
-  openSection(b.dataset.jump.replace('sec-',''), true);
-  document.getElementById(b.dataset.jump).scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'});
- };
- if (secObserver) secObserver.disconnect();
- if (!('IntersectionObserver' in window)) return;
- secObserver = new IntersectionObserver(entries => {
-  const vis = entries.filter(x=>x.isIntersecting).sort((a,b)=>a.boundingClientRect.top - b.boundingClientRect.top)[0];
-  if (vis) mark(vis.target.id);
- }, {rootMargin:'-80px 0px -55% 0px'});
- document.querySelectorAll('#v-detail .dsec').forEach(sec => secObserver.observe(sec));
+ const tabs = document.getElementById('dtabs'); if (!tabs) return;
+ tabs.onclick = e => { const b = e.target.closest('[data-tab-d]'); if (b) showDetailTab(b.dataset.tabD); };
+ openSection('season', true); openSection('week', true);
+ showDetailTab('now', true);
 }
 
 // colore del testo per ogni livello, leggibile su fondo chiaro
