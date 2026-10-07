@@ -24,7 +24,9 @@ I file marcati *generato* li scrivono le automazioni: non vanno modificati a man
 
 | File | Tipo | Contenuto |
 | --- | --- | --- |
-| `index.html` | App | Interfaccia, calcoli, mappa, accesso e sincronizzazione |
+| `index.html` | App | Struttura della pagina |
+| `app.js` | App | Calcoli, mappa, accesso e sincronizzazione; va caricato insieme a `index.html` |
+| `styles.css` | App | Aspetto dell'app (colori, caratteri, layout); va caricato insieme a `index.html` |
 | `spots.json` | Dati di riserva | Spot ufficiali di partenza, usati se il database non risponde |
 | `apple-touch-icon.png` | Immagine | Icona dell'app sulla Home (180×180) |
 | `manifest.webmanifest`, `sw.js` | App | Descrizione dell'app per l'installazione su Android (nome, colori, icone, schermo intero); `sw.js` è un service worker minimo che non salva nulla |
@@ -75,7 +77,7 @@ Nell'app c'è solo la chiave pubblica di Supabase (`sb_publishable_…`), protet
 3. **Settings › Actions › General**: Workflow permissions su Read and write.
 4. Aggiungi i segreti elencati sopra.
 5. Su Supabase crea un progetto Free (Central EU) ed esegui `supabase_schema.sql` nel SQL Editor.
-6. Se il progetto Supabase è nuovo, aggiorna indirizzo e chiave pubblica in `index.html` (`SUPA_URL`, `SUPA_KEY`) e in `alert_telegram.py` (`SUPABASE_URL`, `SUPABASE_KEY`).
+6. Se il progetto Supabase è nuovo, aggiorna indirizzo e chiave pubblica in `app.js` (`SUPA_URL`, `SUPA_KEY`) e in `alert_telegram.py` (`SUPABASE_URL`, `SUPABASE_KEY`).
 7. Supabase › Authentication › URL Configuration: Site URL e Redirect URL con l'indirizzo dell'app (`…/waves/` e `…/waves/**`).
 8. Brevo: verifica il mittente e genera una chiave SMTP; in Supabase attiva il custom SMTP (`smtp-relay.brevo.com`, porta 587) e usa `{{ .Token }}` nei modelli "Magic Link" e "Confirm sign up".
 9. Telegram, alert per utente: esegui `aggiorna_telegram.sql` in Supabase. Poi Edge Functions › crea `telegram-webhook` incollando `supabase/functions/telegram-webhook/index.ts`, disattiva "Verify JWT" e imposta i segreti `TELEGRAM_BOT_TOKEN` e `TELEGRAM_WEBHOOK_SECRET` (una parola d'ordine a caso). Apri una volta nel browser `https://<progetto>.supabase.co/functions/v1/telegram-webhook?setup=<parola d'ordine>`: registra il webhook e salva il nome del bot. Su GitHub aggiungi il segreto `SUPABASE_SERVICE_KEY`.
