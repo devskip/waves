@@ -672,7 +672,7 @@ a{color:var(--amber)}
 .sheet-bg{background:rgba(0,0,0,.62)}
 .sheet-p{background:var(--panel);border-radius:28px 28px 0 0}
 .sheet-x{background:var(--panel2);border:0;color:var(--ink)}
-.toast{background:var(--light);color:var(--lightink);bottom:calc(112px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 24px rgba(0,0,0,.5);font-family:var(--grot)}
+.toast{width:max-content;background:var(--light);color:var(--lightink);bottom:calc(112px + env(safe-area-inset-bottom,0px));box-shadow:0 8px 24px rgba(0,0,0,.5);font-family:var(--grot)}
 .ava{background:var(--light);color:var(--lightink);font-family:var(--grot)}
 .err{color:#E8A094}
 .form input,.form select,.form textarea,.field{background:var(--panel2);border-color:#444;color:var(--ink)}
