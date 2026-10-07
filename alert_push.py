@@ -16,6 +16,7 @@ Prova senza inviare:   python3 alert_push.py --prova
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime
@@ -57,10 +58,19 @@ def ang_diff(a, b):
 
 
 def get_json(url, params):
+    """Open-Meteo a volte non risponde subito (soprattutto dopo lo script Telegram): riprovo con attese crescenti."""
     q = urllib.parse.urlencode(params)
-    with urllib.request.urlopen(f"{url}?{q}", timeout=30) as r:
-        data = json.load(r)
-    return data if isinstance(data, list) else [data]
+    attese = [20, 45, 90]
+    for tentativo in range(len(attese) + 1):
+        try:
+            with urllib.request.urlopen(f"{url}?{q}", timeout=30) as r:
+                data = json.load(r)
+            return data if isinstance(data, list) else [data]
+        except Exception as ex:
+            if tentativo == len(attese):
+                raise
+            print(f"Open-Meteo non risponde ({ex}), riprovo tra {attese[tentativo]} s")
+            time.sleep(attese[tentativo])
 
 
 def evaluate(spot, s, i):
