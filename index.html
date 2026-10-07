@@ -1041,25 +1041,28 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .hero .hdial .info{left:14px;right:auto;top:auto;bottom:14px}
 /* boa e modelli, come in tavola */
 .bxh{margin:22px 0 0;font:700 18px/1.2 var(--mono);color:var(--ink)}
-.bxcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
-.bxc{box-sizing:border-box;padding:16px 14px;border-radius:26px;background:#1E1E1E;border:2px solid #4F7A33;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
-.bxc:not(.bxb){border:2px dashed #6A4A4A}
-.bxpill{padding:5px 14px;border-radius:16px;background:#26331F;color:#9FD18B;border:1px solid #4F7A33;font:700 13px var(--mono)}
-.bxpill.bxm{background:#3A2A2A;color:#E8A094;border:1px dashed #8A5A5A}
-.bxn{margin-top:16px;font:700 42px/1 var(--grot);color:var(--ink)}
-.bxn small{font:400 14px var(--mono);color:var(--muted)}
-.bxbar{width:100%;height:10px;margin-top:16px;border-radius:5px;background:#333;overflow:hidden}
+.bxcard{padding:16px;border-radius:24px;background:#232323}
+.bxtop{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bxtop b{font:700 15px var(--mono);color:var(--ink)}
+.bxpill2{font:700 11px var(--grot);font-style:normal;padding:4px 10px;border-radius:12px;background:#26331F;color:#9FD18B}
+.bxcols{margin-top:6px}
+.bxrw{display:flex;align-items:center;gap:12px;margin-top:12px}
+.bxl{flex:0 0 62px;font-size:12px;color:var(--muted)}
+.bxv{flex:0 0 54px;text-align:right;font:700 18px/1.1 var(--grot);color:var(--ink)}
+.bxv small{margin-left:1px;font:400 11px var(--mono);color:var(--muted)}
+.bxbar{flex:1;height:10px;border-radius:5px;background:#333;overflow:hidden}
 .bxbar i{display:block;height:10px;border-radius:5px}
-.bxc p{margin:12px 0 0;font-size:11px;line-height:1.4;color:var(--muted)}
-.bxban{display:flex;align-items:center;gap:14px;margin-top:12px;padding:14px 18px;border-radius:24px;background:#1F2A1D;border:1.5px solid #3E5A2C}
-.bxban b{font:700 28px/1.1 var(--grot);color:#9FD18B;white-space:nowrap}
-.bxban p{margin:0;font-size:12px;line-height:1.5;color:var(--muted)}
+.bxcard svg{width:100%;height:44px;display:block;margin-top:14px}
+.bxsrc{margin:12px 0 0;font-size:11px;line-height:1.5;color:var(--muted)}
+.bxfix{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #404040;font-size:11.5px;color:var(--muted)}
+.bxfix b{color:var(--ink)}
+.bxsm{flex-shrink:0;height:32px;padding:0 12px;border:1px solid #4A4A4A;border-radius:16px;background:transparent;color:var(--ink);font:600 12px var(--grot)}
 .bxsec{margin-top:12px;padding:16px;border-radius:24px;background:#232323}
 .bxhead{display:flex;align-items:center;justify-content:space-between;gap:8px;font:700 14px var(--mono);color:var(--ink)}
 .bxhead em{font:700 11px var(--grot);font-style:normal;padding:3px 10px;border-radius:12px;background:#3E3224;color:#F0A22E}
 .bxsec svg{width:100%;height:80px;display:block;margin-top:12px}
-.bxlg{display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted)}
-.bxlg span{display:inline-flex;align-items:center;gap:6px}.bxlg i{display:block;width:10px;height:10px;border-radius:5px}
+.bxlg{display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--muted)}
+.bxlg span{display:inline-flex;align-items:center;gap:6px}.bxlg i{display:block;width:10px;height:10px;border-radius:5px}.bxlg .bxwin{margin-left:auto}
 .bxrow{display:flex;gap:14px;margin-top:16px}.bxrow:first-child{margin-top:0}
 .bxi{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .bxrow b{font-size:14px;color:var(--ink)}.bxrow p{margin:3px 0 0;font-size:12px;line-height:1.55;color:var(--muted)}
@@ -1067,11 +1070,11 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .adesso .buoy{padding:16px 16px 4px;background:#171717}
 .bxm2{display:none}
 /* Home: onde in arrivo a schede, spot non attivi in accordion */
-.bnr{margin-top:18px}
+.bnr{margin-top:0}
 .bnr .bhd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
 .bnr .k{font:700 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
 .bnr .lnk{border:0;background:transparent;padding:6px 0 6px 8px;font:700 12px var(--mono);color:var(--amber)}
-.bsl{display:flex;gap:10px;margin:0 -20px;padding:0 20px;scroll-padding:0 20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.bsl{display:flex;gap:10px;margin:0 -20px;padding:0 20px;scroll-padding:0 20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .bsl::-webkit-scrollbar{display:none}
 .bcrd{flex:0 0 236px;box-sizing:border-box;scroll-snap-align:start;padding:16px;border-radius:26px;background:#2A2A2A;border:1px solid #4A3A28;color:var(--ink);text-align:left;display:flex;flex-direction:column}
 .bcrd .bt{display:flex;justify-content:space-between;align-items:center}
@@ -1097,10 +1100,13 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .offacc .mini{background:#2E2E2E;border-color:#2E2E2E}
 
 /* dettaglio a schede */
-.dtabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:14px -20px 0;padding:8px 20px;background:var(--bg)}
+.dtabsph{margin:14px -20px 0}
+.dtabs{z-index:30;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:8px 20px;background:var(--bg)}
+.dtabs.stuck{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);max-width:560px;margin:0 auto;box-sizing:border-box}
 .dtabs button{min-height:40px;border:0;border-radius:20px;background:#2B2B2B;color:var(--muted);font:600 14px var(--grot)}
 .dtabs button[aria-selected="true"]{background:var(--amber);color:#171717}
 .tpanel[hidden]{display:none}
+.tpanel{padding-top:4px}
 .tpanel > .dsec:first-child{margin-top:10px}
 .hero{flex-wrap:wrap}
 .hero .htiles{flex:0 0 100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:12px 0 0;border-top:1px solid #DADCD8}
@@ -1112,8 +1118,8 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .tpanel .cams,#sec-cams .cams{margin-top:10px;padding:16px;border:0;border-radius:24px;background:var(--panel)}
 #sec-boa{background:transparent;padding:0;margin-top:0;overflow:visible}
 #sec-boa .adesso{background:transparent;border-radius:0}
-#sec-boa .buoy{padding:0}
-#sec-boa .adesso{margin-top:6px}
+#sec-boa .buoy{padding:0;background:transparent;border:0}
+#sec-boa .adesso{margin-top:10px}
 #sec-boa .bxh:first-child,#sec-boa .buoy .bxh:first-child{margin-top:12px}
 </style>
 </head>
@@ -1675,9 +1681,9 @@ function renderSpot(){
     <b class="bn">${esc(h.sp.name)}</b><span class="bh">${h.d.maxFace.toFixed(1)}m<small> · ${Math.round(e.T)}s</small></span>
     <span class="bl"><i style="background:var(--blue)"></i><span>swell da ${cardinal(e.dir)}</span><i style="background:#EC8D2C"></i><span>${wind} <em style="color:${tf};background:${tb}">${e.windType}</em></span></span></button>`; };
   b.hidden = false;
-  b.innerHTML = `<div class="bhd"><span class="k">Onde in arrivo</span><button class="lnk" data-tab="alert">Vedi tutti →</button></div><div class="bsl" id="bsl">${hits.map(card).join('')}</div>${hits.length > 1 ? `<div class="bdots" id="bdots">${hits.map((_,i)=>`<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : ''}`;
+  b.innerHTML = `<div class="lhead"><h2>Onde in arrivo</h2><button class="linkbtn" data-tab="alert">Vedi tutti →</button></div><div class="bsl" id="bsl">${hits.map(card).join('')}</div>${hits.length > 1 ? `<div class="bdots" id="bdots">${hits.map((_,i)=>`<i${i ? '' : ' class="on"'}></i>`).join('')}</div>` : ''}`;
   const sl = document.getElementById('bsl');
-  if (sl && hits.length > 1) sl.addEventListener('scroll', () => { const w = sl.firstElementChild.offsetWidth + 10, i = Math.min(hits.length-1, Math.round(sl.scrollLeft / w)); document.querySelectorAll('#bdots i').forEach((d,k) => d.classList.toggle('on', k === i)); }, {passive:true});
+  if (sl && hits.length > 1) sl.addEventListener('scroll', () => { const w = sl.firstElementChild.offsetWidth + 10, end = sl.scrollLeft + sl.clientWidth >= sl.scrollWidth - 4, i = end ? hits.length-1 : Math.min(hits.length-1, Math.round(sl.scrollLeft / w)); document.querySelectorAll('#bdots i').forEach((d,k) => d.classList.toggle('on', k === i)); }, {passive:true});
  } else b.hidden = true;
 }
 // ---------- Spot pubblici da OpenStreetMap ----------
@@ -2657,8 +2663,8 @@ function openDetail(id){
     <p class="small muted" style="margin-top:6px">Un solo anello: gli archi dicono dove va bene, i marker dove sono adesso onde e vento. Il nord è in alto.</p>
     ${dirSheetHtml(sp, ev)}
    </div></div>
-  <nav class="dtabs" id="dtabs" role="tablist" aria-label="Sezioni dello spot">
-   <button role="tab" data-tab-d="now" aria-selected="true">Adesso</button><button role="tab" data-tab-d="boa" aria-selected="false">Boa</button><button role="tab" data-tab-d="week" aria-selected="false">Settimana</button><button role="tab" data-tab-d="info" aria-selected="false">Info</button></nav>
+  <div class="dtabsph" id="dtabsph"><nav class="dtabs" id="dtabs" role="tablist" aria-label="Sezioni dello spot">
+   <button role="tab" data-tab-d="now" aria-selected="true">Adesso</button><button role="tab" data-tab-d="boa" aria-selected="false">Boa</button><button role="tab" data-tab-d="week" aria-selected="false">Settimana</button><button role="tab" data-tab-d="info" aria-selected="false">Info</button></nav></div>
 
   <section class="dsec t-now tpanel" id="sec-now" data-panel="now">
    <div class="adesso">
@@ -3412,17 +3418,14 @@ async function renderBuoy(sp){
  const name = bu.name ? bu.name : (bu.km != null && Math.abs(bu.lat - 40.55) < 0.6 && bu.lon < 8.6 ? 'Boa di Alghero' : 'Boa ondametrica ' + bu.id);
  const L = bu.last;
  const boaTxt = `${(+L.hs).toFixed(1)}m${L.tp ? `, ${Math.round(L.tp)}s` : ''}${L.dir != null && L.dir !== '' ? ` da ${cardinal(+L.dir)}` : ''}`;
- // la correzione e la boa di riferimento, in fondo
  const fixOn = !!(buoyFix && buoyFix.applied && data[sp.id]?.hsRaw), pct = buoyFix ? Math.round((buoyFix.ratio - 1) * 100) : 0;
- const ico = (c, bg, d) => `<div class="bxi" style="background:${bg};color:${c}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg></div>`;
- const fixItem = buoyFix ? `<div class="bxrow">${ico('#9FD18B', '#26331F', '<path d="M5 12l5 5 9-10"/>')}<div><b>${fixOn ? 'Previsione corretta' : 'Nessuna correzione'}</b><p>${fixOn
-   ? `Nelle ultime ${buoyFix.n} ore il modello ha ${pct > 0 ? 'sottostimato' : 'sovrastimato'} l'onda del ${Math.abs(pct)}%: qui è ${pct > 0 ? 'alzata' : 'abbassata'}, e la correzione sfuma in 2 giorni.`
-   : 'Il modello è in linea con le misure della boa.'}</p></div></div>` : '';
- const refItem = `<div class="bxrow">${ico('#3DA5F5', '#243442', '<circle cx="12" cy="7" r="3"/><path d="M12 10v6"/><path d="M3 19c2.5-2 5-2 9 0s6.5 2 9 0"/>')}<div><b>Boa di riferimento</b><p>${esc(name)}, a ${Math.round(bu.d)}km verso ${cardinal(bearing(beach(sp), bu))}. Onda misurata al largo, prima che arrivi alla costa.${newer ? ` Più recente: ${esc(newer.name || 'boa ' + newer.id)}, a ${Math.round(newer.d)}km: ${(+newer.last.hs).toFixed(1)}m, ${ago(newer.last.time)}.` : ''}</p></div></div>`;
- const tail = `<h3 class="bxh">Come correggiamo</h3><section class="bxsec">${fixItem}${refItem}${buoyFix ? `<button class="bxbtn" id="fixToggle">${store.get('surf.buoyfix', true) ? 'Disattiva la correzione' : 'Attiva la correzione'}</button>` : ''}</section>`;
+ const src = `${esc(name)} · ${Math.round(bu.d)}km verso ${cardinal(bearing(beach(sp), bu))} · misurata ${ago(L.time)}${newer ? `. Più recente: ${esc(newer.name || 'boa ' + newer.id)}, ${Math.round(newer.d)}km` : ''}`;
+ const fixCard = buoyFix ? `<div class="bxfix"><span><b>${fixOn ? `Corretta ${pct > 0 ? '+' : '−'}${Math.abs(pct)}%` : 'Nessuna correzione'}</b> · ${fixOn ? 'sfuma in 2 giorni' : 'modello in linea con la boa'}</span><button class="bxsm" id="fixToggle">${store.get('surf.buoyfix', true) ? 'Disattiva' : 'Attiva'}</button></div>` : '';
  const bindFix = () => { const t = document.getElementById('fixToggle');
   if (t) t.onclick = async ()=>{ store.set('surf.buoyfix', !store.get('surf.buoyfix', true)); Object.values(data).forEach(s=>{ if (s.hsRaw){ s.hs = s.hsRaw; s.sh = s.shRaw; delete s.hsRaw; delete s.shRaw; } }); await applyBuoyFix(); openDetail(sp.id); renderAll(); }; };
- box.innerHTML = `<div class="buoy"><h3 class="bxh" style="margin-top:0">Boa e modelli</h3><div id="buoyCmp"><div class="bxcards"><div class="bxc"><span class="bxpill bxm">Modello</span><b class="bxn">…</b><p>previsto qui, ora</p></div><div class="bxc bxb"><span class="bxpill">Boa</span><b class="bxn">${(+L.hs).toFixed(1)}<small> m</small></b><p>${boaTxt}, misurato ${ago(L.time)}</p></div></div></div>${tail}</div>`;
+ const col = (cls, lab, v, w, color) => `<div class="bxrw"><span class="bxl">${lab}</span><div class="bxbar"><i style="width:${w ?? 10}%;background:${color}"></i></div><b class="bxv">${v.toFixed(1)}<small>m</small></b></div>`;
+ const card = (head, cols, chart) => `<section class="bxcard"><div class="bxtop"><b>Boa e modelli</b>${head}</div><div class="bxcols">${cols}</div>${chart}${fixCard}<p class="bxsrc">${src}</p></section>`;
+ box.innerHTML = `<div class="buoy" id="buoyCmp">${card('', col('bxb', 'Boa', +L.hs, null, '#6AA53F'), '')}</div>`;
  bindFix();
  // confronto con il modello nello stesso punto e nelle stesse ore
  try{
@@ -3436,25 +3439,25 @@ async function renderBuoy(sp){
   const pts = bu.series.map(x => ({t:x.t, obs:x.hs, mod: mi.get(x.t.slice(0,13))})).filter(x => x.mod != null);
   const cmp = document.getElementById('buoyCmp'); if (!cmp) return;
   const nowMod = mi.get(L.time.slice(0,13));
-  if (!pts.length || nowMod == null){ cmp.innerHTML = `<div class="bxcards"><div class="bxc bxb" style="grid-column:1/-1"><span class="bxpill">Boa</span><b class="bxn">${(+L.hs).toFixed(1)}<small> m</small></b><p>${boaTxt}, misurato ${ago(L.time)}</p></div></div>`; return; }
+  if (!pts.length || nowMod == null) return;
   const diff = Math.round((L.hs / Math.max(nowMod, .05) - 1) * 100);
-  const mean = pts.reduce((a,x)=>a + x.obs/Math.max(x.mod,.05), 0)/pts.length, md = Math.round((mean-1)*100);
-  const W = 300, Hh = 80, mx = Math.max(.5, ...pts.map(x=>Math.max(x.obs, x.mod)))*1.1;
-  const X = i => (i/(pts.length-1 || 1))*W, Y = v => Hh - v/mx*Hh;
-  const line = k => pts.map((x,i)=>`${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(x[k]).toFixed(1)}`).join(' ');
   const sc = Math.max(nowMod, +L.hs, .3)*1.2, w = v => Math.max(3, Math.round(v/sc*100));
   const sgn = diff > 0 ? '+' : diff < 0 ? '−' : '';
-  const verdict = Math.abs(diff) < 10 ? 'il modello ci ha preso' : diff > 0 ? 'il mare è più grosso del previsto' + (fixOn ? ': alziamo la previsione' : '') : 'il mare è più piccolo del previsto' + (fixOn ? ': abbassiamo la previsione' : '');
-  cmp.innerHTML = `<div class="bxcards">
-    <div class="bxc"><span class="bxpill bxm">Modello</span><b class="bxn">${nowMod.toFixed(1)}<small> m</small></b><div class="bxbar"><i style="width:${w(nowMod)}%;background:#E8A094"></i></div><p>previsto qui, ora</p></div>
-    <div class="bxc bxb"><span class="bxpill">Boa</span><b class="bxn">${(+L.hs).toFixed(1)}<small> m</small></b><div class="bxbar"><i style="width:${w(+L.hs)}%;background:#6AA53F"></i></div><p>${boaTxt}, misurato ${ago(L.time)}</p></div></div>
-   <section class="bxban"><b>${sgn}${Math.abs(diff)}%</b><p>${verdict}</p></section>
-   <section class="bxsec"><div class="bxhead"><span>Ultime ${pts.length} ore</span>${pts.length >= 12 ? `<em>${Math.abs(md) < 10 ? 'modello e boa coincidono' : `boa ${md > 0 ? '+' : '−'}${Math.abs(md)}% in media`}</em>` : ''}</div>
-    <svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Onda misurata dalla boa e prevista dal modello nelle ultime ore">
+  const verdict = Math.abs(diff) < 10 ? 'modello e boa coincidono' : `${sgn}${Math.abs(diff)}%${fixOn ? (diff > 0 ? ': alziamo la previsione' : ': abbassiamo la previsione') : (diff > 0 ? ' più grosso del previsto' : ' più piccolo del previsto')}`;
+  const head = `<em class="bxpill2">${verdict}</em>`;
+  let chart = '';
+  if (pts.length >= 4){
+   const W = 300, Hh = 44, mx = Math.max(.5, ...pts.map(x=>Math.max(x.obs, x.mod)))*1.1;
+   const X = i => (i/(pts.length-1 || 1))*W, Y = v => Hh - v/mx*Hh;
+   const line = k => pts.map((x,i)=>`${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(x[k]).toFixed(1)}`).join(' ');
+   chart = `<svg viewBox="0 0 ${W} ${Hh}" preserveAspectRatio="none" role="img" aria-label="Onda misurata dalla boa e prevista dal modello nelle ultime ${pts.length} ore">
      <path d="${line('mod')}" fill="none" stroke="#B9B9B3" stroke-width="2" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
      <path d="${line('obs')}" fill="none" stroke="#6AA53F" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
-    <div class="bxlg"><span><i style="background:#6AA53F"></i>Boa</span><span><i style="background:#B9B9B3"></i>Modello</span></div></section>`;
- }catch(e){ const cmp = document.getElementById('buoyCmp'); if (cmp && !cmp.querySelector('.bxban')) { /* resta il solo dato della boa */ } }
+    <div class="bxlg"><span><i style="background:#6AA53F"></i>Boa</span><span><i style="background:#B9B9B3"></i>Modello</span><span class="bxwin">ultime ${pts.length} ore</span></div>`;
+  }
+  cmp.innerHTML = card(head, col('', 'Modello', nowMod, w(nowMod), '#E8A094') + col('bxb', 'Boa', +L.hs, w(+L.hs), '#6AA53F'), chart);
+  bindFix();
+ }catch(e){ /* resta il solo dato della boa */ }
 }
 
 // ---------- Correzione delle previsioni con la boa ----------
@@ -3550,12 +3553,13 @@ async function loadAgreement(sp){
 }
 
 const TAB_OF = {wx:'info', tide:'info', cal:'info', week:'week', season:'week'};
-let detailTab = 'now';
+let detailTab = 'now', tabsScroll = null, _sat = null;
+function safeTop(){ if (_sat == null){ const d = document.createElement('div'); d.style.cssText = 'position:fixed;top:0;visibility:hidden;padding-top:env(safe-area-inset-top,0px)'; document.body.appendChild(d); _sat = d.offsetHeight; d.remove(); } return _sat; }
 function showDetailTab(name, keepScroll){
  detailTab = name;
  document.querySelectorAll('#v-detail .tpanel').forEach(p => p.hidden = p.dataset.panel !== name);
  document.querySelectorAll('#dtabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tabD === name));
- if (!keepScroll){ const t = document.getElementById('dtabs'); const top = t ? t.getBoundingClientRect().top + scrollY : 0; const hero = document.querySelector('#v-detail .hero'); if (scrollY > (hero ? hero.getBoundingClientRect().bottom + scrollY - 60 : 0)) scrollTo({top: Math.max(0, top - 4), behavior:'auto'}); }
+ if (!keepScroll){ const t = document.getElementById('dtabsph'); const top = t ? t.getBoundingClientRect().top + scrollY : 0; const hero = document.querySelector('#v-detail .hero'); if (scrollY > (hero ? hero.getBoundingClientRect().bottom + scrollY - 60 : 0)) scrollTo({top: Math.max(0, top - 4), behavior:'auto'}); }
 }
 function mountTiles(ev){
  const hero = document.querySelector('#v-detail .hero'); if (!hero) return;
@@ -3576,7 +3580,11 @@ function openSection(key, open){
 }
 function initDetailNav(){
  document.querySelectorAll('#v-detail [data-toggle]').forEach(t => t.onclick = () => openSection(t.dataset.toggle));
- const tabs = document.getElementById('dtabs'); if (!tabs) return;
+ const tabs = document.getElementById('dtabs'), ph = document.getElementById('dtabsph'); if (!tabs || !ph) return;
+ ph.style.height = tabs.offsetHeight + 'px';
+ if (tabsScroll) removeEventListener('scroll', tabsScroll);
+ tabsScroll = () => { if (!ph.isConnected || ph.offsetParent === null) return; const top = safeTop(); tabs.classList.toggle('stuck', ph.getBoundingClientRect().top <= top); };
+ addEventListener('scroll', tabsScroll, {passive:true}); tabsScroll();
  tabs.onclick = e => { const b = e.target.closest('[data-tab-d]'); if (b) showDetailTab(b.dataset.tabD); };
  openSection('season', true); openSection('week', true);
  showDetailTab('now', true);
@@ -4299,7 +4307,7 @@ function setupPullToRefresh(){
  const blocked = t => {
   const n = t && t.nodeType === 1 ? t : t && t.parentElement;
   return document.body.classList.contains('locked') || document.body.classList.contains('sorting') || !document.getElementById('v-add').hidden
-   || !!(n && n.closest && n.closest('.mapwrap, .leaflet-container, .grip, .hours, .chips, .kmchips, .compass, input, textarea, select'));
+   || !!(n && n.closest && n.closest('.mapwrap, .leaflet-container, .bsl, .grip, .hours, .chips, .kmchips, .compass, input, textarea, select'));
  };
  document.addEventListener('touchstart', e => {
   tracking = false; active = false;
