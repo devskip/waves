@@ -28,7 +28,7 @@ VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT") or "https://github.com/devskip/w
 
 TZ = "Europe/Rome"
 DAY_START, DAY_END = 7, 19          # ore del giorno che contano per il punteggio
-QUIET_FROM, QUIET_TO = 22, 7        # di notte non si disturba: l'avviso parte alla prima esecuzione utile
+QUIET_FROM, QUIET_TO = 25, 0        # di notte non si disturba: l'avviso parte alla prima esecuzione utile
 DAYS_AHEAD = 4
 GIORNI = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
 
