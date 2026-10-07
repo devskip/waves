@@ -131,6 +131,7 @@ def fetch():
             sh=m["swell_wave_height"], sd=m["swell_wave_direction"], sp=m["swell_wave_period"],
             ws=[pick(w["wind_speed_10m"], t) for t in m["time"]],
             wd=[pick(w["wind_direction_10m"], t) for t in m["time"]],
+            wg=[pick(w["wind_gusts_10m"], t) for t in m["time"]],
         )
     return out
 
@@ -160,6 +161,41 @@ def find_hits(data, threshold):
     return hits
 
 
+DEVICE_FILE = ROOT / "device.json"
+
+
+def to_utc(local):
+    """'2026-10-10T05:00' (ora di Roma) -> '2026-10-10T03:00Z'"""
+    dt = datetime.strptime(local, "%Y-%m-%dT%H:%M").replace(tzinfo=ZoneInfo(TZ))
+    return dt.astimezone(ZoneInfo("UTC")).strftime("%Y-%m-%dT%H:%MZ")
+
+
+def build_device(data, threshold):
+    """Scrive device.json, letto dal display tondo (ESP32): stato di adesso + prossima onda buona.
+    Spot scelto con la variabile DEVICE_SPOT (id o nome); se manca, il primo con alert attivo."""
+    want = (os.environ.get("DEVICE_SPOT") or "").strip().lower()
+    spot = next((x for x in SPOTS if want in (x["id"].lower(), x["name"].lower())), SPOTS[0])
+    s = data[spot["id"]]
+    now_key = datetime.now(ZoneInfo(TZ)).strftime("%Y-%m-%dT%H:00")
+    out = dict(updated=datetime.now(ZoneInfo("UTC")).strftime("%Y-%m-%dT%H:%MZ"), spot=spot["name"])
+    nxt = None
+    for i, t in enumerate(s["time"]):
+        if t < now_key:
+            continue
+        ev = evaluate(spot, s, i)
+        if not ev:
+            continue
+        if t == now_key:
+            out["now"] = dict(score=ev["score"], wave=round(ev["face"], 1), period=round(ev["T"]), dir=round(ev["dir"]),
+                              wind=round(ev["ws"]), gust=round(s["wg"][i] or ev["ws"]), windDir=round(s["wd"][i] or 0))
+        elif nxt is None and ev["score"] >= threshold and DAY_START <= int(t[11:13]) <= DAY_END:
+            nxt = dict(id=f"{spot['id']}|{t[:10]}", start=to_utc(t), wave=round(ev["face"], 1), period=round(ev["T"]),
+                       dir=round(ev["dir"]), score=ev["score"])
+    out["next"] = nxt
+    DEVICE_FILE.write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False))
+    return out
+
+
 def send(token, chat_id, text):
     body = urllib.parse.urlencode(dict(chat_id=chat_id, text=text)).encode()
     urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data=body, timeout=30)
@@ -174,7 +210,10 @@ def main():
     threshold = float(os.environ.get("SURF_THRESHOLD") or 3)
     state = json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {}
 
-    hits = find_hits(fetch(), threshold)
+    data = fetch()
+    dev = build_device(data, threshold)
+    print("device.json:", json.dumps(dev, ensure_ascii=False))
+    hits = find_hits(data, threshold)
     lines = []
     for spot, day, ev in hits:
         key = f"{spot['id']}|{day}"
