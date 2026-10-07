@@ -1369,7 +1369,7 @@ function openDetail(id){
     ${dirSheetHtml(sp, ev)}
    </div></div>
   <nav class="dtabs" id="dtabs" role="tablist" aria-label="Sezioni dello spot">
-   <button role="tab" data-tab-d="now" aria-selected="true">Adesso</button><button role="tab" data-tab-d="boa" aria-selected="false">Boa</button><button role="tab" data-tab-d="week" aria-selected="false">Settimana</button><button role="tab" data-tab-d="info" aria-selected="false">Info</button></nav>
+   <button role="tab" data-tab-d="now" aria-selected="true">Adesso</button><button role="tab" data-tab-d="boa" aria-selected="false">Misurato</button><button role="tab" data-tab-d="week" aria-selected="false">Settimana</button><button role="tab" data-tab-d="info" aria-selected="false">Meteo</button></nav>
 
   <section class="dsec t-now tpanel" id="sec-now" data-panel="now">
    <div class="adesso">
@@ -1377,12 +1377,20 @@ function openDetail(id){
    ${windowHtml(sp)}
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
    ${ev ? boardHtml(sp, ev) : ''}</div>
+   <div id="sec-cams">${camsHtml(sp)}</div>
    <button class="pillbtn logbtn" id="logOpen"><span>Registra una sessione</span></button>
   </section>
 
   <section class="dsec t-now tpanel" id="sec-boa" data-panel="boa" hidden>
    <div class="adesso"><div id="buoyBox" data-spot="${sp.id}"></div><div id="agreeBox"></div></div>
   </section>
+  <div class="tpanel" data-panel="boa" hidden>
+  <section class="dsec t-cal" id="sec-cal">
+   ${MOTIF.cal}
+   ${secToggle('cal', 'Taratura', 'Le tue sessioni confrontate con le previsioni', calSummary(sp), calInfo(sp))}
+   <div id="body-cal" hidden><div id="calBox">${calHtml(sp)}</div></div>
+  </section>
+  </div>
 
   <div class="tpanel" data-panel="week" hidden>
   <section class="dsec t-week${best && best.best.score >= 2.5 ? ' good' : ''}" id="sec-week" style="--goodbg:color-mix(in srgb, ${tone(best?.best.score)[0]} 32%, #fff)">
@@ -1415,13 +1423,6 @@ function openDetail(id){
    ${MOTIF.tide}
    ${secToggle('tide', 'Marea', 'Alte e basse di oggi', '<span>…</span>', 'Carico…')}
    <div id="body-tide" hidden><div id="extraTide" data-spot="${sp.id}"><p class="small muted">Carico la marea…</p></div></div>
-  </section>
-
-   <div id="sec-cams">${camsHtml(sp)}</div>
-  <section class="dsec t-cal" id="sec-cal">
-   ${MOTIF.cal}
-   ${secToggle('cal', 'Taratura', 'Le tue sessioni confrontate con le previsioni', calSummary(sp), calInfo(sp))}
-   <div id="body-cal" hidden><div id="calBox">${calHtml(sp)}</div></div>
   </section>
 
   </div>
@@ -2257,7 +2258,7 @@ async function loadAgreement(sp){
  }catch(e){}
 }
 
-const TAB_OF = {wx:'info', tide:'info', cal:'info', week:'week', season:'week'};
+const TAB_OF = {wx:'info', tide:'info', cal:'boa', week:'week', season:'week'};
 let detailTab = 'now';
 function showDetailTab(name, keepScroll){
  detailTab = name;
