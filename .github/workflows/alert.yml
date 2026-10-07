@@ -29,6 +29,15 @@ jobs:
           SURF_THRESHOLD: ${{ vars.SURF_THRESHOLD }}
         run: python alert_telegram.py
 
+      - name: Invia le notifiche push (blocca schermo e icona dell'app)
+        continue-on-error: true   # se le push hanno un problema, Telegram e il resto non si fermano
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+        run: |
+          pip install --quiet pywebpush
+          python alert_push.py
+
       - name: Salva lo stato degli alert già inviati
         run: |
           if [ -n "$(git status --porcelain alert_state.json)" ]; then
