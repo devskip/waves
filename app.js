@@ -1713,14 +1713,17 @@ function bindCal(sp){
 // del database fanno sì che ognuno legga e scriva soltanto i propri dati.
 const SUPA_URL = 'https://djicqanyclbrfzhxlsxm.supabase.co';
 const SUPA_KEY = 'sb_publishable_YcNI9IPd7AyG5_EE-jc0Rw_BhsKkcMf';
+// chiave pubblica delle notifiche push (la parte privata sta solo nei segreti di GitHub)
+const VAPID_PUBLIC = 'BDV65RvRwRwOJknTN4R2i6Dy4_CEiQ2SSBM1susxE5NzXJgRppdCnlpR3-QMexf1oKkEYl_3jKm5Xw64Yo0QBck';
 const Cloud = (() => {
  let sb = null, user = null, busy = false, timer = null, lastSync = null, lastErr = null, pendingEmail = null, partialErr = null, partialDetail = null;
  // errore "a metà": spot e sessioni si sincronizzano, ma profilo e tavole no (di solito manca l'aggiornamento del database)
  const friendly = m => /schema cache|could not find|does not exist|undefined (table|column)/i.test(m || '') ? 'il database non è ancora aggiornato (serve aggiorna_tavole.sql)' : /permission denied|row-level security|not allowed/i.test(m || '') ? 'permessi mancanti sul database (rilancia aggiorna_tavole.sql)' : (m || 'errore sconosciuto');
  let admin = false;
- const api = {ready:false, get busy(){ return busy; }, get partialErr(){ return partialErr; }, get partialDetail(){ return partialDetail; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }};
+ const api = {ready:false, get busy(){ return busy; }, get partialErr(){ return partialErr; }, get partialDetail(){ return partialDetail; }, get admin(){ return admin; }, get user(){ return user; }, get lastSync(){ return lastSync; }, get lastErr(){ return lastErr; }, get pendingEmail(){ return pendingEmail; }, get pushOn(){ return pushOn; }};
  const SYNC_KEYS = ['surf.sessions','surf.customSpots','surf.favorite','surf.followed','surf.order','surf.gain','surf.threshold','surf.profile','surf.boards'];
  let tg = {linked:false, link:null}, tgTimer = null;
+ let pushOn = false;   // questo telefono ha le notifiche push attive per questo account
  // vale la soglia di questo dispositivo solo se l'ha scelta la persona (o se c'era già prima che la soglia viaggiasse sull'account)
  const thresholdDirty = () => store.get('surf.thresholdDirty', store.get('surf.threshold', null) != null);
  const isUuid = v => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || '');
@@ -1762,13 +1765,13 @@ const Cloud = (() => {
   if (!window.supabase?.createClient){ status(); return; }
   sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true}});
   try{ const {data} = await sb.auth.getSession(); user = data?.session?.user || null; }catch(e){ user = null; }
-  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; if (!user) admin = false; status(); if (user && user.id !== was){ api.checkAdmin(); api.sync(); api.ping(); } });
+  sb.auth.onAuthStateChange((ev, sess) => { const was = user?.id; user = sess?.user || null; if (!user) admin = false; status(); if (user && user.id !== was){ api.checkAdmin(); api.sync(); api.ping(); api.pushRefresh(); } });
   api.ready = true;
   window.__cloudTouch = k => { if (user && SYNC_KEYS.includes(k)){ clearTimeout(timer); timer = setTimeout(() => api.push(), 2500); } };
   window.__cloudRemoveSpot = id => { if (user && sb) sb.from('spots').delete().eq('id', id).eq('owner', user.id).then(()=>{}); };
   window.__cloudRemoveBoard = id => { if (user && sb) sb.from('boards').delete().eq('id', id).eq('user_id', user.id).then(()=>{}); };
   status();
-  if (user){ api.checkAdmin(); api.sync(); }
+  if (user){ api.checkAdmin(); api.sync(); api.pushRefresh(); }
   api.ping();
  };
  api.checkAdmin = async () => {
@@ -1855,7 +1858,42 @@ const Cloud = (() => {
   const {error} = await sb.rpc('unlink_telegram'); if (error) throw error;
   tg.linked = false; tg.link = null; status();
  };
- api.signOut = async () => { await sb.auth.signOut(); user = null; tg = {linked:false, link:null}; clearInterval(tgTimer); status(); };
+ // notifiche push: arrivano nel blocca schermo e accendono il badge sull'icona, anche con l'app chiusa
+ api.pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+ const keyBytes = b64 => { const p = '='.repeat((4 - b64.length % 4) % 4), r = atob((b64 + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, c => c.charCodeAt(0)); };
+ api.pushRefresh = async () => {
+  let on = false;
+  try{
+   if (user && api.pushSupported() && Notification.permission === 'granted'){
+    const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+    if (sub){
+     const {data} = await sb.from('push_subscriptions').select('endpoint').eq('user_id', user.id).eq('endpoint', sub.endpoint).maybeSingle();
+     on = !!data;
+    }
+   }
+  }catch(e){ on = false; }
+  if (on !== pushOn){ pushOn = on; status(); if (typeof renderAlert === 'function' && lastTab === 'alert') renderAlert(); }
+ };
+ api.pushEnable = async () => {
+  if (!user) throw new Error('Entra prima con l\'account (nel Profilo)');
+  if (!api.pushSupported()) throw new Error('Questo dispositivo non supporta le notifiche push');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permesso negato: abilita le notifiche per l\'app nelle impostazioni del telefono');
+  const reg = await navigator.serviceWorker.ready;
+  const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC)});
+  const j = sub.toJSON();
+  const {error} = await sb.from('push_subscriptions').upsert({user_id: user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth}, {onConflict: 'user_id,endpoint'});
+  if (error) throw new Error(/schema cache|does not exist/i.test(error.message) ? 'il database non è aggiornato (serve aggiorna_push.sql)' : error.message);
+  pushOn = true; status();
+ };
+ api.pushDisable = async () => {
+  try{
+   const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+   if (sub){ await sb.from('push_subscriptions').delete().eq('user_id', user.id).eq('endpoint', sub.endpoint); await sub.unsubscribe(); }
+  }catch(e){ /* se non c'è più l'iscrizione è già come volevamo */ }
+  pushOn = false; status();
+ };
+ api.signOut = async () => { await api.pushDisable().catch(()=>{}); await sb.auth.signOut(); user = null; pushOn = false; tg = {linked:false, link:null}; clearInterval(tgTimer); status(); };
 
  // invia al database quello che c'è sul telefono
  api.push = async () => {
@@ -2672,13 +2710,20 @@ const SV = (d, f='none') => `<svg width="20" height="20" viewBox="0 0 24 24" fil
   <div class="srow"><span>${esc(sp.name)}</span>
   <button class="switch" aria-pressed="${isFollowed(sp)}" aria-label="Segui ${esc(sp.name)}" data-follow="${sp.id}"></button></div>`).join('');
  const ns = document.getElementById('notifState'), nb = document.getElementById('notifBtn');
+ nb.textContent = 'Attiva';
  if (!('Notification' in window)){ ns.textContent = 'Non supportate: su iPhone aggiungi prima l\'app alla schermata Home.'; nb.hidden = true; }
- else if (Notification.permission === 'granted'){ ns.textContent = 'Attive, arrivano quando apri l\'app.'; nb.hidden = true; }
- else if (Notification.permission === 'denied'){ ns.textContent = 'Bloccate nelle impostazioni del browser.'; nb.hidden = true; }
- else { ns.textContent = 'Arrivano quando apri l\'app.'; nb.hidden = false; }
+ else if (Notification.permission === 'denied'){ ns.textContent = 'Bloccate nelle impostazioni del telefono: riabilitale da lì.'; nb.hidden = true; }
+ else if (Cloud.ready && Cloud.user && Cloud.pushSupported()){
+  if (Cloud.pushOn){ ns.textContent = 'Attive: arrivano nel blocca schermo e sull\'icona anche con l\'app chiusa.'; nb.textContent = 'Disattiva'; }
+  else { ns.textContent = 'Attivale per riceverle nel blocca schermo e sull\'icona anche con l\'app chiusa.'; }
+  nb.hidden = false;
+ }
+ else if (Notification.permission === 'granted'){ ns.textContent = 'Attive, arrivano quando apri l\'app. Entra con l\'account (nel Profilo) per riceverle anche ad app chiusa.'; nb.hidden = true; }
+ else { ns.textContent = 'Arrivano quando apri l\'app. Entra con l\'account (nel Profilo) per riceverle anche ad app chiusa.'; nb.hidden = !Cloud.user; }
 }
 function notify(){
  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+ if (Cloud.pushOn) return;   // con le push attive l'avviso arriva già dal server
  const sent = store.get('surf.sent', {});
  upcomingAlerts().forEach(h=>{
   const key = `${h.sp.id}|${h.d.day}`;
@@ -2961,7 +3006,14 @@ document.getElementById('bkBtn').onclick = async ()=>{
   toast('Backup copiato'); }
  catch(e){ st.textContent = 'Copia non riuscita: riprova.'; toast('Copia non riuscita', 'err'); }
 };
-document.getElementById('notifBtn').onclick = async ()=>{ await Notification.requestPermission(); renderAlert(); notify(); };
+document.getElementById('notifBtn').onclick = async ()=>{
+ const err = document.getElementById('notifState');
+ try{
+  if (Cloud.user && Cloud.pushSupported()){ if (Cloud.pushOn) await Cloud.pushDisable(); else { await Cloud.pushEnable(); toast('Notifiche attivate'); } }
+  else await Notification.requestPermission();
+ }catch(e){ err.textContent = 'Non riuscito: ' + e.message; return; }
+ renderAlert(); notify();
+};
 document.getElementById('nearBtn').onclick = e=>{
  const btn = e.currentTarget, st = document.getElementById('status');
  if (userPos){ userPos = null; btn.setAttribute('aria-pressed','false'); renderSpot(); return; }
@@ -3044,7 +3096,7 @@ function setupPullToRefresh(){
 }
 if (STANDALONE) setupPullToRefresh();
 
-if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });   // solo per l'installazione su Android
+if ('serviceWorker' in navigator) addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });   // installazione su Android e notifiche push
 document.addEventListener('touchstart', () => {}, {passive:true});   // su iOS serve perché :active dia feedback al tocco
 setInterval(refresh, 3*60*60*1000);
 // se il database locale del telefono non risponde (succede a volte su iPhone) l'app parte lo stesso dopo 4 secondi
