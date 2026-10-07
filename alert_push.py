@@ -9,7 +9,7 @@ Variabili d'ambiente:
     SUPABASE_URL           indirizzo del progetto (default: quello dell'app)
     SUPABASE_SERVICE_KEY   chiave di servizio (segreta): serve a leggere iscrizioni e preferenze di tutti
     VAPID_PRIVATE_KEY      chiave privata delle notifiche (segreta)
-    VAPID_SUBJECT          opzionale, default https://github.com/devskip/waves
+    VAPID_SUBJECT          opzionale, contatto 'mailto:indirizzo@...' (default: indirizzo del bot GitHub)
 
 Prova senza inviare:   python3 alert_push.py --prova
 """
@@ -25,7 +25,7 @@ from zoneinfo import ZoneInfo
 SUPABASE_URL = os.environ.get("SUPABASE_URL") or "https://djicqanyclbrfzhxlsxm.supabase.co"
 SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 VAPID_PRIVATE = os.environ.get("VAPID_PRIVATE_KEY", "")
-VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT") or "https://github.com/devskip/waves"
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT") or "mailto:onde-bot@users.noreply.github.com"   # contatto richiesto dalle notifiche push, deve iniziare con mailto:
 
 TZ = "Europe/Rome"
 DAY_START, DAY_END = 7, 19          # ore del giorno che contano per il punteggio
