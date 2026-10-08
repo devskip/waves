@@ -4,14 +4,14 @@ e la salva in waves-grid.json (la legge la mappa "Onde in arrivo" dell'app).
 
 Formato (ogni lista ha nlat*nlon valori, riga per riga da sud a nord, null = terra):
   {"generated", "tz", "lat0", "lon0", "step", "nlat", "nlon", "times": [...],
-   "hs": [[...]], "dir": [[...]], "per": [[...]], "ws": [[...]], "wd": [[...]]}
+   "hs": [[...]], "dir": [[...]], "ws": [[...]], "wd": [[...]]}
 Un passo ogni 3 ore, da poco prima di adesso a 5 giorni.
 """
 import json, os, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-LAT0, LON0, STEP, NLAT, NLON = 38.25, 5.0, 0.25, 13, 19   # 38.25-41.25 N, 5.0-9.5 E
+LAT0, LON0, STEP, NLAT, NLON = 37.5, 5.0, 0.25, 21, 21   # 37.5-42.5 N, 5.0-10.0 E
 TZ, DAYS, CHUNK = "Europe/Rome", 5, 40
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "waves-grid.json")
 MARINE = "https://marine-api.open-meteo.com/v1/marine"
@@ -39,13 +39,13 @@ def fetch(base, hourly, pts):
             "hourly": hourly, "timezone": TZ, "forecast_days": DAYS})
         r = get(f"{base}?{q}")
         out += r if isinstance(r, list) else [r]
-        time.sleep(1.5)
+        time.sleep(5)   # il limite gratuito è 600 punti al minuto
     return out
 
 
 def main():
     pts = [(round(LAT0 + j * STEP, 2), round(LON0 + i * STEP, 2)) for j in range(NLAT) for i in range(NLON)]
-    marine = fetch(MARINE, "wave_height,wave_direction,wave_period", pts)
+    marine = fetch(MARINE, "wave_height,wave_direction", pts)
     wind = fetch(WIND, "wind_speed_10m,wind_direction_10m", pts)
     if len(marine) != len(pts) or len(wind) != len(pts):
         sys.exit("risposta incompleta")
@@ -61,12 +61,11 @@ def main():
 
     g = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "tz": TZ,
          "lat0": LAT0, "lon0": LON0, "step": STEP, "nlat": NLAT, "nlon": NLON,
-         "times": [times_all[k] for k in keep], "hs": [], "dir": [], "per": [], "ws": [], "wd": []}
+         "times": [times_all[k] for k in keep], "hs": [], "dir": [], "ws": [], "wd": []}
     for k in keep:
         wk = wmap.get(times_all[k])
         g["hs"].append([num(m["hourly"]["wave_height"][k], 1) for m in marine])
         g["dir"].append([num(m["hourly"]["wave_direction"][k]) for m in marine])
-        g["per"].append([num(m["hourly"]["wave_period"][k]) for m in marine])
         g["ws"].append([None if wk is None else num(w["hourly"]["wind_speed_10m"][wk]) for w in wind])
         g["wd"].append([None if wk is None else num(w["hourly"]["wind_direction_10m"][wk]) for w in wind])
     sea = sum(v is not None for v in g["hs"][0])
