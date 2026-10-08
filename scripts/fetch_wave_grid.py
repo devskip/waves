@@ -18,16 +18,17 @@ MARINE = "https://marine-api.open-meteo.com/v1/marine"
 WIND = "https://api.open-meteo.com/v1/forecast"
 
 
-def get(url, tries=4):
+def get(url, tries=6):
     for k in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "sinis-waves"}), timeout=40) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "sinis-waves"}), timeout=60) as r:
                 return json.load(r)
         except Exception as e:
             if k == tries - 1:
                 raise
-            time.sleep(5 * (k + 1))
-            print("retry:", e, file=sys.stderr)
+            wait = 65 if getattr(e, "code", None) == 429 else 8 * (k + 1)   # 429 = limite al minuto: aspetto che passi
+            print(f"retry {k + 1}/{tries - 1} tra {wait}s: {e}", file=sys.stderr, flush=True)
+            time.sleep(wait)
 
 
 def fetch(base, hourly, pts):
@@ -39,6 +40,7 @@ def fetch(base, hourly, pts):
             "hourly": hourly, "timezone": TZ, "forecast_days": DAYS})
         r = get(f"{base}?{q}")
         out += r if isinstance(r, list) else [r]
+        print(f"{base.split('/')[2]}: {len(out)}/{len(pts)} punti", flush=True)
         time.sleep(5)   # il limite gratuito è 600 punti al minuto
     return out
 
