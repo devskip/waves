@@ -1561,7 +1561,7 @@ async function openWaveMap(id){
  const dayMarks = times.map((k, i) => (i === 0 || k.slice(0,10) !== times[i-1].slice(0,10)) ? `<span style="left:${(i / times.length * 100).toFixed(2)}%">${weekday(k.slice(0,10)).slice(0,3)}</span>` : '').join('');
  root.innerHTML = `<div class="wvleaf" id="wvLeaf"></div>
   <header class="wvhead"><button type="button" class="wvbtn" id="wvBack" aria-label="Chiudi la mappa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-   <div class="wvttl"><b>${esc(sp.name)}</b><span>Onde in arrivo${upd ? ' · agg. ' + upd : ''} · v5</span></div>
+   <div class="wvttl"><b>${esc(sp.name)}</b><span>Onde in arrivo${upd ? ' · agg. ' + upd : ''}</span></div>
    <button type="button" class="wvbtn" id="wvCenter" aria-label="Ricentra sullo spot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button></header>
   <div class="wvchips" role="group" aria-label="Livello"><button type="button" aria-pressed="true" data-m="waves">Onde</button><button type="button" aria-pressed="false" data-m="wind">Vento</button></div>
   <div class="wvlegend" id="wvLegend"></div>
