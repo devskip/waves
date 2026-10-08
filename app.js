@@ -1351,6 +1351,226 @@ document.addEventListener('click', e => {
  }
 });
 
+// ---------- Onde in arrivo: come la perturbazione arriva allo spot ----------
+// "Arrivo" = prima ora in cui l'onda a riva (la stessa "face" di evaluate) raggiunge il minimo
+// del range dello spot e ci resta per almeno 3 ore. Conta l'onda e non il punteggio, così un
+// vento sfavorevole non nasconde la perturbazione. "Picco" = massimo da adesso in poi.
+const WG_URL = 'waves-grid.json';
+let wvGrid = null, wv = null;
+const wvHm = k => k.slice(11,16);
+const keyMs = k => Date.parse(k + ':00Z');   // le chiavi sono ora locale: servono solo per le differenze
+function whenTxt(k){
+ const d = k.slice(0,10), t = todayIso();
+ const tom = new Date(keyMs(t + 'T12:00') + 864e5).toISOString().slice(0,10);
+ return `${d === t ? 'oggi' : d === tom ? 'domani' : weekday(d).toLowerCase()} alle ${wvHm(k)}`;
+}
+function waveArrival(sp){
+ const s = data[sp.id]; if (!s) return null;
+ const i0 = currentIndex(s), n = s.time.length;
+ const face = i => { const e = evaluate(sp, s, i); return e ? e.face : null; };
+ const ok = i => { const f = face(i); return f != null && f >= sp.min; };
+ const peakFrom = from => { let pk = null; for (let i = from; i < n; i++){ const f = face(i); if (f != null && (!pk || f > pk.f)) pk = {i, f}; } return pk; };
+ if (face(i0) == null) return null;
+ if (ok(i0)) return {state:'now', i0, s, peak:peakFrom(i0)};
+ for (let i = i0 + 1; i < n - 2; i++) if (ok(i) && ok(i+1) && ok(i+2)) return {state:'soon', i0, arr:i, s, peak:peakFrom(i)};
+ return {state:'none', i0, s, peak:peakFrom(i0)};
+}
+function waveThumb(state, dir){
+ const on = state !== 'none', d = Math.round(dir ?? 290);
+ const bands = on ? [6,14,22,30,38].map((y,i) => `<rect x="-24" y="${y-3}" width="96" height="6" fill="#2B96E3" opacity="${state === 'now' ? .55 : (.75 - i*.14).toFixed(2)}"/>`).join('') : '';
+ const front = state === 'soon' ? '<path d="M-24 26H72" stroke="#F0A22E" stroke-width="1.6" stroke-dasharray="4 3"/>' : '';
+ return `<svg class="wvthumb" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><defs><clipPath id="wvtc"><rect width="48" height="48" rx="14"/></clipPath></defs><g clip-path="url(#wvtc)"><rect width="48" height="48" fill="#17313F"/><g transform="rotate(${d} 24 24)"><g style="filter:blur(1.6px)">${bands}</g>${front}</g><circle cx="24" cy="24" r="4.5" fill="#F5F5F2" stroke="#F0A22E" stroke-width="2"/></g></svg>`;
+}
+function waveCardHtml(sp){
+ const a = waveArrival(sp); if (!a) return '';
+ const s = a.s, ev = i => evaluate(sp, s, i);
+ let sub, dir = null;
+ if (a.state === 'soon'){
+  const e = ev(a.arr); dir = e.dir;
+  sub = `Da ${cardinal(e.dir)}: arriva ${whenTxt(s.time[a.arr])}, picco ${a.peak.f.toFixed(1)} m ${whenTxt(s.time[a.peak.i])}`;
+ } else if (a.state === 'now'){
+  const e = ev(a.i0); dir = e.dir;
+  sub = a.peak.i - a.i0 > 3 && a.peak.f > e.face + .3
+   ? `Onde in corso da ${cardinal(e.dir)}, picco ${a.peak.f.toFixed(1)} m ${whenTxt(s.time[a.peak.i])}`
+   : `Onde in corso da ${cardinal(e.dir)}, ${e.face.toFixed(1)} m`;
+ } else sub = `Nessuna onda utile nei prossimi ${Math.max(1, Math.round((s.time.length - a.i0) / 24))} giorni`;
+ return `<div class="ablock"><button class="wvcard" id="wvOpen" type="button" aria-label="Apri la mappa delle onde in arrivo. ${esc(sub)}">${waveThumb(a.state, dir)}<span class="wvt"><b>Onde in arrivo</b><span>${esc(sub)}</span></span><span class="wvx" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span></button></div>`;
+}
+
+// colori del campo: onde in blu, vento in arancione (come nel resto dell'app)
+const rampFn = stops => v => {
+ if (v <= stops[0][0]) return stops[0][1];
+ for (let i = 1; i < stops.length; i++) if (v <= stops[i][0]){
+  const [v0, c0] = stops[i-1], [v1, c1] = stops[i], f = (v - v0) / (v1 - v0);
+  return `rgb(${c0.map((x, j) => Math.round(x + (c1[j] - x) * f)).join(',')})`;
+ }
+ return stops[stops.length-1][1];
+};
+const hexRgb = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16));
+const toRamp = st => rampFn(st.map(([v, h]) => [v, hexRgb(h)])), asStr = c => Array.isArray(c) ? `rgb(${c})` : c;
+const waveColor = (r => v => asStr(r(v)))(toRamp([[0,'#17313F'],[.5,'#1F6F9E'],[1.5,'#2B96E3'],[2.5,'#8FD0F8'],[4,'#E4F3FD']]));
+const windColor = (r => v => asStr(r(v)))(toRamp([[0,'#2A2118'],[15,'#7A4A14'],[30,'#EC8D2C'],[50,'#FFD08A']]));
+
+// livello Leaflet: campo colorato (canvas sfocato), linea tratteggiata del fronte e frecce
+let WaveFieldCls = null;
+const makeWaveField = () => L.Layer.extend({
+ initialize(g){ this.g = g; this.t = 0; this.mode = 'waves'; this.thr = null; },
+ onAdd(map){
+  this._map = map;
+  this._c = L.DomUtil.create('canvas', 'wvfield'); this._f = L.DomUtil.create('canvas', 'wvfront');
+  const pane = map.getPane('overlayPane'); pane.appendChild(this._c); pane.appendChild(this._f);
+  map.on('moveend zoomend resize', this._draw, this); this._draw();
+ },
+ onRemove(map){ L.DomUtil.remove(this._c); L.DomUtil.remove(this._f); map.off('moveend zoomend resize', this._draw, this); },
+ setState(t, mode, thr){ this.t = t; this.mode = mode; this.thr = thr; if (this._map) this._draw(); },
+ _idx(lat, lon){
+  const g = this.g, fy = (lat - g.lat0) / g.step, fx = (lon - g.lon0) / g.step;
+  return (fy < 0 || fx < 0 || fy > g.nlat - 1 || fx > g.nlon - 1) ? null : {fy, fx};
+ },
+ _val(arr, lat, lon){   // media pesata dei nodi con dato; sulla terra (null) il campo si spegne
+  const p = this._idx(lat, lon); if (!p) return null;
+  const g = this.g, y0 = Math.min(g.nlat - 2, Math.floor(p.fy)), x0 = Math.min(g.nlon - 2, Math.floor(p.fx)), dy = p.fy - y0, dx = p.fx - x0;
+  let sum = 0, w = 0;
+  for (const [yy, xx, ww] of [[y0,x0,(1-dy)*(1-dx)],[y0,x0+1,(1-dy)*dx],[y0+1,x0,dy*(1-dx)],[y0+1,x0+1,dy*dx]]){
+   const v = arr[yy * g.nlon + xx]; if (v != null){ sum += v * ww; w += ww; }
+  }
+  return w < .5 ? null : sum / w;
+ },
+ _near(arr, lat, lon){ const p = this._idx(lat, lon); return p ? arr[Math.round(p.fy) * this.g.nlon + Math.round(p.fx)] : null; },
+ _draw(){
+  const m = this._map; if (!m) return;
+  const PAD = 120, B = 6, sz = m.getSize(), W = sz.x + 2*PAD, H = sz.y + 2*PAD, tl = m.containerPointToLayerPoint([-PAD, -PAD]);
+  for (const cv of [this._c, this._f]){ cv.width = W; cv.height = H; L.DomUtil.setPosition(cv, tl); }
+  const g = this.g, wind = this.mode === 'wind', t = this.t;
+  const arr = wind ? g.ws[t] : g.hs[t], dirs = wind ? g.wd[t] : g.dir[t], hs = g.hs[t];
+  const cx = this._c.getContext('2d'), fx = this._f.getContext('2d'), col = wind ? windColor : waveColor;
+  const ll = (x, y) => m.containerPointToLatLng([x - PAD, y - PAD]);
+  const nx = Math.ceil(W / B), ny = Math.ceil(H / B), val = new Float32Array(nx * ny).fill(NaN);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){
+   const p = ll(i*B + B/2, j*B + B/2), v = this._val(arr, p.lat, p.lng);
+   if (v == null) continue;
+   val[j*nx + i] = v; cx.fillStyle = col(v); cx.fillRect(i*B, j*B, B, B);
+  }
+  if (!wind && this.thr != null){   // fronte: dove l'onda arriva all'altezza minima dello spot
+   fx.fillStyle = '#F0A22E';
+   for (let j = 1; j < ny - 1; j++) for (let i = 1; i < nx - 1; i++){
+    const v = val[j*nx + i]; if (isNaN(v) || v < this.thr || (i + j) % 2) continue;
+    const nb = [val[j*nx + i-1], val[j*nx + i+1], val[(j-1)*nx + i], val[(j+1)*nx + i]];
+    if (nb.some(u => !isNaN(u) && u < this.thr)) fx.fillRect(i*B + 1, j*B + 1, 4, 4);
+   }
+  }
+  fx.strokeStyle = wind ? '#FFD08A' : 'rgba(228,243,253,.9)'; fx.lineWidth = 1.6; fx.lineCap = 'round'; fx.lineJoin = 'round';
+  for (let y = 24; y < H; y += 48) for (let x = 24; x < W; x += 48){
+   const p = ll(x, y), v = this._val(arr, p.lat, p.lng); if (v == null || v < (wind ? 3 : .25)) continue;
+   const d = this._near(dirs, p.lat, p.lng); if (d == null) continue;
+   fx.save(); fx.translate(x, y); fx.rotate((d + 180) * Math.PI / 180);   // la direzione è "da": la freccia va dove viaggia l'onda
+   fx.beginPath(); fx.moveTo(0, 7); fx.lineTo(0, -7); fx.moveTo(-4, -2.5); fx.lineTo(0, -7); fx.lineTo(4, -2.5); fx.stroke(); fx.restore();
+  }
+ }
+});
+
+async function loadWaveGrid(){
+ if (wvGrid) return wvGrid;
+ return wvGrid = await getJson(WG_URL + '?v=' + Math.floor(Date.now() / 6e5), {cache:'no-cache'}, 2);
+}
+function closeWaveMap(){
+ if (!wv) return;
+ document.removeEventListener('keydown', wv.onKey);
+ try{ wv.map.remove(); }catch(e){}
+ wv.root.remove(); document.body.classList.remove('locked'); wv.opener?.focus?.(); wv = null;
+}
+async function openWaveMap(id){
+ const sp = spots.find(x => x.id === id), s = data[id];
+ if (!sp || !s) return;
+ if (!window.L){ toast('Mappa non disponibile: controlla la connessione.', 'err'); return; }
+ closeWaveMap();
+ const opener = document.activeElement;
+ let grid = null;
+ try{ grid = await loadWaveGrid(); }catch(e){ console.warn('Griglia onde non disponibile', e); }
+ const nowK = nowKey(), a = waveArrival(sp), b = beach(sp);
+ const times = grid ? grid.times : s.time.filter(k => k >= nowK && +k.slice(11,13) % 3 === 0).slice(0, 40);
+ if (!times.length) return;
+ let tNow = 0; times.forEach((k, i) => { if (k <= nowK) tNow = i; });
+ const faces = times.map(k => { const i = s.time.indexOf(k), e = i >= 0 ? evaluate(sp, s, i) : null; return e ? e.face : 0; });
+ const fmax = Math.max(1, ...faces);
+ let tPeak = tNow; faces.forEach((f, i) => { if (i >= tNow && f > faces[tPeak]) tPeak = i; });
+ const tArr = a && a.state === 'soon' ? Math.max(0, times.findIndex(k => k >= s.time[a.arr])) : null;
+ const refI = a ? (a.state === 'soon' ? a.arr : a.i0) : currentIndex(s), re = evaluate(sp, s, refI);
+ const thr = sp.min / (re && re.hs ? clamp(re.face / re.hs, .3, 1.3) : 1);
+ const upd = grid?.generated ? new Intl.DateTimeFormat('it-IT', {timeZone:TZ, hour:'2-digit', minute:'2-digit'}).format(new Date(grid.generated)) : null;
+ const root = document.createElement('div');
+ root.id = 'wvmap'; root.className = 'wvmap'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', `Onde in arrivo, ${sp.name}`);
+ const dayMarks = times.map((k, i) => (i === 0 || k.slice(0,10) !== times[i-1].slice(0,10)) ? `<span style="left:${(i / times.length * 100).toFixed(2)}%">${weekday(k.slice(0,10)).slice(0,3)}</span>` : '').join('');
+ root.innerHTML = `<div class="wvleaf" id="wvLeaf"></div>
+  <header class="wvhead"><button type="button" class="wvbtn" id="wvBack" aria-label="Chiudi la mappa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+   <div class="wvttl"><b>${esc(sp.name)}</b><span>Onde in arrivo${upd ? ' · agg. ' + upd : ''}</span></div>
+   <button type="button" class="wvbtn" id="wvCenter" aria-label="Ricentra sullo spot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button></header>
+  <div class="wvchips" role="group" aria-label="Livello"><button type="button" aria-pressed="true" data-m="waves">Onde</button><button type="button" aria-pressed="false" data-m="wind">Vento</button></div>
+  <div class="wvlegend" id="wvLegend"></div>
+  <p class="wvnote" ${grid ? 'hidden' : ''}>Campo delle onde non disponibile: vedi solo lo spot.</p>
+  <section class="wvsheet"><div class="wvrow"><b id="wvTime"></b><span class="wvchip" id="wvChip"></span></div>
+   <div class="wvread"><div><i>Onde</i><b id="wvW"></b><span id="wvWs"></span></div><div><i>Vento</i><b id="wvV"></b><span id="wvVs"></span></div></div>
+   <div class="wvscrub" id="wvScrub" role="slider" tabindex="0" aria-label="Ora della previsione" aria-valuemin="0" aria-valuemax="${times.length - 1}">${faces.map((f, i) => `<i data-i="${i}" style="height:${Math.max(7, f / fmax * 100).toFixed(1)}%"></i>`).join('')}<u class="wvnow" style="left:${((tNow + .5) / times.length * 100).toFixed(2)}%"></u>${tArr != null ? `<em class="wvflag" style="left:${((tArr + .5) / times.length * 100).toFixed(2)}%" title="Arrivo"></em>` : ''}</div>
+   <div class="wvdays" aria-hidden="true">${dayMarks}</div>
+   <div class="wvcta"><button type="button" class="wvprim" id="wvGo"></button><button type="button" class="wvsec" id="wvNowBtn">Torna a adesso</button></div></section>`;
+ document.body.appendChild(root); document.body.classList.add('locked');
+
+ const map = L.map('wvLeaf', {zoomControl:false, attributionControl:true, zoomSnap:.5, minZoom:6, maxZoom:11});
+ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri · Onde: Open-Meteo'}).addTo(map);
+ const field = grid ? new (WaveFieldCls ||= makeWaveField())(grid).addTo(map) : null;
+ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(map);
+ const marker = L.marker([b.lat, b.lon], {interactive:false, keyboard:false}).addTo(map);
+ const center = () => { map.setView([b.lat, b.lon], 8.5, {animate:false}); map.panBy([0, Math.round(innerHeight * .2)], {animate:false}); };
+ center();
+
+ let cur = tNow, mode = 'waves';
+ const $ = q => root.querySelector(q), bars = [...root.querySelectorAll('#wvScrub i')];
+ const rel = k => Math.round((keyMs(k) - keyMs(nowK)) / 36e5);
+ function legend(){
+  $('#wvLegend').innerHTML = mode === 'waves'
+   ? '<i style="background:linear-gradient(90deg,#17313F,#1F6F9E,#2B96E3,#8FD0F8,#E4F3FD)"></i><span>0.5 → 3 m</span>'
+   : '<i style="background:linear-gradient(90deg,#2A2118,#7A4A14,#EC8D2C,#FFD08A)"></i><span>0 → 50 km/h</span>';
+ }
+ function show(t){
+  cur = clamp(t, 0, times.length - 1);
+  const k = times[cur], si = s.time.indexOf(k), e = si >= 0 ? evaluate(sp, s, si) : null;
+  field?.setState(cur, mode, thr);
+  const [bg, fg] = tone(e?.score);
+  marker.setIcon(L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17], html:`<div class="pin sel" style="--c:${bg};--fg:${fg}">${e?.score ?? '–'}</div>`}));
+  const day = weekday(k.slice(0,10)).slice(0,3).toUpperCase();
+  $('#wvTime').textContent = cur === tNow ? `ADESSO · ${day} ${wvHm(k)}` : `${day} ${wvHm(k)}${cur === tPeak ? ' · PICCO' : ''}`;
+  $('#wvChip').textContent = cur === tNow ? (a?.state === 'soon' ? 'Arriva ' + whenTxt(s.time[a.arr]).replace(' alle', '') : a?.state === 'now' ? 'Onde in corso' : 'Nessun arrivo') : (cur > tNow ? `Fra ${rel(k)} ore` : `${-rel(k)} ore fa`);
+  $('#wvW').textContent = e ? `${e.face.toFixed(1)} m · ${Math.round(e.T)} s` : 'n.d.';
+  $('#wvWs').textContent = e ? `da ${cardinal(e.dir)} ${Math.round(e.dir)}°` : '';
+  $('#wvV').textContent = e ? `${Math.round(e.ws)} km/h` : 'n.d.';
+  $('#wvVs').textContent = e ? `da ${cardinal(e.wd)}${e.windType === 'offshore' ? ' · offshore' : ''}` : '';
+  bars.forEach((el, i) => { el.className = (i === cur ? 'sel ' : '') + (i < tNow ? 'past' : ''); });
+  const sl = $('#wvScrub'); sl.setAttribute('aria-valuenow', cur); sl.setAttribute('aria-valuetext', `${day} ${wvHm(k)}`);
+  const go = $('#wvGo');
+  if (tArr != null && cur !== tArr){ go.textContent = "Vai all'arrivo"; go.dataset.t = tArr; go.hidden = false; }
+  else if (cur !== tPeak && faces[tPeak] > 0){ go.textContent = 'Vai al picco'; go.dataset.t = tPeak; go.hidden = false; }
+  else go.hidden = true;
+  $('#wvNowBtn').hidden = cur === tNow;
+ }
+ $('#wvGo').onclick = e => show(+e.currentTarget.dataset.t);
+ $('#wvNowBtn').onclick = () => show(tNow);
+ $('#wvBack').onclick = closeWaveMap;
+ $('#wvCenter').onclick = center;
+ root.querySelectorAll('.wvchips button').forEach(bn => bn.onclick = () => {
+  mode = bn.dataset.m; root.querySelectorAll('.wvchips button').forEach(x => x.setAttribute('aria-pressed', x === bn)); legend(); show(cur);
+ });
+ const sc = $('#wvScrub'); let drag = false;
+ const idxAt = x => { const r = sc.getBoundingClientRect(); return Math.round(clamp((x - r.left) / r.width * times.length - .5, 0, times.length - 1)); };
+ sc.onpointerdown = e => { drag = true; sc.setPointerCapture(e.pointerId); show(idxAt(e.clientX)); };
+ sc.onpointermove = e => { if (drag) show(idxAt(e.clientX)); };
+ sc.onpointerup = sc.onpointercancel = () => { drag = false; };
+ sc.onkeydown = e => { const d = {ArrowLeft:-1, ArrowRight:1, ArrowDown:-1, ArrowUp:1}[e.key]; if (d){ e.preventDefault(); show(cur + d); } };
+ const onKey = e => { if (e.key === 'Escape') closeWaveMap(); };
+ document.addEventListener('keydown', onKey);
+ wv = {root, map, onKey, opener};
+ legend(); show(tNow); $('#wvBack').focus();
+}
+
 function openDetail(id){
  const sp = spots.find(s=>s.id===id), s = data[id];
  if (!sp || !s) return;
@@ -1376,7 +1596,7 @@ function openDetail(id){
    ${ev ? `<div class="ablock">${periodCell(sp, ev.T)}</div>` : ''}
    ${windowHtml(sp)}
    ${ev ? crowdHtml(sp, crowdNow(sp, ev)) : ''}
-   ${ev ? boardHtml(sp, ev) : ''}</div>
+   ${ev ? boardHtml(sp, ev) : ''}${waveCardHtml(sp)}</div>
    <div id="sec-cams">${camsHtml(sp)}</div>
    <button class="pillbtn logbtn" id="logOpen"><span>Registra una sessione</span></button>
   </section>
@@ -1441,6 +1661,7 @@ function openDetail(id){
  loadAgreement(sp);
  renderBuoy(sp);
  document.getElementById('back').onclick = ()=>setTab(lastTab);
+ const wvo = document.getElementById('wvOpen'); if (wvo) wvo.onclick = ()=>openWaveMap(id);
  const sheet = document.getElementById('dialSheet'), opener = document.getElementById('dialBtn');
  const closeSheet = ()=>{ sheet.hidden = true; document.body.classList.remove('locked'); document.removeEventListener('keydown', onKey); opener.focus(); };
  const onKey = e=>{ if (e.key === 'Escape') closeSheet(); };
