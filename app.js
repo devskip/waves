@@ -1412,6 +1412,7 @@ const waveColor = (r => v => asStr(r(v)))(toRamp([[0,'#17313F'],[.5,'#1F6F9E'],[
 const windColor = (r => v => asStr(r(v)))(toRamp([[0,'#2A2118'],[15,'#7A4A14'],[30,'#EC8D2C'],[50,'#FFD08A']]));
 
 // livello Leaflet: campo colorato (canvas sfocato), linea tratteggiata del fronte e frecce
+const FRONT_SEG = {1:['LB'],2:['BR'],3:['LR'],4:['RT'],5:['LT','BR'],6:['BT'],7:['LT'],8:['LT'],9:['BT'],10:['LB','RT'],11:['RT'],12:['LR'],13:['BR'],14:['LB']};
 let WaveFieldCls = null;
 const makeWaveField = () => L.Layer.extend({
  initialize(g){ this.g = g; this.t = 0; this.mode = 'waves'; this.thr = null; },
@@ -1428,44 +1429,53 @@ const makeWaveField = () => L.Layer.extend({
   const g = this.g, fy = (lat - g.lat0) / g.step, fx = (lon - g.lon0) / g.step;
   return (fy < 0 || fx < 0 || fy > g.nlat - 1 || fx > g.nlon - 1) ? null : {fy, fx};
  },
- _val(arr, lat, lon){   // media pesata dei nodi con dato; sulla terra (null) il campo si spegne
-  const p = this._idx(lat, lon); if (!p) return null;
+ _val(arr, lat, lon){   // media pesata dei nodi con dato; this._w = quanto peso viene dal mare (verso la costa il campo sfuma)
+  const p = this._idx(lat, lon); this._w = 0; if (!p) return null;
   const g = this.g, y0 = Math.min(g.nlat - 2, Math.floor(p.fy)), x0 = Math.min(g.nlon - 2, Math.floor(p.fx)), dy = p.fy - y0, dx = p.fx - x0;
   let sum = 0, w = 0;
   for (const [yy, xx, ww] of [[y0,x0,(1-dy)*(1-dx)],[y0,x0+1,(1-dy)*dx],[y0+1,x0,dy*(1-dx)],[y0+1,x0+1,dy*dx]]){
    const v = arr[yy * g.nlon + xx]; if (v != null){ sum += v * ww; w += ww; }
   }
-  return w < .75 ? null : sum / w;
+  this._w = w; return w < .45 ? null : sum / w;
  },
  _near(arr, lat, lon){ const p = this._idx(lat, lon); return p ? arr[Math.round(p.fy) * this.g.nlon + Math.round(p.fx)] : null; },
+ _front(fx, PAD){   // linea dove l'onda arriva all'altezza minima dello spot (marching squares sui nodi della griglia)
+  const m = this._map, g = this.g, h = g.hs[this.t], T = this.thr, nl = g.nlon;
+  const pt = (j, i) => { const p = m.latLngToContainerPoint([g.lat0 + j * g.step, g.lon0 + i * g.step]); return [p.x + PAD, p.y + PAD]; };
+  const lerp = (v0, v1, p0, p1) => { const f = (T - v0) / (v1 - v0); return [p0[0] + (p1[0] - p0[0]) * f, p0[1] + (p1[1] - p0[1]) * f]; };
+  fx.beginPath();
+  for (let j = 0; j < g.nlat - 1; j++) for (let i = 0; i < nl - 1; i++){
+   const a = h[j*nl + i], b = h[j*nl + i + 1], c = h[(j+1)*nl + i + 1], d = h[(j+1)*nl + i];
+   if (a == null || b == null || c == null || d == null) continue;
+   const k = (a >= T ? 1 : 0) | (b >= T ? 2 : 0) | (c >= T ? 4 : 0) | (d >= T ? 8 : 0);
+   if (k === 0 || k === 15) continue;
+   const A = pt(j, i), B = pt(j, i + 1), C = pt(j + 1, i + 1), D = pt(j + 1, i);
+   const E = {L:() => lerp(a, d, A, D), B:() => lerp(a, b, A, B), R:() => lerp(b, c, B, C), T:() => lerp(d, c, D, C)};
+   for (const s of FRONT_SEG[k]){ const p = E[s[0]](), q = E[s[1]](); fx.moveTo(p[0], p[1]); fx.lineTo(q[0], q[1]); }
+  }
+  fx.strokeStyle = '#F0A22E'; fx.lineWidth = 2.6; fx.lineCap = 'butt'; fx.setLineDash([7, 5]); fx.stroke(); fx.setLineDash([]);
+ },
  _draw(){
   const m = this._map; if (!m) return;
   const PAD = 160, B = 8, sz = m.getSize(), W = sz.x + 2*PAD, H = sz.y + 2*PAD, tl = m.containerPointToLayerPoint([-PAD, -PAD]);
   for (const cv of [this._c, this._f]){ cv.width = W; cv.height = H; L.DomUtil.setPosition(cv, tl); }
   const g = this.g, wind = this.mode === 'wind', t = this.t;
-  const arr = wind ? g.ws[t] : g.hs[t], dirs = wind ? g.wd[t] : g.dir[t], hs = g.hs[t];
+  const arr = wind ? g.ws[t] : g.hs[t], dirs = wind ? g.wd[t] : g.dir[t];
   const cx = this._c.getContext('2d'), fx = this._f.getContext('2d'), col = wind ? windColor : waveColor;
   const ll = (x, y) => m.containerPointToLatLng([x - PAD, y - PAD]);
-  const nx = Math.ceil(W / B), ny = Math.ceil(H / B), val = new Float32Array(nx * ny).fill(NaN);
-  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){
-   const p = ll(i*B + B/2, j*B + B/2), v = this._val(arr, p.lat, p.lng);
+  for (let y = 0; y < H; y += B) for (let x = 0; x < W; x += B){
+   const p = ll(x + B/2, y + B/2), v = this._val(arr, p.lat, p.lng);
    if (v == null) continue;
-   val[j*nx + i] = v; cx.fillStyle = col(v); cx.fillRect(i*B, j*B, B, B);
+   cx.globalAlpha = Math.max(.2, Math.min(1, (this._w - .45) / .45)); cx.fillStyle = col(v); cx.fillRect(x, y, B, B);
   }
-  if (!wind && this.thr != null){   // fronte: dove l'onda arriva all'altezza minima dello spot
-   fx.fillStyle = '#F0A22E';
-   for (let j = 1; j < ny - 1; j++) for (let i = 1; i < nx - 1; i++){
-    const v = val[j*nx + i]; if (isNaN(v) || v < this.thr || (i + j) % 2) continue;
-    const nb = [val[j*nx + i-1], val[j*nx + i+1], val[(j-1)*nx + i], val[(j+1)*nx + i]];
-    if (nb.some(u => !isNaN(u) && u < this.thr)) fx.fillRect(i*B + 1, j*B + 1, B - 2, B - 2);
-   }
-  }
+  cx.globalAlpha = 1;
+  if (!wind && this.thr != null) this._front(fx, PAD);
   fx.strokeStyle = wind ? '#FFD08A' : 'rgba(228,243,253,.9)'; fx.lineWidth = 1.6; fx.lineCap = 'round'; fx.lineJoin = 'round';
   for (let y = 24; y < H; y += 48) for (let x = 24; x < W; x += 48){
-   const p = ll(x, y), v = this._val(arr, p.lat, p.lng); if (v == null || v < (wind ? 3 : .25)) continue;
+   const p = ll(x, y), v = this._val(arr, p.lat, p.lng); if (v == null || this._w < .8 || v < (wind ? 3 : .25)) continue;
    const d = this._near(dirs, p.lat, p.lng); if (d == null) continue;
    fx.save(); fx.translate(x, y); fx.rotate((d + 180) * Math.PI / 180);   // la direzione è "da": la freccia va dove viaggia l'onda
-   fx.beginPath(); fx.moveTo(0, 7); fx.lineTo(0, -7); fx.moveTo(-4, -2.5); fx.lineTo(0, -7); fx.lineTo(4, -2.5); fx.stroke(); fx.restore();
+   fx.beginPath(); fx.moveTo(0, 7); fx.lineTo(0, -7); fx.moveTo(-4, -2.5); fx.lineTo(0, -7); fx.moveTo(4, -2.5); fx.lineTo(0, -7); fx.stroke(); fx.restore();
   }
  }
 });
@@ -1486,9 +1496,11 @@ async function openWaveMap(id){
  if (!window.L){ toast('Mappa non disponibile: controlla la connessione.', 'err'); return; }
  closeWaveMap();
  const opener = document.activeElement;
- let grid = null;
+ let grid = null, away = false;
  try{ grid = await loadWaveGrid(); }catch(e){ console.warn('Griglia onde non disponibile', e); }
  const nowK = nowKey(), a = waveArrival(sp), b = beach(sp);
+ const gb = grid && [[grid.lat0, grid.lon0], [grid.lat0 + (grid.nlat - 1) * grid.step, grid.lon0 + (grid.nlon - 1) * grid.step]];
+ if (grid && !(b.lat >= gb[0][0] && b.lat <= gb[1][0] && b.lon >= gb[0][1] && b.lon <= gb[1][1])){ grid = null; away = true; }
  const times = grid ? grid.times : s.time.filter(k => k >= nowK && +k.slice(11,13) % 3 === 0).slice(0, 40);
  if (!times.length) return;
  let tNow = 0; times.forEach((k, i) => { if (k <= nowK) tNow = i; });
@@ -1513,7 +1525,7 @@ async function openWaveMap(id){
    <button type="button" class="wvbtn" id="wvCenter" aria-label="Ricentra sullo spot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button></header>
   <div class="wvchips" role="group" aria-label="Livello"><button type="button" aria-pressed="true" data-m="waves">Onde</button><button type="button" aria-pressed="false" data-m="wind">Vento</button></div>
   <div class="wvlegend" id="wvLegend"></div>
-  <p class="wvnote" ${grid ? 'hidden' : ''}>Campo delle onde non disponibile: vedi solo lo spot.</p>
+  <p class="wvnote" ${grid ? 'hidden' : ''}>${away ? 'Il campo delle onde copre per ora solo la Sardegna: qui vedi solo lo spot.' : 'Campo delle onde non disponibile: vedi solo lo spot.'}</p>
   <section class="wvsheet"><div class="wvrow"><button type="button" class="wvplay" id="wvPlay" aria-pressed="false" aria-label="Avvia l'animazione">${PLAY_ICO}</button><b id="wvTime"></b><span class="wvchip" id="wvChip"></span></div>
    <div class="wvread"><div><i>Onde</i><b id="wvW"></b><span id="wvWs"></span></div><div><i>Vento</i><b id="wvV"></b><span id="wvVs"></span></div></div>
    <div class="wvscrub" id="wvScrub" role="slider" tabindex="0" aria-label="Ora della previsione" aria-valuemin="0" aria-valuemax="${times.length - 1}">${faces.map((f, i) => `<i data-i="${i}" style="height:${Math.max(7, f / fmax * 100).toFixed(1)}%"></i>`).join('')}<u class="wvnow" style="left:${((tNow + .5) / times.length * 100).toFixed(2)}%"></u>${tArr != null ? `<em class="wvflag" style="left:${((tArr + .5) / times.length * 100).toFixed(2)}%" title="Arrivo"></em>` : ''}</div>
@@ -1521,7 +1533,7 @@ async function openWaveMap(id){
    <div class="wvstops" role="group" aria-label="Salta a">${stops.map(x => `<button type="button" class="wvstop" data-t="${x.t}" aria-pressed="false"><i>${x.l}</i><b>${x.s}</b></button>`).join('')}</div></section>`;
  document.body.appendChild(root); document.body.classList.add('locked');
 
- const map = L.map('wvLeaf', {zoomControl:false, attributionControl:true, zoomSnap:.5, minZoom:7, maxZoom:11, zoomAnimation:false, markerZoomAnimation:false, fadeAnimation:false, maxBounds:[[37.9, 4.6], [41.6, 9.9]], maxBoundsViscosity:.8});
+ const map = L.map('wvLeaf', {zoomControl:false, attributionControl:true, zoomSnap:.5, minZoom:grid ? 7.5 : 7, maxZoom:11, zoomAnimation:false, markerZoomAnimation:false, fadeAnimation:false, maxBounds:gb || undefined, maxBoundsViscosity:1});
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri · Onde: Open-Meteo'}).addTo(map);
  const field = grid ? new (WaveFieldCls ||= makeWaveField())(grid).addTo(map) : null;
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(map);
