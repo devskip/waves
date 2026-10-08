@@ -1466,7 +1466,16 @@ const makeWaveField = () => L.Layer.extend({
    if (k === 0 || k === 15) continue;
    const A = pt(j, i), B = pt(j, i + 1), C = pt(j + 1, i + 1), D = pt(j + 1, i);
    const E = {L:() => lerp(a, d, A, D), B:() => lerp(a, b, A, B), R:() => lerp(b, c, B, C), T:() => lerp(d, c, D, C)};
-   for (const s of FRONT_SEG[k]){ const p = E[s[0]](), q = E[s[1]](); fx.moveTo(p[0], p[1]); fx.lineTo(q[0], q[1]); }
+   for (const s of FRONT_SEG[k]){   // la linea si disegna a pezzetti e salta quelli sulla terra
+    const p = E[s[0]](), q = E[s[1]](), n = Math.max(1, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / 6)); let pen = false;
+    for (let u = 0; u < n; u++){
+     const x0 = p[0] + (q[0] - p[0]) * u / n, y0 = p[1] + (q[1] - p[1]) * u / n, x1 = p[0] + (q[0] - p[0]) * (u + 1) / n, y1 = p[1] + (q[1] - p[1]) * (u + 1) / n;
+     const c = m.containerPointToLatLng([(x0 + x1) / 2 - PAD, (y0 + y1) / 2 - PAD]);
+     if (this._land(c.lat, c.lng)){ pen = false; continue; }
+     if (!pen){ fx.moveTo(x0, y0); pen = true; }
+     fx.lineTo(x1, y1);
+    }
+   }
   }
   fx.strokeStyle = '#F0A22E'; fx.lineWidth = 2.6; fx.lineCap = 'butt'; fx.setLineDash([7, 5]); fx.stroke(); fx.setLineDash([]);
  },
