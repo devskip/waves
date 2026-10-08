@@ -1356,7 +1356,7 @@ document.addEventListener('click', e => {
 // del range dello spot e ci resta per almeno 3 ore. Conta l'onda e non il punteggio, così un
 // vento sfavorevole non nasconde la perturbazione. "Picco" = massimo da adesso in poi.
 const WG_URL = 'waves-grid.json';
-let wvGrid = null, wv = null;
+let wvGrid = null, wvLand, wv = null;
 const wvHm = k => k.slice(11,16);
 const keyMs = k => Date.parse(k + ':00Z');   // le chiavi sono ora locale: servono solo per le differenze
 function whenTxt(k){
@@ -1415,7 +1415,7 @@ const windColor = (r => v => asStr(r(v)))(toRamp([[0,'#2A2118'],[15,'#7A4A14'],[
 const FRONT_SEG = {1:['LB'],2:['BR'],3:['LR'],4:['RT'],5:['LT','BR'],6:['BT'],7:['LT'],8:['LT'],9:['BT'],10:['LB','RT'],11:['RT'],12:['LR'],13:['BR'],14:['LB']};
 let WaveFieldCls = null;
 const makeWaveField = () => L.Layer.extend({
- initialize(g){ this.g = g; this.t = 0; this.mode = 'waves'; this.thr = null; },
+ initialize(g, land){ this.g = g; this.land = land; this.t = 0; this.mode = 'waves'; this.thr = null; },
  onAdd(map){
   this._map = map;
   this._c = L.DomUtil.create('canvas', 'wvfield'); this._f = L.DomUtil.create('canvas', 'wvfront');
@@ -1437,6 +1437,21 @@ const makeWaveField = () => L.Layer.extend({
    const v = arr[yy * g.nlon + xx]; if (v != null){ sum += v * ww; w += ww; }
   }
   this._w = w; return w < .45 ? null : sum / w;
+ },
+ _land(lat, lon){   // maschera terra/mare (waves-land.json), se c'è
+  const M = this.land; if (!M) return false;
+  const j = Math.floor((lat - M.lat0) / M.step), i = Math.floor((lon - M.lon0) / M.step);
+  return j >= 0 && i >= 0 && j < M.nlat && i < M.nlon && M.a[j * M.nlon + i] === 1;
+ },
+ _fill(arr, lat, lon){   // mare dove la griglia non ha dato (celle costiere grosse): valore del nodo con dato più vicino
+  const p = this._idx(lat, lon); if (!p) return null;
+  const g = this.g, cy = Math.round(p.fy), cx = Math.round(p.fx); let best = null, bd = 9;
+  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++){
+   const y = cy + dy, x = cx + dx; if (y < 0 || x < 0 || y >= g.nlat || x >= g.nlon) continue;
+   const v = arr[y * g.nlon + x]; if (v == null) continue;
+   const d = (y - p.fy) ** 2 + (x - p.fx) ** 2; if (d < bd){ bd = d; best = v; }
+  }
+  return best;
  },
  _near(arr, lat, lon){ const p = this._idx(lat, lon); return p ? arr[Math.round(p.fy) * this.g.nlon + Math.round(p.fx)] : null; },
  _front(fx, PAD){   // linea dove l'onda arriva all'altezza minima dello spot (marching squares sui nodi della griglia)
@@ -1464,22 +1479,36 @@ const makeWaveField = () => L.Layer.extend({
   const cx = this._c.getContext('2d'), fx = this._f.getContext('2d'), col = wind ? windColor : waveColor;
   const ll = (x, y) => m.containerPointToLatLng([x - PAD, y - PAD]);
   for (let y = 0; y < H; y += B) for (let x = 0; x < W; x += B){
-   const p = ll(x + B/2, y + B/2), v = this._val(arr, p.lat, p.lng);
+   const p = ll(x + B/2, y + B/2);
+   if (this._land(p.lat, p.lng)) continue;
+   let v = this._val(arr, p.lat, p.lng), al = this.land ? 1 : Math.max(.2, Math.min(1, (this._w - .45) / .45));
+   if (v == null && this.land){ v = this._fill(arr, p.lat, p.lng); al = 1; }
    if (v == null) continue;
-   cx.globalAlpha = Math.max(.2, Math.min(1, (this._w - .45) / .45)); cx.fillStyle = col(v); cx.fillRect(x, y, B, B);
+   cx.globalAlpha = al; cx.fillStyle = col(v); cx.fillRect(x, y, B, B);
   }
   cx.globalAlpha = 1;
   if (!wind && this.thr != null) this._front(fx, PAD);
   fx.strokeStyle = wind ? '#FFD08A' : 'rgba(228,243,253,.9)'; fx.lineWidth = 1.6; fx.lineCap = 'round'; fx.lineJoin = 'round';
   for (let y = 24; y < H; y += 48) for (let x = 24; x < W; x += 48){
-   const p = ll(x, y), v = this._val(arr, p.lat, p.lng); if (v == null || this._w < .8 || v < (wind ? 3 : .25)) continue;
-   const d = this._near(dirs, p.lat, p.lng); if (d == null) continue;
+   const p = ll(x, y); if (this._land(p.lat, p.lng)) continue;
+   let v = this._val(arr, p.lat, p.lng); if (v == null && this.land) v = this._fill(arr, p.lat, p.lng);
+   if (v == null || (!this.land && this._w < .8) || v < (wind ? 3 : .25)) continue;
+   let d = this._near(dirs, p.lat, p.lng); if (d == null && this.land) d = this._fill(dirs, p.lat, p.lng); if (d == null) continue;
    fx.save(); fx.translate(x, y); fx.rotate((d + 180) * Math.PI / 180);   // la direzione è "da": la freccia va dove viaggia l'onda
    fx.beginPath(); fx.moveTo(0, 7); fx.lineTo(0, -7); fx.moveTo(-4, -2.5); fx.lineTo(0, -7); fx.moveTo(4, -2.5); fx.lineTo(0, -7); fx.stroke(); fx.restore();
   }
  }
 });
 
+async function loadWaveLand(){   // facoltativa: senza, il campo sfuma verso la costa
+ if (wvLand !== undefined) return wvLand;
+ try{
+  const m = await getJson('waves-land.json', {cache:'no-cache'}, 1), a = new Uint8Array(m.nlat * m.nlon);
+  m.rows.forEach((runs, j) => { let i = 0, v = 0; for (const n of runs){ if (v) a.fill(1, j * m.nlon + i, j * m.nlon + i + n); i += n; v ^= 1; } });
+  wvLand = {...m, a};
+ }catch(e){ wvLand = null; }
+ return wvLand;
+}
 async function loadWaveGrid(){
  if (wvGrid) return wvGrid;
  return wvGrid = await getJson(WG_URL + '?v=' + Math.floor(Date.now() / 6e5), {cache:'no-cache'}, 2);
@@ -1500,6 +1529,7 @@ async function openWaveMap(id){
  try{ grid = await loadWaveGrid(); }catch(e){ console.warn('Griglia onde non disponibile', e); }
  const nowK = nowKey(), a = waveArrival(sp), b = beach(sp);
  const gb = grid && [[grid.lat0, grid.lon0], [grid.lat0 + (grid.nlat - 1) * grid.step, grid.lon0 + (grid.nlon - 1) * grid.step]];
+ const land = grid ? await loadWaveLand() : null;
  if (grid && !(b.lat >= gb[0][0] && b.lat <= gb[1][0] && b.lon >= gb[0][1] && b.lon <= gb[1][1])){ grid = null; away = true; }
  const times = grid ? grid.times : s.time.filter(k => k >= nowK && +k.slice(11,13) % 3 === 0).slice(0, 40);
  if (!times.length) return;
@@ -1535,7 +1565,7 @@ async function openWaveMap(id){
 
  const map = L.map('wvLeaf', {zoomControl:false, attributionControl:true, zoomSnap:.5, minZoom:grid ? 7.5 : 7, maxZoom:11, zoomAnimation:false, markerZoomAnimation:false, fadeAnimation:false, maxBounds:gb || undefined, maxBoundsViscosity:1});
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri · Onde: Open-Meteo'}).addTo(map);
- const field = grid ? new (WaveFieldCls ||= makeWaveField())(grid).addTo(map) : null;
+ const field = grid ? new (WaveFieldCls ||= makeWaveField())(grid, land).addTo(map) : null;
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(map);
  const marker = L.marker([b.lat, b.lon], {interactive:false, keyboard:false}).addTo(map);
  const center = () => { map.setView([b.lat, b.lon], 8.5, {animate:false}); map.panBy([0, Math.round(innerHeight * .2)], {animate:false}); };
