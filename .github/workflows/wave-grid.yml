@@ -2,7 +2,7 @@ name: Griglia onde
 
 on:
   schedule:
-    - cron: '20 */3 * * *'   # ogni 3 ore
+    - cron: '20 */6 * * *'   # ogni 6 ore: i modelli onde si aggiornano 2 volte al giorno
   workflow_dispatch:
 
 permissions:
