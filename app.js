@@ -1419,9 +1419,10 @@ const makeWaveField = () => L.Layer.extend({
   this._map = map;
   this._c = L.DomUtil.create('canvas', 'wvfield'); this._f = L.DomUtil.create('canvas', 'wvfront');
   const pane = map.getPane('overlayPane'); pane.appendChild(this._c); pane.appendChild(this._f);
-  map.on('moveend zoomend resize', this._draw, this); this._draw();
+  map.on('zoom zoomend moveend resize', this._soon, this); this._draw();
  },
- onRemove(map){ L.DomUtil.remove(this._c); L.DomUtil.remove(this._f); map.off('moveend zoomend resize', this._draw, this); },
+ onRemove(map){ cancelAnimationFrame(this._raf); L.DomUtil.remove(this._c); L.DomUtil.remove(this._f); map.off('zoom zoomend moveend resize', this._soon, this); this._map = null; },
+ _soon(){ if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = 0; this._draw(); }); },
  setState(t, mode, thr){ this.t = t; this.mode = mode; this.thr = thr; if (this._map) this._draw(); },
  _idx(lat, lon){
   const g = this.g, fy = (lat - g.lat0) / g.step, fx = (lon - g.lon0) / g.step;
@@ -1434,12 +1435,12 @@ const makeWaveField = () => L.Layer.extend({
   for (const [yy, xx, ww] of [[y0,x0,(1-dy)*(1-dx)],[y0,x0+1,(1-dy)*dx],[y0+1,x0,dy*(1-dx)],[y0+1,x0+1,dy*dx]]){
    const v = arr[yy * g.nlon + xx]; if (v != null){ sum += v * ww; w += ww; }
   }
-  return w < .5 ? null : sum / w;
+  return w < .75 ? null : sum / w;
  },
  _near(arr, lat, lon){ const p = this._idx(lat, lon); return p ? arr[Math.round(p.fy) * this.g.nlon + Math.round(p.fx)] : null; },
  _draw(){
   const m = this._map; if (!m) return;
-  const PAD = 120, B = 6, sz = m.getSize(), W = sz.x + 2*PAD, H = sz.y + 2*PAD, tl = m.containerPointToLayerPoint([-PAD, -PAD]);
+  const PAD = 160, B = 8, sz = m.getSize(), W = sz.x + 2*PAD, H = sz.y + 2*PAD, tl = m.containerPointToLayerPoint([-PAD, -PAD]);
   for (const cv of [this._c, this._f]){ cv.width = W; cv.height = H; L.DomUtil.setPosition(cv, tl); }
   const g = this.g, wind = this.mode === 'wind', t = this.t;
   const arr = wind ? g.ws[t] : g.hs[t], dirs = wind ? g.wd[t] : g.dir[t], hs = g.hs[t];
@@ -1456,7 +1457,7 @@ const makeWaveField = () => L.Layer.extend({
    for (let j = 1; j < ny - 1; j++) for (let i = 1; i < nx - 1; i++){
     const v = val[j*nx + i]; if (isNaN(v) || v < this.thr || (i + j) % 2) continue;
     const nb = [val[j*nx + i-1], val[j*nx + i+1], val[(j-1)*nx + i], val[(j+1)*nx + i]];
-    if (nb.some(u => !isNaN(u) && u < this.thr)) fx.fillRect(i*B + 1, j*B + 1, 4, 4);
+    if (nb.some(u => !isNaN(u) && u < this.thr)) fx.fillRect(i*B + 1, j*B + 1, B - 2, B - 2);
    }
   }
   fx.strokeStyle = wind ? '#FFD08A' : 'rgba(228,243,253,.9)'; fx.lineWidth = 1.6; fx.lineCap = 'round'; fx.lineJoin = 'round';
@@ -1475,7 +1476,7 @@ async function loadWaveGrid(){
 }
 function closeWaveMap(){
  if (!wv) return;
- document.removeEventListener('keydown', wv.onKey);
+ wv.stop?.(); document.removeEventListener('keydown', wv.onKey);
  try{ wv.map.remove(); }catch(e){}
  wv.root.remove(); document.body.classList.remove('locked'); wv.opener?.focus?.(); wv = null;
 }
@@ -1498,6 +1499,11 @@ async function openWaveMap(id){
  const refI = a ? (a.state === 'soon' ? a.arr : a.i0) : currentIndex(s), re = evaluate(sp, s, refI);
  const thr = sp.min / (re && re.hs ? clamp(re.face / re.hs, .3, 1.3) : 1);
  const upd = grid?.generated ? new Intl.DateTimeFormat('it-IT', {timeZone:TZ, hour:'2-digit', minute:'2-digit'}).format(new Date(grid.generated)) : null;
+ const stops = [{t:tNow, l:'Adesso', s:wvHm(times[tNow])}];
+ if (tArr != null && tArr !== tNow) stops.push({t:tArr, l:'Arrivo', s:`${weekday(times[tArr].slice(0,10)).slice(0,3)} ${wvHm(times[tArr])}`});
+ if (a && a.state !== 'none' && faces[tPeak] > 0 && tPeak !== tNow) stops.push({t:tPeak, l:'Picco', s:`${weekday(times[tPeak].slice(0,10)).slice(0,3)} ${wvHm(times[tPeak])}`});
+ stops.sort((x, y) => x.t - y.t);
+ const PLAY_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>', PAUSE_ICO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>';
  const root = document.createElement('div');
  root.id = 'wvmap'; root.className = 'wvmap'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', `Onde in arrivo, ${sp.name}`);
  const dayMarks = times.map((k, i) => (i === 0 || k.slice(0,10) !== times[i-1].slice(0,10)) ? `<span style="left:${(i / times.length * 100).toFixed(2)}%">${weekday(k.slice(0,10)).slice(0,3)}</span>` : '').join('');
@@ -1508,14 +1514,14 @@ async function openWaveMap(id){
   <div class="wvchips" role="group" aria-label="Livello"><button type="button" aria-pressed="true" data-m="waves">Onde</button><button type="button" aria-pressed="false" data-m="wind">Vento</button></div>
   <div class="wvlegend" id="wvLegend"></div>
   <p class="wvnote" ${grid ? 'hidden' : ''}>Campo delle onde non disponibile: vedi solo lo spot.</p>
-  <section class="wvsheet"><div class="wvrow"><b id="wvTime"></b><span class="wvchip" id="wvChip"></span></div>
+  <section class="wvsheet"><div class="wvrow"><button type="button" class="wvplay" id="wvPlay" aria-pressed="false" aria-label="Avvia l'animazione">${PLAY_ICO}</button><b id="wvTime"></b><span class="wvchip" id="wvChip"></span></div>
    <div class="wvread"><div><i>Onde</i><b id="wvW"></b><span id="wvWs"></span></div><div><i>Vento</i><b id="wvV"></b><span id="wvVs"></span></div></div>
    <div class="wvscrub" id="wvScrub" role="slider" tabindex="0" aria-label="Ora della previsione" aria-valuemin="0" aria-valuemax="${times.length - 1}">${faces.map((f, i) => `<i data-i="${i}" style="height:${Math.max(7, f / fmax * 100).toFixed(1)}%"></i>`).join('')}<u class="wvnow" style="left:${((tNow + .5) / times.length * 100).toFixed(2)}%"></u>${tArr != null ? `<em class="wvflag" style="left:${((tArr + .5) / times.length * 100).toFixed(2)}%" title="Arrivo"></em>` : ''}</div>
    <div class="wvdays" aria-hidden="true">${dayMarks}</div>
-   <div class="wvcta"><button type="button" class="wvprim" id="wvGo"></button><button type="button" class="wvsec" id="wvNowBtn">Torna a adesso</button></div></section>`;
+   <div class="wvstops" role="group" aria-label="Salta a">${stops.map(x => `<button type="button" class="wvstop" data-t="${x.t}" aria-pressed="false"><i>${x.l}</i><b>${x.s}</b></button>`).join('')}</div></section>`;
  document.body.appendChild(root); document.body.classList.add('locked');
 
- const map = L.map('wvLeaf', {zoomControl:false, attributionControl:true, zoomSnap:.5, minZoom:6, maxZoom:11});
+ const map = L.map('wvLeaf', {zoomControl:false, attributionControl:true, zoomSnap:.5, minZoom:7, maxZoom:11, zoomAnimation:false, markerZoomAnimation:false, fadeAnimation:false, maxBounds:[[37.9, 4.6], [41.6, 9.9]], maxBoundsViscosity:.8});
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, attribution:'Tiles &copy; Esri · Onde: Open-Meteo'}).addTo(map);
  const field = grid ? new (WaveFieldCls ||= makeWaveField())(grid).addTo(map) : null;
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom:18, maxNativeZoom:16, pane:'shadowPane'}).addTo(map);
@@ -1538,22 +1544,27 @@ async function openWaveMap(id){
   const [bg, fg] = tone(e?.score);
   marker.setIcon(L.divIcon({className:'', iconSize:[34,34], iconAnchor:[17,17], html:`<div class="pin sel" style="--c:${bg};--fg:${fg}">${e?.score ?? '–'}</div>`}));
   const day = weekday(k.slice(0,10)).slice(0,3).toUpperCase();
-  $('#wvTime').textContent = cur === tNow ? `ADESSO · ${day} ${wvHm(k)}` : `${day} ${wvHm(k)}${cur === tPeak ? ' · PICCO' : ''}`;
-  $('#wvChip').textContent = cur === tNow ? (a?.state === 'soon' ? 'Arriva ' + whenTxt(s.time[a.arr]).replace(' alle', '') : a?.state === 'now' ? 'Onde in corso' : 'Nessun arrivo') : (cur > tNow ? `Fra ${rel(k)} ore` : `${-rel(k)} ore fa`);
+  $('#wvTime').textContent = cur === tNow ? `ADESSO · ${day} ${wvHm(k)}` : `${day} ${wvHm(k)}${cur === tArr ? ' · ARRIVO' : cur === tPeak ? ' · PICCO' : ''}`;
+  $('#wvChip').textContent = cur === tNow ? (a?.state === 'soon' ? (rel(s.time[a.arr]) <= 1 ? 'Arriva a breve' : `Arriva fra ${rel(s.time[a.arr])} ore`) : a?.state === 'now' ? 'Onde in corso' : 'Nessun arrivo') : (cur > tNow ? `Fra ${rel(k)} ore` : `${-rel(k)} ore fa`);
   $('#wvW').textContent = e ? `${e.face.toFixed(1)} m · ${Math.round(e.T)} s` : 'n.d.';
   $('#wvWs').textContent = e ? `da ${cardinal(e.dir)} ${Math.round(e.dir)}°` : '';
   $('#wvV').textContent = e ? `${Math.round(e.ws)} km/h` : 'n.d.';
   $('#wvVs').textContent = e ? `da ${cardinal(e.wd)}${e.windType === 'offshore' ? ' · offshore' : ''}` : '';
   bars.forEach((el, i) => { el.className = (i === cur ? 'sel ' : '') + (i < tNow ? 'past' : ''); });
   const sl = $('#wvScrub'); sl.setAttribute('aria-valuenow', cur); sl.setAttribute('aria-valuetext', `${day} ${wvHm(k)}`);
-  const go = $('#wvGo');
-  if (tArr != null && cur !== tArr){ go.textContent = "Vai all'arrivo"; go.dataset.t = tArr; go.hidden = false; }
-  else if (cur !== tPeak && faces[tPeak] > 0){ go.textContent = 'Vai al picco'; go.dataset.t = tPeak; go.hidden = false; }
-  else go.hidden = true;
-  $('#wvNowBtn').hidden = cur === tNow;
+  root.querySelectorAll('.wvstop').forEach(bn => bn.setAttribute('aria-pressed', +bn.dataset.t === cur));
  }
- $('#wvGo').onclick = e => show(+e.currentTarget.dataset.t);
- $('#wvNowBtn').onclick = () => show(tNow);
+ let timer = null;
+ const playBtn = $('#wvPlay');
+ const setPlay = on => {
+  if (on === !!timer) return;
+  if (on){ if (cur >= times.length - 1) show(tNow); timer = setInterval(() => show(cur >= times.length - 1 ? tNow : cur + 1), 420); }
+  else { clearInterval(timer); timer = null; }
+  playBtn.innerHTML = on ? PAUSE_ICO : PLAY_ICO; playBtn.setAttribute('aria-pressed', on);
+  playBtn.setAttribute('aria-label', on ? "Metti in pausa l'animazione" : "Avvia l'animazione");
+ };
+ playBtn.onclick = () => setPlay(!timer);
+ root.querySelectorAll('.wvstop').forEach(bn => bn.onclick = () => { setPlay(false); show(+bn.dataset.t); });
  $('#wvBack').onclick = closeWaveMap;
  $('#wvCenter').onclick = center;
  root.querySelectorAll('.wvchips button').forEach(bn => bn.onclick = () => {
@@ -1561,13 +1572,13 @@ async function openWaveMap(id){
  });
  const sc = $('#wvScrub'); let drag = false;
  const idxAt = x => { const r = sc.getBoundingClientRect(); return Math.round(clamp((x - r.left) / r.width * times.length - .5, 0, times.length - 1)); };
- sc.onpointerdown = e => { drag = true; sc.setPointerCapture(e.pointerId); show(idxAt(e.clientX)); };
+ sc.onpointerdown = e => { setPlay(false); drag = true; sc.setPointerCapture(e.pointerId); show(idxAt(e.clientX)); };
  sc.onpointermove = e => { if (drag) show(idxAt(e.clientX)); };
  sc.onpointerup = sc.onpointercancel = () => { drag = false; };
- sc.onkeydown = e => { const d = {ArrowLeft:-1, ArrowRight:1, ArrowDown:-1, ArrowUp:1}[e.key]; if (d){ e.preventDefault(); show(cur + d); } };
+ sc.onkeydown = e => { const d = {ArrowLeft:-1, ArrowRight:1, ArrowDown:-1, ArrowUp:1}[e.key]; if (d){ e.preventDefault(); setPlay(false); show(cur + d); } };
  const onKey = e => { if (e.key === 'Escape') closeWaveMap(); };
  document.addEventListener('keydown', onKey);
- wv = {root, map, onKey, opener};
+ wv = {root, map, onKey, opener, stop:() => setPlay(false)};
  legend(); show(tNow); $('#wvBack').focus();
 }
 
