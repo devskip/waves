@@ -3265,7 +3265,14 @@ async function refresh(){
 // che contano davvero (previsioni non scaricate), gestiti in refresh().
 window.addEventListener('error', e=>{ console.warn('Errore intercettato:', e.message, e.filename, e.lineno); });
 window.addEventListener('unhandledrejection', e=>{ console.warn('Promessa non gestita:', e.reason); });
+// aprire l'app = notifiche viste: spengo il pallino sull'icona e tolgo le notifiche già consegnate
+async function clearBadge(){
+ try{ await navigator.clearAppBadge?.(); }catch(e){}
+ try{ const reg = await navigator.serviceWorker?.getRegistration(); ((await reg?.getNotifications?.()) || []).forEach(n => n.close()); }catch(e){}
+}
+clearBadge();
 document.addEventListener('visibilitychange', ()=>{
+ if (!document.hidden) clearBadge();
  if (!document.hidden && Cloud.user && Cloud.tg().link) Cloud.loadTelegram().catch(()=>{});
  const c = store.get('surf.cache', null);
  if (!document.hidden && (!c || Date.now() - c.at > 60*60*1000)) refresh();
