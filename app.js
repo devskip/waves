@@ -1454,7 +1454,7 @@ const makeWaveField = () => L.Layer.extend({
   return best;
  },
  _near(arr, lat, lon){ const p = this._idx(lat, lon); return p ? arr[Math.round(p.fy) * this.g.nlon + Math.round(p.fx)] : null; },
- _front(fx, PAD, drawn, nx, B){   // linea dove l'onda arriva all'altezza minima dello spot (marching squares sui nodi della griglia)
+ _front(fx, PAD, drawn, nx, BS){   // linea dove l'onda arriva all'altezza minima dello spot (marching squares sui nodi della griglia)
   const m = this._map, g = this.g, h = g.hs[this.t], T = this.thr, nl = g.nlon;
   const pt = (j, i) => { const p = m.latLngToContainerPoint([g.lat0 + j * g.step, g.lon0 + i * g.step]); return [p.x + PAD, p.y + PAD]; };
   const lerp = (v0, v1, p0, p1) => { const f = (T - v0) / (v1 - v0); return [p0[0] + (p1[0] - p0[0]) * f, p0[1] + (p1[1] - p0[1]) * f]; };
@@ -1471,7 +1471,7 @@ const makeWaveField = () => L.Layer.extend({
     for (let u = 0; u < n; u++){
      const x0 = p[0] + (q[0] - p[0]) * u / n, y0 = p[1] + (q[1] - p[1]) * u / n, x1 = p[0] + (q[0] - p[0]) * (u + 1) / n, y1 = p[1] + (q[1] - p[1]) * (u + 1) / n;
      const c = m.containerPointToLatLng([(x0 + x1) / 2 - PAD, (y0 + y1) / 2 - PAD]);
-     if (this._land(c.lat, c.lng) || !drawn[Math.floor((y0 + y1) / 2 / B) * nx + Math.floor((x0 + x1) / 2 / B)]){ pen = false; continue; }   // solo dove c'è il campo blu
+     if (this._land(c.lat, c.lng) || !drawn[Math.floor((y0 + y1) / 2 / BS) * nx + Math.floor((x0 + x1) / 2 / BS)]){ pen = false; continue; }   // solo dove c'è il campo blu
      if (!pen){ fx.moveTo(x0, y0); pen = true; }
      fx.lineTo(x1, y1);
     }
@@ -1561,7 +1561,7 @@ async function openWaveMap(id){
  const dayMarks = times.map((k, i) => (i === 0 || k.slice(0,10) !== times[i-1].slice(0,10)) ? `<span style="left:${(i / times.length * 100).toFixed(2)}%">${weekday(k.slice(0,10)).slice(0,3)}</span>` : '').join('');
  root.innerHTML = `<div class="wvleaf" id="wvLeaf"></div>
   <header class="wvhead"><button type="button" class="wvbtn" id="wvBack" aria-label="Chiudi la mappa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-   <div class="wvttl"><b>${esc(sp.name)}</b><span>Onde in arrivo${upd ? ' · agg. ' + upd : ''} · v4</span></div>
+   <div class="wvttl"><b>${esc(sp.name)}</b><span>Onde in arrivo${upd ? ' · agg. ' + upd : ''} · v5</span></div>
    <button type="button" class="wvbtn" id="wvCenter" aria-label="Ricentra sullo spot"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button></header>
   <div class="wvchips" role="group" aria-label="Livello"><button type="button" aria-pressed="true" data-m="waves">Onde</button><button type="button" aria-pressed="false" data-m="wind">Vento</button></div>
   <div class="wvlegend" id="wvLegend"></div>
