@@ -1943,7 +1943,7 @@ function openLog(sp){
 }
 const median = a => { const b = [...a].sort((x,y)=>x-y), m = b.length >> 1; return b.length ? (b.length % 2 ? b[m] : (b[m-1]+b[m])/2) : null; };
 function calStats(sp){
- const ss = spotSessions(sp), withApp = ss.filter(x => x.onda_app_m !== '' && x.onda_app_m > 0.15);
+ const ss = [...spotSessions(sp)].sort((x,y)=>(x.data+' '+x.ora).localeCompare(y.data+' '+y.ora)), withApp = ss.filter(x => x.onda_app_m !== '' && x.onda_app_m > 0.15);
  const ratios = withApp.map(x => x.onda_reale_m / (x.onda_app_m / (x.gain || 1) / (x.fix || 1)));
  const gain = ratios.length ? median(ratios) : null;
  const diffs = ss.filter(x => x.punteggio_app !== '').map(x => x.qualita_reale_1_5 - x.punteggio_app);
@@ -1968,12 +1968,12 @@ function calHtml(sp){
    ? `<p><b>Onda:</b> ${cur !== 1 ? 'con la correzione attiva le previsioni' : 'le previsioni'} sono in linea con quello che hai trovato (scarto ${pct > 0 ? '+' : ''}${pct}%). Niente da correggere.</p>`
    : `<p><b>Onda:</b> sulle tue ${st.nApp} sessioni l'app ${pct < 0 ? 'sovrastima' : 'sottostima'} l'onda a riva di circa il ${Math.abs(pct)}%. Correzione proposta: ×${st.gain.toFixed(2)}.</p>
       <button class="pillbtn primary" id="calApply" style="margin-top:8px;width:auto">Applica la correzione</button>`;
- } else tips += `<p>Servono almeno 3 sessioni con la previsione dell'app per proporre una correzione (ora ${st.nApp}).</p>`;
+ } else tips += `<p>Servono almeno 3 sessioni con la previsione dell'app per proporre una correzione (ora ${st.nApp}${st.n > st.nApp ? `, su ${st.n} registrate: ${st.n - st.nApp === 1 ? 'una non vale' : (st.n - st.nApp) + ' non valgono'} perché l'app prevedeva meno di 0,2 m o non aveva la previsione` : ''}).</p>`;
  if (st.bias != null && st.n >= 3 && Math.abs(st.bias) >= 1)
   tips += `<p style="margin-top:8px"><b>Punteggio:</b> in media il tuo voto è ${st.bias > 0 ? 'più alto' : 'più basso'} di ${Math.abs(st.bias).toFixed(1)} punti. ${st.bias > 0 ? 'Lo spot rende più di quanto pensi l\'app: forse la finestra di direzioni è troppo stretta.' : 'Lo spot rende meno: forse la finestra è troppo larga o il range di onda troppo basso.'}</p>`;
  if (st.windMiss >= 2)
   tips += `<p style="margin-top:8px"><b>Vento:</b> ${st.windMiss} volte l'app lo dava buono ma in acqua era onshore. Probabilmente la direzione offshore dello spot (ora da ${cardinal(sp.offshore)}) va corretta.</p>`;
- const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m}m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''}${x.affollamento_1_4 ? ', gente ' + x.affollamento_1_4 + '/4' : ''}${x.tavola ? ', ' + esc(x.tavola) : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}</span></div>`).join('');
+ const list = st.ss.slice(-6).reverse().map(x => `<div><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>Reale ${x.onda_reale_m}m, voto ${x.qualita_reale_1_5}/5${x.vento_reale ? ', ' + x.vento_reale : ''}${x.affollamento_1_4 ? ', gente ' + x.affollamento_1_4 + '/4' : ''}${x.tavola ? ', ' + esc(x.tavola) : ''} · App ${x.onda_app_m !== '' ? x.onda_app_m.toFixed(1) + ' m, ' + x.punteggio_app + '/5' : 'n.d.'}${x.onda_app_m === '' || x.onda_app_m <= 0.15 ? ' · non conteggiata' : ''}</span></div>`).join('');
  return `${tips || ''}
   ${cur !== 1 ? `<p class="small" style="margin-top:10px">Correzione personale attiva: ×${cur.toFixed(2)}. Vale per le tue previsioni${Cloud.user ? ', su tutti i tuoi dispositivi e negli alert Telegram' : ' su questo telefono'}. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}
   ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px var(--grot)">Ultime sessioni</h3><div class="slist">${list}</div>` : ''}
