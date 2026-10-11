@@ -233,6 +233,7 @@ async function loadSpots(){
  try{ fromFile = (await getJson('spots.json', {cache:'no-cache'}, 1)).spots; }catch(e){}
  const ids = new Set(fromDb.map(s => s.id));
  baseSpots = [...fromDb, ...fromFile.filter(s => !ids.has(s.id))];
+ baseSpots.forEach(s => { s.gain0 = s.gain ?? 1; });   // correzione dello spot come sta nel database: le correzioni personali non la toccano
  if (!baseSpots.length) throw new Error('elenco spot non disponibile');
  const official = new Set(baseSpots.map(s => s.id));
  const mine = Data.spots.all().filter(s => !official.has(s.id));   // uno spot personale diventato ufficiale non si ripete
@@ -245,7 +246,11 @@ async function loadSpots(){
 // correzioni personali dalla taratura: valgono sopra a quella dello spot
 function applyGains(){
  const g = store.get('surf.gain', {});
- spots.forEach(sp => { if (g[sp.id] != null) sp.gain = g[sp.id]; });
+ spots.forEach(sp => {
+  const b0 = sp.gain0 ?? (baseSpots.includes(sp) ? sp.gain : null) ?? 1;
+  if (sp.gain0 == null && baseSpots.includes(sp)) sp.gain0 = b0;
+  sp.gain = g[sp.id] != null ? g[sp.id] : b0;
+ });
 }
 
 async function fetchForecast(){
@@ -1916,11 +1921,12 @@ function openLog(sp, ex, mode){
  const wrap = document.createElement('div');
  wrap.className = 'sheet'; wrap.id = 'logSheet';
  wrap.innerHTML = `<div class="sheet-bg" data-close></div><div class="sheet-p form" role="dialog" aria-modal="true" aria-labelledby="logT">
-  <div class="sheet-h"><h2 id="logT">${editing ? 'Modifica' : `Com'era a ${esc(sp.name)}?`}</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
-  <div class="qual lgmode" id="lgMode" role="group" aria-label="Tipo di registrazione"><button type="button" data-mode="surf" aria-pressed="false">Ho surfato</button><button type="button" data-mode="obs" aria-pressed="false">Solo condizioni</button></div>
-  <p class="small muted" id="lgIntro" style="margin-top:8px"></p>
+  <div class="sheet-h"><h2 id="logT">${editing ? 'Modifica' : 'Registra'}</h2><button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
+  <div class="segbar" id="lgMode" role="group" aria-label="Tipo di registrazione"><button type="button" data-mode="surf" aria-pressed="false">Ho surfato</button><button type="button" data-mode="obs" aria-pressed="false">Solo condizioni</button></div>
+  <p class="small muted" id="lgIntro" style="margin-top:10px"></p>
   <label>Quando<input type="datetime-local" id="lgWhen" value="${whenValue(ex, now)}"></label>
   <label>Onda a riva, in metri<input type="number" id="lgWave" inputmode="decimal" step="0.1" min="0" max="8" placeholder="es. 1.2" value="${ex && ex.onda_reale_m !== '' ? ex.onda_reale_m : ''}"></label>
+  <p class="xs muted" id="lgWaveHint" style="margin-top:6px"></p>
   <div id="lgSurf">
    <label>Com'era, da 1 (da non uscire) a 5 (epico)</label><div class="qual" id="lgQual">${[1,2,3,4,5].map(n=>`<button type="button" data-q="${n}" aria-pressed="false">${n}</button>`).join('')}</div>
    <label>Quanta gente c'era</label><div class="qual crowdq" id="lgCrowd">${[1,2,3,4].map(n=>`<button type="button" data-c="${n}" aria-pressed="false" aria-label="${CROWD[n-1]}">${'<svg width="12" height="16" viewBox="0 0 18 22" fill="currentColor" aria-hidden="true"><circle cx="9" cy="5" r="4"/><path d="M1 21c0-5 3.6-8 8-8s8 3 8 8z"/></svg>'.repeat(n)}</button>`).join('')}</div>
@@ -1928,25 +1934,28 @@ function openLog(sp, ex, mode){
   </div>
   <label id="lgWdLab">Vento, da dove soffia</label>
   <div class="wdial" id="lgDial" role="group" aria-labelledby="lgWdLab">${windDialHtml()}<div class="wdc"><i>da</i><b id="lgWdDeg">–</b></div></div>
+  <p class="xs muted wdleg"><b class="a">●</b> scelto <b class="b">◌</b> previsto dall'app</p>
   <p class="xs muted wdtxt" id="lgWdTxt"></p>
   <label>Forza del vento</label><div class="qual forceq" id="lgForce">${WIND_FORCE.map(([k, t]) => `<button type="button" data-f="${k}" aria-pressed="false">${t}</button>`).join('')}</div>
   <p class="xs muted" style="margin-top:4px">Debole sotto 8 km/h · medio 8–20 · forte oltre 20</p>
   <div id="lgBoardBox">${boards.length ? `<label>Tavola usata<select id="lgBoard"><option value="">Non indicata</option>${boards.map(b => `<option value="${b.id}"${ex && ex.tavola === b.name ? ' selected' : ''}>${esc(b.name)}</option>`).join('')}</select></label>` : ''}</div>
   <label>Note<textarea id="lgNote" rows="2" placeholder="es. chiudeva sul reef, marea alta">${ex ? esc(ex.note || '') : ''}</textarea></label>
   <p class="err" id="lgErr" hidden></p>
-  <button class="pillbtn primary" id="lgSave" style="margin-top:16px"></button></div>`;
+  <button type="button" class="savepill" id="lgSave"><span id="lgSaveT"></span><span class="savedot" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></span></button>
+  <p class="xs muted" style="margin-top:12px">${Cloud.user ? 'Salvata nel tuo account: contribuisce alla taratura dello spot.' : 'Salvata su questo telefono. Con l\'account contribuisce alla taratura dello spot.'}</p></div>`;
  document.body.appendChild(wrap); document.body.classList.add('locked');
  const $l = sel => wrap.querySelector(sel);
  const close = ()=>{ wrap.remove(); document.body.classList.remove('locked'); };
  const syncUI = () => {
   wrap.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.mode === 'obs') === obs));
   $l('#lgSurf').hidden = obs; $l('#lgBoardBox').hidden = obs;
-  $l('#lgIntro').textContent = obs ? 'Non hai surfato? Segna lo stesso come hai trovato mare e vento: conta per onda e vento nella taratura, non per il voto.' : "Serve a capire quanto l'app ci prende su questo spot. Bastano pochi secondi.";
-  $l('#lgSave').textContent = editing ? 'Salva modifiche' : obs ? 'Salva condizioni' : 'Salva sessione';
+  $l('#lgIntro').innerHTML = `<b>${esc(sp.name)}</b> · ` + (obs ? 'senza sessione non servono voto, tavola e affollamento. Conta per onda e vento nella taratura.' : "serve a capire quanto l'app ci prende su questo spot. Bastano pochi secondi.");
+  $l('#lgSaveT').textContent = editing ? 'Salva modifiche' : obs ? 'Salva condizioni' : 'Salva sessione';
   wrap.querySelectorAll('[data-q]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.q === q));
   wrap.querySelectorAll('[data-c]').forEach(b => b.setAttribute('aria-pressed', +b.dataset.c === cr));
   $l('#lgCrowdTxt').textContent = cr ? CROWD[cr - 1] : 'Da 1 (nessuno o quasi) a 4 (affollato)';
   const ev = $l('#lgWhen').value ? appAt(sp, $l('#lgWhen').value) : null, appDeg = ev && ev.ws >= 3 ? ev.wd : null;
+  $l('#lgWaveHint').textContent = ev ? `L'app prevedeva ${mdl(ev.face)} m` : '';
   wrap.querySelectorAll('[data-wd]').forEach(b => { b.setAttribute('aria-pressed', wd != null && dirIndex(wd) === +b.dataset.i); b.classList.toggle('app', appDeg != null && dirIndex(appDeg) === +b.dataset.i); });
   $l('#lgWdDeg').textContent = wd != null ? cardinal(wd) : '–';
   wrap.querySelectorAll('[data-f]').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === force));
@@ -2010,7 +2019,7 @@ function calStats(sp){
  const diffs = ss.filter(x => x.punteggio_app !== '' && x.qualita_reale_1_5 !== '' && x.qualita_reale_1_5 != null).map(x => x.qualita_reale_1_5 - x.punteggio_app);
  const bias = diffs.length ? diffs.reduce((a,b)=>a+b,0)/diffs.length : null;
  const windMiss = ss.filter(x => x.vento_reale === 'onshore' && ['offshore','debole'].includes(x.vento_app)).length;
- return {n: ss.length, nApp: withApp.length, nObs: ss.filter(x => x.tipo === 'osservazione').length, gain, bias, windMiss, ss};
+ return {used: withApp, n: ss.length, nApp: withApp.length, nObs: ss.filter(x => x.tipo === 'osservazione').length, gain, bias, windMiss, ss};
 }
 // ---------- Taratura della community: valori aggregati per spot, calcolati dal database ----------
 let communityP = null;
@@ -2024,7 +2033,7 @@ function loadCommunity(force){
  return communityP;
 }
 const isOfficial = sp => baseSpots.some(b => b.id === sp.id);
-const baseGain = sp => baseSpots.find(b => b.id === sp.id)?.gain ?? 1;
+const baseGain = sp => sp.gain0 ?? 1;
 const communityOf = sp => { const all = store.get('surf.community', null); if (!all || !isOfficial(sp)) return null; return all[sp.id] || {spot: sp.id, entries: 0, users: 0, gain_users: 0, gain: null, bias: null, wind_miss: 0, wind_n: 0}; };
 const commTag = sp => { const c = communityOf(sp); return c && c.gain != null ? `Tarato da ${c.gain_users} surfisti` : null; };
 const fmtK = n => n.toFixed(2).replace('.', ',');
@@ -2047,6 +2056,81 @@ function calInfo(sp){
  const pct = Math.round((st.gain / (sp.gain ?? 1) - 1) * 100);
  return Math.abs(pct) < 10 ? ((sp.gain ?? 1) !== 1 ? 'Correzione attiva: previsioni in linea con la realtà' : 'Le previsioni d\'onda qui sono in linea con la realtà') : `L'app ${pct < 0 ? 'sovrastima' : 'sottostima'} l'onda di circa il ${Math.abs(pct)}%`;
 }
+
+// ---------- Quale valore usare: modello teorico, correzione community, la tua ----------
+// surf.gain = correzione in uso su questo spot (assente: quella dello spot; 1: modello teorico; altro: la tua).
+// surf.gainMine = la tua correzione salvata, così puoi tornarci anche dopo averne scelta un'altra.
+function gainState(sp){
+ const g = store.get('surf.gain', {})[sp.id], saved = store.get('surf.gainMine', {})[sp.id];
+ const mine = saved != null ? saved : (g != null && g !== 1 ? g : null), base = baseGain(sp);
+ let mode = g == null ? 'community' : g === 1 ? 'raw' : 'mine';
+ if (mode === 'community' && base === 1) mode = 'raw';   // nessuna correzione adottata per lo spot: vale il modello teorico
+ return {g, mine, base, mode};
+}
+function setGainMode(sp, mode, value){
+ const g = {...store.get('surf.gain', {})}, mm = {...store.get('surf.gainMine', {})}, st = gainState(sp);
+ if (st.mine != null) mm[sp.id] = st.mine;
+ if (mode === 'mine'){ const v = value ?? st.mine; if (v == null) return; mm[sp.id] = v; g[sp.id] = v; }
+ else if (mode === 'raw') g[sp.id] = 1;
+ else delete g[sp.id];
+ store.set('surf.gainMine', mm); store.set('surf.gain', g);
+ applyGains(); openDetail(sp.id); openSection('cal', true); renderAll();
+}
+function resetMine(sp){
+ const g = {...store.get('surf.gain', {})}, mm = {...store.get('surf.gainMine', {})}, st = gainState(sp);
+ delete mm[sp.id]; if (st.mode === 'mine') delete g[sp.id];
+ store.set('surf.gainMine', mm); store.set('surf.gain', g);
+ applyGains(); openDetail(sp.id); openSection('cal', true); renderAll();
+}
+const mdl = n => n.toFixed(1).replace('.', ',');
+function calOptions(sp, st){
+ const gs = gainState(sp), proposal = st.nApp >= 3 && st.gain != null ? +st.gain.toFixed(2) : null;
+ const mineVal = gs.mine ?? proposal;
+ return {gs, proposal, list: [
+  {key: 'raw', name: 'Modello teorico', sub: 'Previsione grezza, senza correzioni', g: 1},
+  ...(gs.base !== 1 ? [{key: 'community', name: 'Correzione community', sub: 'Curata dai wave hunter, la stessa per tutti', g: gs.base, tag: 'spot'}] : []),
+  ...(mineVal != null ? [{key: 'mine', name: 'La tua correzione', sub: gs.mine != null ? `Dalle tue ${st.nApp} registrazioni valide` : `Proposta dalle tue ${st.nApp} registrazioni valide`, g: mineVal, proposal: gs.mine == null}] : [])
+ ]};
+}
+function calChoiceHtml(sp, st){
+ const ev = nowEval(sp); if (!ev) return '';
+ const {gs, list} = calOptions(sp, st); if (list.length < 2) return '';
+ const raw = ev.face / (sp.gain || 1), vals = list.map(o => raw * o.g), mx = Math.max(...vals);
+ const rows = list.map((o, i) => { const on = o.key === gs.mode;
+  return `<button type="button" class="copt${on ? ' on' : ''}" data-gopt="${o.key}" aria-pressed="${on}"><span class="rd"><i></i></span>
+   <span class="cot"><b>${o.name}${o.tag ? ` <em class="ctag ok">${o.tag}</em>` : ''}${on ? ' <em class="ctag amber">in uso</em>' : ''}${o.proposal ? ' <em class="ctag blue">proposta</em>' : ''}</b><small>${o.sub}</small></span>
+   <span class="cov"><b>${mdl(vals[i])}<small> m</small></b><small>×${fmtK(o.g)}</small></span><i class="cob"><u style="width:${(vals[i] / mx * 100).toFixed(0)}%"></u></i></button>`; }).join('');
+ const back = gs.mode === 'mine' && gs.base !== 1 ? '<button type="button" class="pillbtn" data-gopt="community">↩ Torna alla correzione community</button>' : '';
+ return `<div class="calc"><div class="calh"><h4>Quale valore usare</h4><span class="xs muted">onda a riva, adesso</span></div>${rows}
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${back}${gs.mine != null ? '<button type="button" class="pillbtn" id="calReset">Azzera la tua</button>' : ''}</div>
+  <p class="xs muted" style="margin-top:8px">Scegliere un'opzione è sempre reversibile: la tua correzione resta salvata e la riattivi quando vuoi.</p></div>`;
+}
+function calAccuracyHtml(sp, st){
+ if (!st.used.length) return '';
+ const {gs, list} = calOptions(sp, st); if (list.length < 2) return '';
+ const err = g => { let d = 0, r = 0; st.used.forEach(x => { const fix = x.fix || 1, pure = x.onda_app_m / (x.gain || 1) / fix; d += Math.abs(pure * g * fix - x.onda_reale_m); r += +x.onda_reale_m; }); return r > 0 ? d / r * 100 : null; };
+ const rows = list.map(o => ({o, e: err(o.g)})).filter(r => r.e != null); if (rows.length < 2) return '';
+ const rawE = rows.find(r => r.o.key === 'raw')?.e, best = rows.reduce((a, b) => b.e < a.e ? b : a);
+ const col = {raw: '#8A8A85', community: '#9FD18B', mine: 'var(--amber)'};
+ return `<div class="calc"><div class="calh"><h4>Quanto ci prende, sulle tue sessioni</h4></div><p class="xs muted">Errore medio sull'onda, rispetto a quello che hai trovato (${plural(st.used.length, 'registrazione', 'registrazioni')})</p>
+  ${rows.map(r => calBar(r.o.name, `${Math.round(r.e)}%`, r.e, col[r.o.key])).join('')}
+  <p style="margin-top:10px">${best.o.key !== 'raw' && rawE > best.e ? `Con ${best.o.key === 'mine' ? 'la tua correzione' : 'la correzione community'} l'errore scende da ${Math.round(rawE)}% a ${Math.round(best.e)}%.` : 'Il modello teorico è già vicino a quello che hai trovato.'}${st.used.length < 3 ? ' Sono poche registrazioni: il confronto è indicativo.' : ''}</p></div>`;
+}
+function calDetailHtml(sp, st){
+ const {gs, list} = calOptions(sp, st); const com = list.find(o => o.key === 'community'), mine = list.find(o => o.key === 'mine');
+ const rows = st.ss.filter(x => x.onda_app_m !== '').slice(-6).reverse();
+ if (!rows.length) return '';
+ const ok = (v, t) => t !== '' && Math.abs(v - t) <= 0.15;
+ const line = x => { const fix = x.fix || 1, pure = x.onda_app_m / (x.gain || 1), t = x.onda_reale_m;
+  const c = (g) => g == null ? '<span class="muted">–</span>' : `<span class="${ok(pure * g * fix, t) ? 'okv' : ''}">${mdl(pure * g * fix)}</span>`;
+  return `<div class="dtr"><b>${x.data.slice(8)}/${x.data.slice(5,7)} ${x.ora}</b><span>${c(1)}</span><span>${c(com ? com.g : null)}</span><span>${c(mine ? mine.g : null)}</span><span class="fv">${t === '' ? '–' : mdl(+t)}</span></div>`; };
+ const ev = nowEval(sp), cur = sp.gain || 1, rawNow = ev ? ev.face / cur : null;
+ const srcName = gs.mode === 'mine' ? 'la tua correzione' : gs.mode === 'community' ? 'la correzione community' : null;
+ return `<details class="caldet"><summary>Dettaglio: modello, correzioni e trovato</summary>
+  <div class="dtr dth"><span>Quando</span><span>Teorico</span><span>Commun.</span><span>Tua</span><span>Trovato</span></div>${rows.map(line).join('')}
+  <p class="xs muted" style="margin-top:8px">Onda a riva in metri, per ogni registrazione. In verde i valori entro 15 cm da quello che hai trovato. Con previsione zero non si può calcolare un rapporto: la registrazione non conta.</p>
+  ${rawNow != null ? `<div class="calstack"><div><span>Modello teorico, adesso</span><b>${mdl(rawNow)} m</b></div><p class="xs muted">${srcName ? `× ${fmtK(cur)} ${srcName}` : 'nessuna correzione in uso'}</p><div class="tot"><span>Valore mostrato in app</span><b>${mdl(rawNow * cur)} m</b></div></div>` : ''}</details>`;
+}
 const calBar = (label, val, pct, col) => `<div class="calbar"><div><span>${label}</span><b>${val}</b></div><i><u style="width:${clamp(pct,4,100).toFixed(0)}%;background:${col}"></u></i></div>`;
 function calCommHtml(sp, c){
  const base = baseGain(sp);
@@ -2059,9 +2143,9 @@ function calCommHtml(sp, c){
    <button class="pillbtn primary calcta" id="calLog2">✍️ Dai una mano, registra</button></div>`;
  }
  const diff = c.gain / base - 1, pct = Math.round(diff * 100), aligned = Math.abs(diff) < 0.1;
- const tag = aligned ? `<span class="ctag ok">${base !== 1 ? 'Applicata allo spot' : 'Nessuna correzione'}</span>` : '<span class="ctag amber">Da applicare</span>';
+ const tag = aligned ? `<span class="ctag ok">${base !== 1 ? 'Adottata per lo spot' : 'Nessuna correzione'}</span>` : '<span class="ctag amber">Non ancora adottata</span>';
  const txt = aligned
-  ? (base !== 1 ? 'Le previsioni di questo spot sono già corrette: in linea con quello che trova la community.' : 'Le previsioni qui sono in linea con quello che trova la community.')
+  ? (base !== 1 ? 'La correzione dello spot è in linea con quello che trova la community.' : 'Il modello teorico qui è in linea con quello che trova la community.')
   : `Secondo la community l'app ${pct < 0 ? 'sovrastima' : 'sottostima'} l'onda di circa il ${Math.abs(pct)}%.`;
  return `<div class="calc"><div class="calh"><h4>Community</h4>${tag}</div>
   <div class="calbig">×${fmtK(c.gain)}</div><p>${txt}</p>
@@ -2069,7 +2153,7 @@ function calCommHtml(sp, c){
   ${calBar('Onda a riva: previsto → trovato', `${c.gain < 1 ? '−' : '+'}${Math.abs(Math.round((c.gain - 1) * 100))}%`, c.gain * 100, 'var(--sea-line,#91C4EE)')}
   ${c.bias != null ? calBar('Punteggio: tuo voto − voto app', fmtD(c.bias), Math.abs(c.bias) / 2 * 100, '#9FD18B') : ''}
   ${c.wind_n > 0 ? calBar('Vento onshore contro previsione', `${c.wind_miss} su ${c.wind_n}`, c.wind_miss / c.wind_n * 100, '#E6B84A') : ''}
-  ${!aligned && Cloud.admin ? `<button class="pillbtn primary calcta" id="calApplyC">Applica allo spot (×${fmtK(c.gain)})</button>` : ''}</div>`;
+  </div>${Cloud.admin && Math.abs(+c.gain.toFixed(2) - base) >= 0.02 ? `<div class="calc calhunt"><div class="calh"><h4>Per i wave hunter</h4><span class="ctag blue">solo admin</span></div><p>La community ora suggerisce ×${fmtK(c.gain)}. ${base !== 1 ? `La correzione adottata per lo spot è ×${fmtK(base)}.` : 'Per questo spot non c\'è ancora una correzione adottata.'}</p><button class="pillbtn primary calcta" id="calApplyC">Adotta ×${fmtK(c.gain)} per lo spot</button></div>` : ''}`;
 }
 const windText = x => x.vento_dir != null && x.vento_dir !== '' ? `vento da ${cardinal(x.vento_dir)}${x.vento_forza ? ' ' + x.vento_forza : ''}` : (x.vento_reale || '');
 const ICO_EDIT = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
@@ -2084,7 +2168,7 @@ function calRowHtml(x){
   <span class="rowact"><button type="button" class="rbtn" data-edit="${x.id}" aria-label="Modifica">${ICO_EDIT}</button><button type="button" class="rbtn del" data-del="${x.id}" aria-label="Elimina">${ICO_BIN}</button></span></div>`;
 }
 function calHtml(sp){
- const st = calStats(sp), cur = sp.gain ?? 1, c = communityOf(sp), mineSet = store.get('surf.gain', {})[sp.id] != null;
+ const st = calStats(sp), cur = sp.gain ?? 1, c = communityOf(sp), mineSet = gainState(sp).mine != null;
  let tips = '';
  if (st.nApp >= 3){
   const pct = Math.round((st.gain / cur - 1) * 100);
@@ -2097,11 +2181,11 @@ function calHtml(sp){
   tips += `<p style="margin-top:8px"><b>Punteggio:</b> in media il tuo voto è ${st.bias > 0 ? 'più alto' : 'più basso'} di ${Math.abs(st.bias).toFixed(1)} punti. ${st.bias > 0 ? 'Lo spot rende più di quanto pensi l\'app: forse la finestra di direzioni è troppo stretta.' : 'Lo spot rende meno: forse la finestra è troppo larga o il range di onda troppo basso.'}</p>`;
  if (st.windMiss >= 2)
   tips += `<p style="margin-top:8px"><b>Vento:</b> ${st.windMiss} volte l'app lo dava buono ma in acqua era onshore. Probabilmente la direzione offshore dello spot (ora da ${cardinal(sp.offshore)}) va corretta.</p>`;
- const mineTag = c ? (mineSet ? '<span class="ctag amber">Ha la precedenza</span>' : c.gain != null ? '<span class="ctag">Vale la community</span>' : '') : '';
- const me = `<div class="calc">${c ? `<div class="calh"><h4>Tu</h4>${mineTag}</div>` : ''}${tips}
-  ${cur !== 1 && mineSet ? `<p class="small" style="margin-top:10px">Correzione personale attiva: ×${cur.toFixed(2)}. Vale per le tue previsioni${Cloud.user ? ', su tutti i tuoi dispositivi e negli alert Telegram' : ' su questo telefono'}. <button class="linkbtn" id="calReset" style="min-height:auto">Azzera</button></p>` : ''}</div>`;
+ const gsT = gainState(sp), mineTag = gsT.mine != null ? (gsT.mode === 'mine' ? '<span class="ctag amber">in uso</span>' : '<span class="ctag">salvata, non in uso</span>') : '';
+ const me = `<div class="calc"><div class="calh"><h4>La tua correzione</h4>${mineTag}</div>${tips}
+  ${gsT.mode === 'mine' ? `<p class="xs muted" style="margin-top:10px">Vale per le tue previsioni${Cloud.user ? ', su tutti i tuoi dispositivi e negli alert' : ' su questo telefono'}.</p>` : ''}</div>`;
  const list = st.ss.slice(-6).reverse().map(calRowHtml).join('');
- return `${c ? calCommHtml(sp, c) : ''}${me}
+ return `${calChoiceHtml(sp, st)}${calAccuracyHtml(sp, st)}${c ? calCommHtml(sp, c) : ''}${me}${calDetailHtml(sp, st)}
   ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px var(--grot)">Ultime sessioni</h3><div class="slist edit">${list}</div>` : ''}
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
    <button class="pillbtn" id="calLog">✍️ Registra una sessione</button><button class="pillbtn" id="calObs">Solo condizioni</button></div>
@@ -2124,20 +2208,23 @@ function bindCal(sp){
   toast('Registrazione eliminata', 'ok', {label: 'Annulla', fn: () => { Data.sessions.restore(r); if (curDetail === sp.id) refreshCal(sp); }});
  });
  on('calApply', ()=>{
-  const g = store.get('surf.gain', {}); g[sp.id] = +calStats(sp).gain.toFixed(2); store.set('surf.gain', g);
-  applyGains(); openDetail(sp.id); openSection('cal', true); renderAll();
+  setGainMode(sp, 'mine', +calStats(sp).gain.toFixed(2));
+ });
+ document.querySelectorAll('#calBox [data-gopt]').forEach(b => b.onclick = () => {
+  const k = b.dataset.gopt, o = calOptions(sp, calStats(sp)).list.find(x => x.key === k);
+  setGainMode(sp, k, k === 'mine' ? o?.g : undefined);
  });
  on('calApplyC', async ()=>{
   const c = communityOf(sp); if (!c || c.gain == null) return;
   const g = +c.gain.toFixed(2);
   try{
    await Cloud.applyCommunityGain(sp.id, g);
-   const b = baseSpots.find(x => x.id === sp.id); if (b) b.gain = g;
-   spots.forEach(x => { if (x.id === sp.id) x.gain = g; }); applyGains();
+   const b = baseSpots.find(x => x.id === sp.id); if (b) b.gain0 = g;
+   applyGains();
    toast('Correzione applicata allo spot'); openDetail(sp.id); openSection('cal', true); renderAll();
   }catch(e){ toast('Non riesco ad applicarla: ' + (e.message || e), 'err'); }
  });
- on('calReset', ()=>{ const g = store.get('surf.gain', {}); delete g[sp.id]; store.set('surf.gain', g); sp.gain = baseSpots.find(b=>b.id===sp.id)?.gain; spots.forEach(x=>{ if (x.id===sp.id) x.gain = sp.gain; }); openDetail(sp.id); openSection('cal', true); renderAll(); });
+ on('calReset', ()=> resetMine(sp));
 }
 
 // ================= Cloud: account e sincronizzazione con Supabase =================
