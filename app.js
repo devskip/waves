@@ -2022,14 +2022,14 @@ function calStats(sp){
  return {used: withApp, n: ss.length, nApp: withApp.length, nObs: ss.filter(x => x.tipo === 'osservazione').length, gain, bias, windMiss, ss};
 }
 // ---------- Taratura della community: valori aggregati per spot, calcolati dal database ----------
-let communityP = null;
+let communityP = null, communityErr = null;
 function loadCommunity(force){
  if (communityP && !force) return communityP;
  communityP = getJson(`${SUPA_URL}/rest/v1/rpc/community_calibration`, {method:'POST', headers:{apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, 'Content-Type':'application/json'}, body:'{}'}, 1, 12000)
-  .then(rows => { const m = {}; (rows || []).forEach(r => { m[r.spot] = {spot: r.spot, entries: +r.entries || 0, users: +r.users || 0, gain_users: +r.gain_users || 0,
+  .then(rows => { communityErr = null; const m = {}; (rows || []).forEach(r => { m[r.spot] = {spot: r.spot, entries: +r.entries || 0, users: +r.users || 0, gain_users: +r.gain_users || 0,
     gain: r.gain == null ? null : +r.gain, bias: r.bias == null ? null : +r.bias, wind_miss: +r.wind_miss || 0, wind_n: +r.wind_n || 0}; });
    store.set('surf.community', m); return m; })
-  .catch(e => { communityP = null; console.warn('Taratura della community non disponibile', e); return store.get('surf.community', null); });
+  .catch(e => { communityP = null; communityErr = e.message || String(e); console.warn('Taratura della community non disponibile', e); return store.get('surf.community', null); });
  return communityP;
 }
 const isOfficial = sp => baseSpots.some(b => b.id === sp.id);
@@ -2084,40 +2084,45 @@ function resetMine(sp){
 }
 const mdl = n => n.toFixed(1).replace('.', ',');
 function calOptions(sp, st){
- const gs = gainState(sp), proposal = st.nApp >= 3 && st.gain != null ? +st.gain.toFixed(2) : null;
+ const gs = gainState(sp), c = communityOf(sp), proposal = st.nApp >= 3 && st.gain != null ? +st.gain.toFixed(2) : null;
  const mineVal = gs.mine ?? proposal;
+ const comNote = gs.base !== 1 ? 'Curata dai wave hunter, la stessa per tutti'
+  : c ? (c.gain != null ? `La community suggerisce ×${fmtK(c.gain)}, non ancora adottata dai wave hunter` : `In raccolta: ${plural(c.gain_users, 'surfista', 'surfisti')} su 3`)
+  : isOfficial(sp) ? 'Taratura della community non disponibile al momento' : 'Solo per gli spot ufficiali';
  return {gs, proposal, list: [
   {key: 'raw', name: 'Modello teorico', sub: 'Previsione grezza, senza correzioni', g: 1},
-  ...(gs.base !== 1 ? [{key: 'community', name: 'Correzione community', sub: 'Curata dai wave hunter, la stessa per tutti', g: gs.base, tag: 'spot'}] : []),
-  ...(mineVal != null ? [{key: 'mine', name: 'La tua correzione', sub: gs.mine != null ? `Dalle tue ${st.nApp} registrazioni valide` : `Proposta dalle tue ${st.nApp} registrazioni valide`, g: mineVal, proposal: gs.mine == null}] : [])
+  {key: 'community', name: 'Correzione community', sub: comNote, g: gs.base !== 1 ? gs.base : null, tag: gs.base !== 1 ? 'spot' : null, disabled: gs.base === 1},
+  {key: 'mine', name: 'La tua correzione', g: mineVal, proposal: gs.mine == null && mineVal != null, disabled: mineVal == null,
+   sub: mineVal == null ? `Servono 3 registrazioni valide (ora ${st.nApp})` : gs.mine != null ? `Dalle tue ${st.nApp} registrazioni valide` : `Proposta dalle tue ${st.nApp} registrazioni valide`}
  ]};
 }
 function calChoiceHtml(sp, st){
  const ev = nowEval(sp); if (!ev) return '';
- const {gs, list} = calOptions(sp, st); if (list.length < 2) return '';
- const raw = ev.face / (sp.gain || 1), vals = list.map(o => raw * o.g), mx = Math.max(...vals);
- const rows = list.map((o, i) => { const on = o.key === gs.mode;
-  return `<button type="button" class="copt${on ? ' on' : ''}" data-gopt="${o.key}" aria-pressed="${on}"><span class="rd"><i></i></span>
+ const {gs, list} = calOptions(sp, st);
+ const raw = ev.face / (sp.gain || 1), vals = list.map(o => o.g != null ? raw * o.g : null), mx = Math.max(...vals.filter(v => v != null));
+ const rows = list.map((o, i) => { const on = !o.disabled && o.key === gs.mode;
+  return `<button type="button" class="copt${on ? ' on' : ''}${o.disabled ? ' off' : ''}" data-gopt="${o.key}" aria-pressed="${on}"${o.disabled ? ' disabled' : ''}><span class="rd"><i></i></span>
    <span class="cot"><b>${o.name}${o.tag ? ` <em class="ctag ok">${o.tag}</em>` : ''}${on ? ' <em class="ctag amber">in uso</em>' : ''}${o.proposal ? ' <em class="ctag blue">proposta</em>' : ''}</b><small>${o.sub}</small></span>
-   <span class="cov"><b>${mdl(vals[i])}<small> m</small></b><small>×${fmtK(o.g)}</small></span><i class="cob"><u style="width:${(vals[i] / mx * 100).toFixed(0)}%"></u></i></button>`; }).join('');
+   <span class="cov">${vals[i] != null ? `<b>${mdl(vals[i])}<small> m</small></b><small>×${fmtK(o.g)}</small>` : '<b>–</b>'}</span>${vals[i] != null ? `<i class="cob"><u style="width:${(vals[i] / mx * 100).toFixed(0)}%"></u></i>` : ''}</button>`; }).join('');
  const back = gs.mode === 'mine' && gs.base !== 1 ? '<button type="button" class="pillbtn" data-gopt="community">↩ Torna alla correzione community</button>' : '';
+ const act = back || gs.mine != null;
  return `<div class="calc"><div class="calh"><h4>Quale valore usare</h4><span class="xs muted">onda a riva, adesso</span></div>${rows}
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${back}${gs.mine != null ? '<button type="button" class="pillbtn" id="calReset">Azzera la tua</button>' : ''}</div>
+  ${act ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${back}${gs.mine != null ? '<button type="button" class="pillbtn" id="calReset">Azzera la tua</button>' : ''}</div>` : ''}
   <p class="xs muted" style="margin-top:8px">Scegliere un'opzione è sempre reversibile: la tua correzione resta salvata e la riattivi quando vuoi.</p></div>`;
 }
 function calAccuracyHtml(sp, st){
  if (!st.used.length) return '';
- const {gs, list} = calOptions(sp, st); if (list.length < 2) return '';
+ const list = calOptions(sp, st).list.filter(o => !o.disabled);
  const err = g => { let d = 0, r = 0; st.used.forEach(x => { const fix = x.fix || 1, pure = x.onda_app_m / (x.gain || 1) / fix; d += Math.abs(pure * g * fix - x.onda_reale_m); r += +x.onda_reale_m; }); return r > 0 ? d / r * 100 : null; };
- const rows = list.map(o => ({o, e: err(o.g)})).filter(r => r.e != null); if (rows.length < 2) return '';
+ const rows = list.map(o => ({o, e: err(o.g)})).filter(r => r.e != null); if (!rows.length) return '';
  const rawE = rows.find(r => r.o.key === 'raw')?.e, best = rows.reduce((a, b) => b.e < a.e ? b : a);
  const col = {raw: '#8A8A85', community: '#9FD18B', mine: 'var(--amber)'};
  return `<div class="calc"><div class="calh"><h4>Quanto ci prende, sulle tue sessioni</h4></div><p class="xs muted">Errore medio sull'onda, rispetto a quello che hai trovato (${plural(st.used.length, 'registrazione', 'registrazioni')})</p>
   ${rows.map(r => calBar(r.o.name, `${Math.round(r.e)}%`, r.e, col[r.o.key])).join('')}
-  <p style="margin-top:10px">${best.o.key !== 'raw' && rawE > best.e ? `Con ${best.o.key === 'mine' ? 'la tua correzione' : 'la correzione community'} l'errore scende da ${Math.round(rawE)}% a ${Math.round(best.e)}%.` : 'Il modello teorico è già vicino a quello che hai trovato.'}${st.used.length < 3 ? ' Sono poche registrazioni: il confronto è indicativo.' : ''}</p></div>`;
+  <p style="margin-top:10px">${best.o.key !== 'raw' && rawE > best.e ? `Con ${best.o.key === 'mine' ? 'la tua correzione' : 'la correzione community'} l'errore scende da ${Math.round(rawE)}% a ${Math.round(best.e)}%.` : rows.length === 1 ? `Errore del modello teorico sulle tue registrazioni: ${Math.round(rawE)}%. Con 3 registrazioni valide potrai confrontarlo con la tua correzione.` : 'Il modello teorico è già vicino a quello che hai trovato.'}${st.used.length < 3 ? ' Sono poche registrazioni: il confronto è indicativo.' : ''}</p></div>`;
 }
 function calDetailHtml(sp, st){
- const {gs, list} = calOptions(sp, st); const com = list.find(o => o.key === 'community'), mine = list.find(o => o.key === 'mine');
+ const {gs, list} = calOptions(sp, st); const com = list.find(o => o.key === 'community' && !o.disabled), mine = list.find(o => o.key === 'mine' && !o.disabled);
  const rows = st.ss.filter(x => x.onda_app_m !== '').slice(-6).reverse();
  if (!rows.length) return '';
  const ok = (v, t) => t !== '' && Math.abs(v - t) <= 0.15;
@@ -2185,7 +2190,7 @@ function calHtml(sp){
  const me = `<div class="calc"><div class="calh"><h4>La tua correzione</h4>${mineTag}</div>${tips}
   ${gsT.mode === 'mine' ? `<p class="xs muted" style="margin-top:10px">Vale per le tue previsioni${Cloud.user ? ', su tutti i tuoi dispositivi e negli alert' : ' su questo telefono'}.</p>` : ''}</div>`;
  const list = st.ss.slice(-6).reverse().map(calRowHtml).join('');
- return `${calChoiceHtml(sp, st)}${calAccuracyHtml(sp, st)}${c ? calCommHtml(sp, c) : ''}${me}${calDetailHtml(sp, st)}
+ return `${calChoiceHtml(sp, st)}${calAccuracyHtml(sp, st)}${c ? calCommHtml(sp, c) : (isOfficial(sp) && Cloud.admin && communityErr ? `<div class="calc calhunt"><div class="calh"><h4>Community</h4><span class="ctag blue">solo admin</span></div><p>La taratura della community non si carica (${esc(communityErr)}). Controlla di aver eseguito lo script SQL su Supabase.</p></div>` : '')}${me}${calDetailHtml(sp, st)}
   ${st.n ? `<h3 style="margin:16px 0 4px;font:600 18px var(--grot)">Ultime sessioni</h3><div class="slist edit">${list}</div>` : ''}
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
    <button class="pillbtn" id="calLog">✍️ Registra una sessione</button><button class="pillbtn" id="calObs">Solo condizioni</button></div>
@@ -2211,7 +2216,7 @@ function bindCal(sp){
   setGainMode(sp, 'mine', +calStats(sp).gain.toFixed(2));
  });
  document.querySelectorAll('#calBox [data-gopt]').forEach(b => b.onclick = () => {
-  const k = b.dataset.gopt, o = calOptions(sp, calStats(sp)).list.find(x => x.key === k);
+  const k = b.dataset.gopt, o = calOptions(sp, calStats(sp)).list.find(x => x.key === k); if (!o || o.disabled) return;
   setGainMode(sp, k, k === 'mine' ? o?.g : undefined);
  });
  on('calApplyC', async ()=>{
