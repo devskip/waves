@@ -2050,7 +2050,7 @@ function calInfo(sp){
   const pct = Math.round((c.gain / baseGain(sp) - 1) * 100);
   return Math.abs(pct) < 10 ? 'Le previsioni sono in linea con quello che trova la community' : `La community dice che l'app ${pct < 0 ? 'sovrastima' : 'sottostima'} l'onda di circa il ${Math.abs(pct)}%`;
  }
- if (c && c.gain == null && c.users > 0 && !st.n) return `La community sta raccogliendo dati: ${c.gain_users} su 3 surfisti`;
+ if (c && c.gain == null && c.users > 0 && !st.n) { const m = Math.max(0, 3 - c.gain_users); return m ? `Per attivare la correzione della community serve ancora ${plural(m, 'surfista', 'surfisti')} con registrazioni valide` : 'La correzione della community si sta calcolando'; }
  if (!st.n) return 'Registra com\'era davvero per rendere il punteggio più preciso';
  if (st.nApp < 3) return `Ancora ${3 - st.nApp} ${3 - st.nApp === 1 ? 'registrazione' : 'registrazioni'} con la previsione dell'app per il primo suggerimento`;
  const pct = Math.round((st.gain / (sp.gain ?? 1) - 1) * 100);

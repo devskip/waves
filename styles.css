@@ -1212,3 +1212,4 @@ body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area
 .caldet summary::-webkit-details-marker{display:none}
 .caldet summary::after{content:'+';width:30px;height:30px;border-radius:50%;background:#3A3A3A;display:grid;place-items:center;font:700 18px var(--grot);color:var(--muted)}
 .caldet[open] summary::after{content:'–'}
+.sbtn .stext .ssum span+span::before{content:'·';margin:0 8px 0 2px;color:var(--muted)}
