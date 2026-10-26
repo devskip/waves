@@ -108,6 +108,13 @@ let baseSpots = [], spots = [], data = {}, userPos = null, lastTab = 'spot';
 let threshold = store.get('surf.threshold', 3);
 let followed = store.get('surf.followed', null);
 let favorite = store.get('surf.favorite', null);
+// spot ufficiali che l'utente ha tolto dalla home: solo su questo telefono (non è in SYNC_KEYS)
+let editList = false;
+const hiddenIds = () => new Set((store.get('surf.hiddenSpots', []) || []).filter(id => spots.some(s => s.id === id)));
+const isOfficialId = id => baseSpots.some(b => b.id === id);
+const canHide = id => isOfficialId(id) && id !== favorite;
+const setHidden = set => store.set('surf.hiddenSpots', set.size ? [...set] : null);
+const HIDE_ICO = '<span class="hminus" aria-hidden="true"><i></i></span>';
 let mapDay = 'now', mapSel = null, leaf = null, leafPins = {}, curDetail = null;
 
 // ---------- Calcoli (stessa logica di alert_telegram.py) ----------
@@ -345,20 +352,26 @@ function renderSpot(){
   favEl.innerHTML = `<div class="favhint">${ICON.star(false)}<span>Apri uno spot e tocca "Preferito" per averlo sempre qui in cima.</span></div>`;
  }
 
- const rows = spots.map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, beach(sp)) : null}));
+ const hid = hiddenIds();
+ const rows = spots.filter(sp=>!hid.has(sp.id)).map(sp=>({sp, ev:nowEval(sp), dist:userPos ? distanceKm(userPos, beach(sp)) : null}));
  const order = store.get('surf.order', null);
  const pos = id => { const i = order ? order.indexOf(id) : -1; return i < 0 ? Infinity : i; };
  const byScore = (a,b)=>(b.ev?.score ?? -1)-(a.ev?.score ?? -1);
  rows.sort((a,b)=> order ? ((pos(a.sp.id)-pos(b.sp.id)) || byScore(a,b)) : byScore(a,b));
  const km = d => d == null ? '' : d < 1 ? `${Math.round(d*1000/50)*50}m` : `${d < 10 ? d.toFixed(1) : Math.round(d)}km`;
+ const editCtl = sp => !editList ? '' : canHide(sp.id) ? `<button type="button" class="hidebtn" data-hide="${sp.id}" aria-label="Nascondi ${esc(sp.name)}">${HIDE_ICO}</button>`
+   : `<span class="hidelock" aria-hidden="true">${sp.id === favorite ? ICON.star(true) : ''}</span>`;
+ const mineTag = sp => editList && !isOfficialId(sp.id) ? '<span class="mytag">TUO</span>' : '';
  const gripHtml = sp => `<span class="grip" role="button" tabindex="0" aria-label="Sposta ${esc(sp.name)}: frecce su e giù">${GRIP}</span>`;
- const fullRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="row" data-open="${r.sp.id}"><span class="dtile">${comboGauge(r.sp, r.ev, 46)}</span>
-   <div class="grow"><p class="name">${esc(r.sp.name)}</p>
+ const fullRow = (r, g) => `<div class="item${editList ? ' editing' : ''}" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}${editCtl(r.sp)}<button class="row" data-open="${r.sp.id}"><span class="dtile">${comboGauge(r.sp, r.ev, 46)}</span>
+   <div class="grow"><p class="name">${esc(r.sp.name)} ${mineTag(r.sp)}</p>
     <p class="xs muted" style="margin-top:2px">${esc(metaLine(r.sp))}${r.dist!=null?`, ${km(r.dist)}`:''}</p>
     <p class="xs muted">Vento ${r.ev.windType} ${Math.round(r.ev.ws)}km/h</p></div>
    <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span>m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)}s, ${cardinal(r.ev.dir)}</p></div>
    ${badge(r.ev.score)}</button></div>`;
- const miniRow = (r, g) => `<div class="item" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}<button class="mini" data-open="${r.sp.id}"><span class="grow"><b>${esc(r.sp.name)}</b><small>${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${km(r.dist)}`:''}</small></span>${badge(r.ev?.score,'sm')}</button></div>`;
+ const miniRow = (r, g) => `<div class="item${editList ? ' editing' : ''}" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}${editCtl(r.sp)}<button class="mini" data-open="${r.sp.id}"><span class="grow"><b>${esc(r.sp.name)} ${mineTag(r.sp)}</b><small>${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${km(r.dist)}`:''}</small></span>${badge(r.ev?.score,'sm')}</button></div>`;
+ // oltre 8 spot non attivi: tessere a due colonne (nome e punteggio), il motivo si vede nel dettaglio
+ const tileRow = r => `<div class="item tile${editList ? ' editing' : ''}" data-id="${r.sp.id}">${editList && canHide(r.sp.id) ? `<button type="button" class="hidebtn" data-hide="${r.sp.id}" aria-label="Nascondi ${esc(r.sp.name)}">${HIDE_ICO}</button>` : ''}<button class="mini2" data-open="${r.sp.id}"><b>${esc(r.sp.name)}</b>${mineTag(r.sp)}${badge(r.ev?.score,'xs')}</button></div>`;
  const isOn = r => (r.ev?.score ?? 0) >= ACTIVE_FROM;
 
  // vicino a te: spot entro il raggio scelto, dal più vicino
@@ -381,8 +394,15 @@ function renderSpot(){
  const on = rest.filter(isOn), off = rest.filter(r=>!isOn(r));
  document.getElementById('activeList').innerHTML = on.length ? on.map(r=>fullRow(r, true)).join('')
   : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
- document.getElementById('offList').innerHTML = off.map(r=>miniRow(r, true)).join('');
+ const compact = off.length > 8, offBox = document.getElementById('offList');
+ offBox.classList.toggle('grid2', compact);
+ offBox.innerHTML = off.map(r=>compact ? tileRow(r) : miniRow(r, true)).join('');
  document.getElementById('offAcc').hidden = !off.length; document.getElementById('offCnt').textContent = off.length;
+ if (editList && off.length){ offBox.hidden = false; document.getElementById('offToggle').setAttribute('aria-expanded', 'true'); }
+ document.getElementById('editList').textContent = editList ? 'Fatto' : 'Modifica elenco';
+ document.getElementById('editList').classList.toggle('on', editList);
+ const nh = hid.size, hb = document.getElementById('hidOpen'); hb.hidden = !nh; hb.textContent = `${nh} nascost${nh === 1 ? 'o' : 'i'}`;
+ document.getElementById('v-spot')?.classList.toggle('editing', editList);
  updateOrderUi();
 
  // onde in arrivo: le prime giornate in condizione tra gli spot che segui, in schede che scorrono di lato
@@ -876,6 +896,27 @@ function boardHtml(sp, ev){
   <p class="xs muted" style="margin-top:12px">Indicazione di massima: conta anche come ti senti tu e come sono le onde davvero.</p></div>`;
 }
 
+// ---------- Spot nascosti: elenco e ripristino ----------
+function openHiddenSheet(){
+ document.getElementById('hidSheet')?.remove(); document.getElementById('toast')?.classList.remove('on');
+ const wrap = document.createElement('div'); wrap.className = 'sheet'; wrap.id = 'hidSheet';
+ const draw = () => {
+  const set = hiddenIds(), list = spots.filter(s => set.has(s.id));
+  wrap.innerHTML = `<div class="sheet-bg" data-close></div><div class="sheet-p" role="dialog" aria-modal="true" aria-labelledby="hidT">
+   <div class="sheet-h"><h2 id="hidT">Spot nascosti</h2>${list.length > 1 ? '<button type="button" class="linkbtn" data-unall>Mostra tutti</button>' : ''}<button class="sheet-x" data-close aria-label="Chiudi">×</button></div>
+   <div class="hidlist">${list.length ? list.map(s => `<div class="hidrow"><span><b>${esc(s.name)}</b><small>${esc(metaLine(s))}</small></span><button type="button" class="pillbtn" data-unhide="${s.id}">Mostra</button></div>`).join('') : '<p class="muted small">Nessuno spot nascosto.</p>'}</div>
+   <p class="xs muted" style="margin-top:12px">Nascondere toglie lo spot solo dalla home di questo telefono. Gli alert e la mappa non cambiano.</p></div>`;
+ };
+ const close = () => { wrap.remove(); document.body.classList.remove('locked'); document.removeEventListener('keydown', onKey); if (lastTab === 'spot') renderSpot(); if (document.getElementById('meSurf')) renderProfile(); };
+ const onKey = e => { if (e.key === 'Escape') close(); };
+ wrap.addEventListener('click', e => {
+  if (e.target.closest('[data-close]')) return close();
+  const u = e.target.closest('[data-unhide]'); if (u){ const s = hiddenIds(); s.delete(u.dataset.unhide); setHidden(s); draw(); if (!s.size) close(); return; }
+  if (e.target.closest('[data-unall]')){ setHidden(new Set()); close(); }
+ });
+ draw(); document.body.appendChild(wrap); document.body.classList.add('locked'); document.addEventListener('keydown', onKey);
+}
+
 // ---------- Avvisi a comparsa ----------
 let toastTimer = null;
 function toast(msg, kind = 'ok', act){
@@ -976,6 +1017,7 @@ function renderProfile(){
   <div class="wlabrow"><p class="lab">Peso</p><span class="xs muted">trascina il righello</span></div>
   ${rulerHtml(pr.weight)}
   <p class="err" id="meErr" hidden></p>${ref}
+  ${hiddenIds().size ? `<button type="button" class="srow linkrow" data-hidopen>Spot nascosti dalla home<span class="cnt">${hiddenIds().size}</span>${ICON.chev}</button>` : ''}
   <p class="xs muted" style="margin-top:12px">Serve solo a calcolare i litri giusti per te. ${Cloud.user ? 'Si salva nel tuo account e lo vedi solo tu.' : 'Resta su questo telefono finché non entri con l\'account.'}</p></div>`;
  sBox.querySelectorAll('[data-lvl]').forEach(b => b.onclick = () => {
   const l = SURF_LEVELS.find(x => x.id === b.dataset.lvl);
@@ -1741,7 +1783,7 @@ function openDetail(id){
  const onKey = e=>{ if (e.key === 'Escape') closeSheet(); };
  opener.onclick = ()=>{ sheet.hidden = false; document.body.classList.add('locked'); document.addEventListener('keydown', onKey); sheet.querySelector('.sheet-x').focus(); };
  sheet.addEventListener('click', e=>{ if (e.target.closest('[data-close]')) closeSheet(); });
- document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); openDetail(id); };
+ document.getElementById('favBtn').onclick = ()=>{ favorite = favorite === id ? null : id; store.set('surf.favorite', favorite); if (favorite){ const s = hiddenIds(); if (s.delete(id)) setHidden(s); } openDetail(id); };
  document.getElementById('followBtn').onclick = ()=>{
   toggleFollow(id); openDetail(id);
   const on = isFollowed(sp), h = document.querySelector('#v-detail .hero');
@@ -3546,6 +3588,13 @@ document.addEventListener('visibilitychange', ()=>{
 });
 
 document.addEventListener('click', e=>{
+ if (e.target.closest('#editList')){ editList = !editList; renderSpot(); return; }
+ if (e.target.closest('#hidOpen') || e.target.closest('[data-hidopen]')){ openHiddenSheet(); return; }
+ const hb = e.target.closest('[data-hide]'); if (hb){
+  const id = hb.dataset.hide, sp = spots.find(s => s.id === id); if (!sp || !canHide(id)) return;
+  const set = hiddenIds(); set.add(id); setHidden(set); renderSpot();
+  toast(`${sp.name} nascosto`, 'ok', {label:'Annulla', fn: () => { const s2 = hiddenIds(); s2.delete(id); setHidden(s2); renderSpot(); }});
+  return; }
  const ot = e.target.closest('#offToggle'); if (ot){ const on = ot.getAttribute('aria-expanded') !== 'true'; ot.setAttribute('aria-expanded', on); document.getElementById('offList').hidden = !on; return; }
  const o = e.target.closest('[data-open]'); if (o){ openDetail(o.dataset.open); return; }
  const t = e.target.closest('[data-tab]'); if (t){ setTab(t.dataset.tab); return; }
