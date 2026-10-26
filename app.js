@@ -370,8 +370,8 @@ function renderSpot(){
    <div class="num"><p class="h">${r.ev.face.toFixed(1)}<span>m</span></p><p class="xs muted" style="margin-top:2px">${Math.round(r.ev.T)}s, ${cardinal(r.ev.dir)}</p></div>
    ${badge(r.ev.score)}</button></div>`;
  const miniRow = (r, g) => `<div class="item${editList ? ' editing' : ''}" data-id="${r.sp.id}">${g ? gripHtml(r.sp) : ''}${editCtl(r.sp)}<button class="mini" data-open="${r.sp.id}"><span class="grow"><b>${esc(r.sp.name)} ${mineTag(r.sp)}</b><small>${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}${r.dist!=null?`, ${km(r.dist)}`:''}</small></span>${badge(r.ev?.score,'sm')}</button></div>`;
- // oltre 8 spot non attivi: tessere a due colonne (nome e punteggio), il motivo si vede nel dettaglio
- const tileRow = r => `<div class="item tile${editList ? ' editing' : ''}" data-id="${r.sp.id}">${editList && canHide(r.sp.id) ? `<button type="button" class="hidebtn" data-hide="${r.sp.id}" aria-label="Nascondi ${esc(r.sp.name)}">${HIDE_ICO}</button>` : ''}<button class="mini2" data-open="${r.sp.id}"><b>${esc(r.sp.name)}</b>${mineTag(r.sp)}${badge(r.ev?.score,'xs')}</button></div>`;
+ // oltre 8 spot non attivi: righe compatte (38px) con nome, motivo e punteggio
+ const denseRow = r => `<div class="item dense${editList ? ' editing' : ''}" data-id="${r.sp.id}">${gripHtml(r.sp)}${editCtl(r.sp)}<button class="mini dn" data-open="${r.sp.id}"><b>${esc(r.sp.name)} ${mineTag(r.sp)}</b><small>${r.ev ? offReason(r.sp, r.ev) : 'Nessun dato'}</small>${badge(r.ev?.score,'xs')}</button></div>`;
  const isOn = r => (r.ev?.score ?? 0) >= ACTIVE_FROM;
 
  // vicino a te: spot entro il raggio scelto, dal più vicino
@@ -395,8 +395,8 @@ function renderSpot(){
  document.getElementById('activeList').innerHTML = on.length ? on.map(r=>fullRow(r, true)).join('')
   : `<p class="muted small">Nessuno spot attivo adesso.</p>`;
  const compact = off.length > 8, offBox = document.getElementById('offList');
- offBox.classList.toggle('grid2', compact);
- offBox.innerHTML = off.map(r=>compact ? tileRow(r) : miniRow(r, true)).join('');
+ offBox.classList.toggle('compact', compact);
+ offBox.innerHTML = off.map(r=>compact ? denseRow(r) : miniRow(r, true)).join('');
  document.getElementById('offAcc').hidden = !off.length; document.getElementById('offCnt').textContent = off.length;
  if (editList && off.length){ offBox.hidden = false; document.getElementById('offToggle').setAttribute('aria-expanded', 'true'); }
  document.getElementById('editList').textContent = editList ? 'Fatto' : 'Modifica elenco';
