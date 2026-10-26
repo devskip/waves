@@ -179,6 +179,19 @@ def main():
         note("nessuna iscrizione in push_subscriptions")
         print("Nessuna iscrizione alle notifiche")
         return
+    if os.environ.get("PUSH_TEST"):
+        from pywebpush import webpush, WebPushException
+        for n, sub in enumerate(subs, 1):
+            host = urllib.parse.urlparse(sub["endpoint"]).netloc
+            try:
+                r = webpush({"endpoint": sub["endpoint"], "keys": {"p256dh": sub["p256dh"], "auth": sub["auth"]}},
+                            data=json.dumps({"title": "Prova notifiche", "body": "Se leggi questo, le push funzionano.", "tag": "prova", "url": "./"}),
+                            vapid_private_key=VAPID_PRIVATE, vapid_claims={"sub": VAPID_SUBJECT}, ttl=600)
+                note(f"prova iscrizione {n} ({host}): inviata, risposta {getattr(r, 'status_code', '?')}")
+            except WebPushException as ex:
+                note(f"prova iscrizione {n} ({host}): FALLITA codice={getattr(ex.response, 'status_code', None)} {str(ex)[:250]}", "warning")
+            except Exception as ex:
+                note(f"prova iscrizione {n} ({host}): errore {type(ex).__name__} {str(ex)[:250]}", "warning")
     users = sorted({s["user_id"] for s in subs})
     note(f"iscrizioni={len(subs)} utenti={len(users)}")
     in_list = "in.(" + ",".join(users) + ")"
