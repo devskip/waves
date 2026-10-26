@@ -217,6 +217,8 @@ def main():
         for sid, gain in follows[u].items():
             spot = to_spot(all_spots[sid], gain)
             bd = best_days(spot, data[sid], th)
+            b0 = best_days(spot, data[sid], 0)
+            note(f"  {spot['name']}: gain={spot['gain']:g} (personale={gain}) min={spot['min']:g} max={spot['max']:g} minPer={spot['minPeriod']:g} finestra={spot['window']:g} facing={spot['facing']:g}; migliori punteggi " + ", ".join(f"{d[5:]}={e['score']:g}/{e['face']:.1f}m" for d, e in b0.items()))
             note(f"  {spot['name']}: giorni sopra soglia={len(bd)} " + ", ".join(f"{d[5:]}={e['score']:g}{'(già inviato)' if sent.get((u, sid, d), -1) >= e['score'] else ''}" for d, e in bd.items()))
             for day, ev in bd.items():
                 if sent.get((u, sid, day), -1) >= ev["score"]:
