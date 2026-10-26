@@ -34,6 +34,11 @@ DAYS_AHEAD = 4
 GIORNI = ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"]
 
 
+def note(msg, level="notice"):
+    """Riga che GitHub mostra tra le annotazioni della run (visibile anche se il passaggio non fallisce)."""
+    print(f"::{level}::push: {msg}")
+
+
 # ---------- Database (Supabase REST) ----------
 def db(method, path, body=None, params=None, prefer=None):
     url = f"{SUPABASE_URL}/rest/v1/{path}" + (("?" + urllib.parse.urlencode(params)) if params else "")
@@ -165,14 +170,17 @@ def main():
 
     hour = datetime.now(ZoneInfo(TZ)).hour
     if not dry and (hour >= QUIET_FROM or hour < QUIET_TO):
+        note("ore notturne, nessuna notifica")
         print("Ore notturne: nessuna notifica, riprovo alla prossima esecuzione")
         return
 
     subs = db("GET", "push_subscriptions", params={"select": "user_id,endpoint,p256dh,auth"}) or []
     if not subs:
+        note("nessuna iscrizione in push_subscriptions")
         print("Nessuna iscrizione alle notifiche")
         return
     users = sorted({s["user_id"] for s in subs})
+    note(f"iscrizioni={len(subs)} utenti={len(users)}")
     in_list = "in.(" + ",".join(users) + ")"
 
     profiles = {p["id"]: p for p in db("GET", "profiles", params={"select": "id,alert_threshold", "id": in_list}) or []}
@@ -215,6 +223,7 @@ def main():
                 lines.append(f"{spot['name']} {ev['score']:g}/5, {wd} {int(day[8:])} dalle {ev['first_hour']}:00, "
                              f"~{ev['face']:.1f} m, vento {ev['wind_type']}")
                 fresh.append({"user_id": u, "spot_id": sid, "day": day, "score": ev["score"]})
+        note(f"utente {u[:8]} soglia={th:g} spot seguiti={len(follows[u])} nuovi avvisi={len(lines)}")
         if not lines:
             continue
         payload = json.dumps({
@@ -235,8 +244,10 @@ def main():
                 code = getattr(ex.response, "status_code", None)
                 if code in (404, 410):    # telefono che non esiste più: tolgo l'iscrizione
                     db("DELETE", "push_subscriptions", params={"user_id": f"eq.{u}", "endpoint": "eq." + sub["endpoint"]})
+                    note(f"iscrizione scaduta ({code}), tolta", "warning")
                 else:
                     print(f"Invio non riuscito ({code}): {ex}")
+                    note(f"invio non riuscito codice={code} {str(ex)[:200]}", "warning")
         if delivered:
             total += 1
             db("POST", "push_sent", fresh, params={"on_conflict": "user_id,spot_id,day"},
@@ -248,8 +259,15 @@ def main():
             db("DELETE", "push_sent", params={"day": f"lt.{today}"})
         except Exception as ex:
             print(f"Pulizia non riuscita: {ex}")
+    note(f"inviate a {total} persone")
     print(f"Notifiche inviate a {total} persone" if not dry else "Prova finita")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as ex:
+        note(f"errore {type(ex).__name__}: {str(ex)[:300]}", "error")
+        raise
