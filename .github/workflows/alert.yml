@@ -2,7 +2,7 @@ name: Alert onde
 
 on:
   schedule:
-    - cron: "15 */3 * * *"   # ogni 3 ore (orario UTC), può partire con qualche minuto di ritardo
+    - cron: "15 * * * *"     # ogni ora (orario UTC), può partire con qualche minuto di ritardo
   workflow_dispatch:          # permette di lanciarlo a mano dalla scheda Actions
 
 permissions:
@@ -27,6 +27,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SURF_THRESHOLD: ${{ vars.SURF_THRESHOLD }}
+          DEVICE_SPOT: ${{ vars.DEVICE_SPOT }}
         run: python alert_telegram.py
 
       - name: Invia le notifiche push (blocca schermo e icona dell'app)
@@ -38,13 +39,13 @@ jobs:
           pip install --quiet pywebpush
           python alert_push.py
 
-      - name: Salva lo stato degli alert già inviati
+      - name: Salva stato alert e device.json
         run: |
-          if [ -n "$(git status --porcelain alert_state.json)" ]; then
+          if [ -n "$(git status --porcelain alert_state.json device.json)" ]; then
             git config user.name "onde-bot"
             git config user.email "onde-bot@users.noreply.github.com"
-            git add alert_state.json
-            git commit -m "Aggiorna stato alert"
+            git add alert_state.json device.json
+            git commit -m "Aggiorna stato alert e device"
             git pull --rebase
             git push
           fi
