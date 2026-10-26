@@ -216,7 +216,9 @@ def main():
         lines, fresh = [], []
         for sid, gain in follows[u].items():
             spot = to_spot(all_spots[sid], gain)
-            for day, ev in best_days(spot, data[sid], th).items():
+            bd = best_days(spot, data[sid], th)
+            note(f"  {spot['name']}: giorni sopra soglia={len(bd)} " + ", ".join(f"{d[5:]}={e['score']:g}{'(già inviato)' if sent.get((u, sid, d), -1) >= e['score'] else ''}" for d, e in bd.items()))
+            for day, ev in bd.items():
                 if sent.get((u, sid, day), -1) >= ev["score"]:
                     continue          # già avvisato, e il punteggio non è salito
                 wd = GIORNI[datetime.strptime(day, "%Y-%m-%d").weekday()]
