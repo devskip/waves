@@ -214,3 +214,10 @@ select v.*, null::uuid, 'public' from (values
   ('sg-la-torre', 'La Torre', 'San Giovanni di Sinis', 39.87, 8.4, 39.8745, 8.439, 245, 45, 65, 0.7, 2.5, 6, 1, false)
 ) as v(id, name, area, lat, lon, beach_lat, beach_lon, facing, "window", offshore, min, max, min_period, gain, alert_default)
 on conflict (id) do nothing;
+
+-- ---------- Sessioni: tipo di registrazione (sessione normale / osservazione) ----------
+-- L'app manda kind = 'observation' solo per le osservazioni; per le sessioni normali la colonna deve avere un DEFAULT,
+-- altrimenti l'inserimento fallisce con: null value in column "kind" of relation "sessions" violates not-null constraint.
+-- Idempotente: se la colonna esiste già (aggiunta a mano), imposta solo il default e sistema le righe rimaste a NULL.
+alter table public.sessions add column if not exists kind text not null default 'session';
+alter table public.sessions alter column kind set default 'session';

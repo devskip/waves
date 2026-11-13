@@ -16,6 +16,8 @@ Uso in locale:
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime
@@ -73,9 +75,27 @@ def cardinal(d):
             "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"][round((d % 360) / 22.5) % 16]
 
 
+def urlopen_retry(req, data=None, tries=4, timeout=30):
+    """urlopen con qualche nuovo tentativo: ogni tanto Open-Meteo/Telegram vanno in timeout (es. handshake SSL) e non deve cadere tutto il workflow."""
+    for n in range(tries):
+        try:
+            return urllib.request.urlopen(req, data=data, timeout=timeout)
+        except urllib.error.HTTPError as ex:
+            if ex.code < 500 and ex.code != 429:
+                raise
+            err = ex
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as ex:
+            err = ex
+        if n == tries - 1:
+            raise err
+        wait = 5 * 2 ** n
+        print(f"Errore di rete ({err}), nuovo tentativo tra {wait}s ({n + 1}/{tries - 1})")
+        time.sleep(wait)
+
+
 def get_json(url, params):
     q = urllib.parse.urlencode(params)
-    with urllib.request.urlopen(f"{url}?{q}", timeout=30) as r:
+    with urlopen_retry(f"{url}?{q}") as r:
         data = json.load(r)
     return data if isinstance(data, list) else [data]
 
@@ -198,7 +218,7 @@ def build_device(data, threshold):
 
 def send(token, chat_id, text):
     body = urllib.parse.urlencode(dict(chat_id=chat_id, text=text)).encode()
-    urllib.request.urlopen(f"https://api.telegram.org/bot{token}/sendMessage", data=body, timeout=30)
+    urlopen_retry(f"https://api.telegram.org/bot{token}/sendMessage", data=body)
 
 
 def main():

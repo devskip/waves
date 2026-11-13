@@ -2503,7 +2503,16 @@ const Cloud = (() => {
    const gone = new Set(delList());
    const ses = Data.sessions.all().filter(x => isUuid(x.id) && !gone.has(x.id) && ok.has(x.spot_id) &&
     (x.tipo === 'osservazione' ? (x.onda_reale_m !== '' || x.vento_dir != null || x.vento_forza) : (x.onda_reale_m !== '' && x.qualita_reale_1_5)));
-   if (ses.length){ const {error} = await sb.from('sessions').upsert(ses.map(sessionOut)); if (error) throw error; }
+   if (ses.length){
+    // PostgREST, in un upsert con più righe, manda NULL per le colonne che mancano in alcune righe e così scavalca il DEFAULT del database
+    // (errore: null value in column "kind" violates not-null constraint). Quindi separo le righe con "kind" (osservazioni) da quelle senza,
+    // e dico comunque di usare il default per le colonne mancanti.
+    const rows = ses.map(sessionOut), withKind = rows.filter(r => 'kind' in r), noKind = rows.filter(r => !('kind' in r));
+    for (const part of [noKind, withKind]){
+     if (!part.length) continue;
+     const {error} = await sb.from('sessions').upsert(part, {defaultToNull: false}); if (error) throw error;
+    }
+   }
    Data.set('surf.syncedSessions', ses.map(x => x.id));
    const us = userSpotRows().filter(r => ok.has(r.spot_id));
    if (us.length){ const {error} = await sb.from('user_spots').upsert(us); if (error) throw error; }
